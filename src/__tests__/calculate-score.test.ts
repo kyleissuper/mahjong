@@ -330,4 +330,35 @@ describe('calculateScore', () => {
     // A pays D 10, dealer C not involved
     expect(result).toEqual({ A: -10, B: 0, C: 0, D: 10 });
   });
+
+  it('Hand 12 — three consecutive pongs, no terminals/honors (10 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['3b', '3b', '3b'], concealed: false },
+        { type: 'pong', tiles: ['4b', '4b', '4b'], concealed: false },
+        { type: 'pong', tiles: ['5b', '5b', '5b'], concealed: false },
+        { type: 'chow', tiles: ['6d', '7d', '8d'], concealed: false },
+        { type: 'pair', tiles: ['2d', '2d'], concealed: true, winTile: '2d' },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'C',
+      method: 'discard',
+      from: 'D',
+      dealer: 'A',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // three consecutive pongs (+4), no terminals/no honors (+3),
+    // all from others (+1), 2/5/8 pair (+1), can only win with one (+1),
+    // only 2 suits (+1) = 11 pts
+    // D pays C 11, dealer A not involved
+    expect(result).toEqual({ A: 0, B: 0, C: 11, D: -11 });
+  });
 });

@@ -32,6 +32,7 @@ const rules: Rule[] = [
   { name: 'cleanDoorstep', score: cleanDoorstep },
   { name: 'cleanDoorstepAndSelfPick', score: cleanDoorstepAndSelfPick, absorbs: ['cleanDoorstep', 'selfPick'] },
   { name: 'threeHiddenPongs', score: threeHiddenPongs },
+  { name: 'threeConsecutivePongs', score: threeConsecutivePongs },
   { name: 'noFlowersNoHonors', score: noFlowersNoHonors },
   { name: 'oneToNineChain', score: oneToNineChain },
   { name: 'pure', score: pure },
@@ -108,12 +109,9 @@ function allGreens(hand: Hand): number {
 }
 
 function splitKong(hand: Hand): number {
-  const nonKongTiles = hand.melds
-    .filter(m => m.type !== 'kong')
-    .flatMap(m => m.tiles);
-  const counts = new Map<Tile, number>();
-  for (const t of nonKongTiles) counts.set(t, (counts.get(t) ?? 0) + 1);
-  return [...counts.values()].filter(c => c >= 4).length;
+  const tiles = hand.melds.filter(m => m.type !== 'kong').flatMap(m => m.tiles);
+  const counts = Map.groupBy(tiles, t => t);
+  return [...counts.values()].filter(group => group.length >= 4).length;
 }
 
 function winFromButt(_hand: Hand, win: Win): number {
@@ -146,6 +144,16 @@ function threeHiddenPongs(hand: Hand): number {
   const hiddenPongs = hand.melds.filter(m =>
     (m.type === 'pong' || m.type === 'kong') && m.concealed);
   return hiddenPongs.length >= 3 ? 4 : 0;
+}
+
+function threeConsecutivePongs(hand: Hand): number {
+  const pongs = hand.melds
+    .filter(m => (m.type === 'pong' || m.type === 'kong') && isNumberTile(m.tiles[0]));
+  const bySuit = Map.groupBy(pongs, m => suit(m.tiles[0]));
+  return [...bySuit.values()].some(melds => {
+    const values = new Set(melds.map(m => numValue(m.tiles[0])));
+    return [...values].some(v => values.has(v + 1) && values.has(v + 2));
+  }) ? 4 : 0;
 }
 
 function noFlowersNoHonors(hand: Hand): number {
