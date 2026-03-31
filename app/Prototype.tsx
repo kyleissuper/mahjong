@@ -12,7 +12,7 @@ interface SetInProgress {
   tiles: Tile[];
 }
 
-type Phase = 'exposed' | 'concealed' | 'win-tile' | 'done';
+type Phase = 'exposed' | 'concealed' | 'done';
 
 interface WinTilePos {
   row: 'exposed' | 'concealed';
@@ -218,12 +218,9 @@ export function Prototype() {
     setState(s => ({ ...s, winTilePos: pos }));
   }
 
-  function confirmWinTile() {
-    setState(s => ({ ...s, phase: 'done' }));
-  }
 
   function tapTile(tile: Tile) {
-    if (phase === 'win-tile' || phase === 'done') return;
+    if (phase === 'done') return;
 
     // Flower: accumulate into a single flower meld
     if (tile === 'F') {
@@ -298,9 +295,9 @@ export function Prototype() {
     }
   }
 
-  function goToWinTile() {
+  function finishMelds() {
     commitCurrentSet();
-    setState(s => ({ ...s, phase: 'win-tile' }));
+    setState(s => ({ ...s, phase: 'done' }));
   }
 
   function undo() {
@@ -369,17 +366,17 @@ export function Prototype() {
   const isEntering = phase === 'exposed' || phase === 'concealed';
 
   function renderSet(meld: Meld, row: 'exposed' | 'concealed', setIdx: number, onTap?: () => void) {
-    const pickingWin = phase === 'win-tile';
+    const canPickWin = phase === 'done';
     return (
-      <div key={`${row}${setIdx}`} className={`proto-set ${onTap && !pickingWin ? 'proto-set-tappable' : ''}`} onClick={pickingWin ? undefined : onTap}>
+      <div key={`${row}${setIdx}`} className={`proto-set ${onTap && !canPickWin ? 'proto-set-tappable' : ''}`} onClick={canPickWin ? undefined : onTap}>
         <div className="proto-set-tiles">
           {meld.tiles.map((t, j) => {
             const isWon = winTilePos?.row === row && winTilePos.set === setIdx && winTilePos.tile === j;
             return (
               <span
                 key={j}
-                className={`tile-frame tile-sm ${pickingWin ? 'tile-pickable' : ''} ${isWon ? 'tile-won' : ''}`}
-                onClick={pickingWin ? (e) => { e.stopPropagation(); pickWinTile({ row, set: setIdx, tile: j }); } : undefined}
+                className={`tile-frame tile-sm ${canPickWin ? 'tile-pickable' : ''} ${isWon ? 'tile-won' : ''}`}
+                onClick={canPickWin ? (e) => { e.stopPropagation(); pickWinTile({ row, set: setIdx, tile: j }); } : undefined}
               >
                 <TileImage tile={t} size={18} />
               </span>
@@ -422,7 +419,7 @@ export function Prototype() {
 
       {/* Hand display */}
       <div className="proto-hand">
-        {phase === 'win-tile' && (
+        {phase === 'done' && !winTilePos && (
           <div className="proto-pick-hint">Tap the tile you won with</div>
         )}
 
@@ -496,14 +493,6 @@ export function Prototype() {
       </div>
 
       {/* Action buttons */}
-      {phase === 'win-tile' && (
-        <div className="proto-actions">
-          {winTilePos && (
-            <button onClick={confirmWinTile} className="proto-btn proto-btn-primary">Confirm →</button>
-          )}
-          <button onClick={() => setState(s => ({ ...s, phase: 'concealed', winTilePos: null }))} className="proto-btn">← Back to editing</button>
-        </div>
-      )}
       {isEntering && (
         <div className="proto-actions">
           {currentSet.tiles.length >= 3 && detectMeldType(currentSet.tiles) !== 'invalid' && (
@@ -515,7 +504,7 @@ export function Prototype() {
           {currentSet.tiles.length > 0 && (
             <button onClick={() => setState(s => ({ ...s, [activeSetKey(s)]: { tiles: [] } }))} className="proto-btn proto-btn-danger">Clear set</button>
           )}
-          <button onClick={goToWinTile} className="proto-btn">Done → pick winning tile</button>
+          <button onClick={finishMelds} className="proto-btn">Done</button>
         </div>
       )}
 
@@ -550,7 +539,7 @@ export function Prototype() {
       )}
 
       {/* Win context + score — shown after melds are done */}
-      {(phase === 'done' || phase === 'win-tile') && allMelds.length > 0 && (
+      {phase === 'done' && allMelds.length > 0 && (
         <WinContext win={win} onChange={setWin} />
       )}
 
@@ -562,7 +551,7 @@ export function Prototype() {
         <p className="proto-hint">Fill in winner and dealer to see the score.</p>
       )}
 
-      {(phase === 'done' || phase === 'win-tile') && (
+      {phase === 'done' && (
         <div className="proto-actions">
           <button onClick={() => setState(s => ({ ...s, phase: 'concealed', winTilePos: null }))} className="proto-btn">← Back to editing</button>
         </div>
