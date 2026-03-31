@@ -420,4 +420,35 @@ describe('calculateScore', () => {
     // B pays A 8, dealer C not involved
     expect(result).toEqual({ A: 8, B: -8, C: 0, D: 0 });
   });
+
+  it('Hand 15 — three suit chow, double chow, all chows (11 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['3b', '4b', '5b'], concealed: true },
+        { type: 'chow', tiles: ['3b', '4b', '5b'], concealed: true },
+        { type: 'chow', tiles: ['3d', '4d', '5d'], concealed: true },
+        { type: 'chow', tiles: ['3c', '4c', '5c'], concealed: true, winTile: '5c' },
+        { type: 'pair', tiles: ['8d', '8d'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'discard',
+      from: 'D',
+      dealer: 'D',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // three suit chow (+4), no terminals/no honors (+3),
+    // double chow (+1), all chows (+1), clean doorstep (+1),
+    // 2/5/8 pair (+1) = 11 pts
+    // D (dealer) pays A: 11+1=12
+    expect(result).toEqual({ A: 12, B: 0, C: 0, D: -12 });
+  });
 });

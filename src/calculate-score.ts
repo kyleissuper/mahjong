@@ -32,6 +32,8 @@ const rules: Rule[] = [
   { name: 'cleanDoorstep', score: cleanDoorstep },
   { name: 'cleanDoorstepAndSelfPick', score: cleanDoorstepAndSelfPick, absorbs: ['cleanDoorstep', 'selfPick'] },
   { name: 'threeHiddenPongs', score: threeHiddenPongs },
+  { name: 'doubleChow', score: doubleChow },
+  { name: 'threeSuitChow', score: threeSuitChow },
   { name: 'threeConsecutivePongs', score: threeConsecutivePongs },
   { name: 'noFlowersNoHonors', score: noFlowersNoHonors },
   { name: 'oneToNineChain', score: oneToNineChain },
@@ -160,6 +162,21 @@ function threeHiddenPongs(hand: Hand): number {
   const hiddenPongs = hand.melds.filter(m =>
     (m.type === 'pong' || m.type === 'kong') && m.concealed);
   return hiddenPongs.length >= 3 ? 4 : 0;
+}
+
+function doubleChow(hand: Hand): number {
+  const chows = hand.melds.filter(m => m.type === 'chow');
+  const keys = chows.map(m => m.tiles.join(','));
+  return keys.length - new Set(keys).size;
+}
+
+function threeSuitChow(hand: Hand): number {
+  const chows = hand.melds.filter(m => m.type === 'chow');
+  const byValues = Map.groupBy(chows, m => m.tiles.map(numValue).join(','));
+  return [...byValues.values()].some(melds => {
+    const suits = new Set(melds.map(m => suit(m.tiles[0])));
+    return suits.has('b') && suits.has('d') && suits.has('c');
+  }) ? 4 : 0;
 }
 
 function threeConsecutivePongs(hand: Hand): number {
