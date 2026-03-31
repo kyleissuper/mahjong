@@ -46,7 +46,7 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className="meld-tiles">
                     {meld.tiles.map((t, j) => (
-                      <TileImage key={j} tile={t} size={24} />
+                      <TileImage key={j} tile={t} size={30} className="meld-tile-img" />
                     ))}
                   </span>
                   <span className="meld-type">{meld.type}</span>
