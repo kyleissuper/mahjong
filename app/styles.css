@@ -121,9 +121,16 @@ body {
 }
 
 .meld-tiles {
-  font-size: 1.4rem;
-  line-height: 1;
-  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.meld-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--warm-gray);
+  margin-left: 4px;
 }
 
 .meld-meta {
@@ -269,13 +276,10 @@ body {
 
 .tile-btn {
   width: 36px;
-  height: 44px;
+  height: 48px;
   border-radius: var(--radius-sm);
   border: 1.5px solid #d4cfc5;
   background: linear-gradient(to bottom, #fefcf8, #f5f0e8);
-  color: var(--tile-color, var(--charcoal));
-  font-size: 1.05rem;
-  font-weight: 700;
   cursor: pointer;
   box-shadow: var(--tile-shadow);
   transition: all 0.1s;
@@ -284,7 +288,11 @@ body {
   justify-content: center;
   user-select: none;
   -webkit-user-select: none;
-  font-family: 'DM Sans', serif;
+  padding: 4px;
+}
+
+.tile-btn img {
+  pointer-events: none;
 }
 
 .tile-btn:active {
@@ -364,11 +372,13 @@ body {
 }
 
 .selected-tiles {
-  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
   font-size: 0.85rem;
   color: var(--jade);
   font-weight: 500;
-  padding: 8px 0;
 }
 
 /* --- Sheet Actions --- */

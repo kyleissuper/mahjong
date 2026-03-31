@@ -1,38 +1,32 @@
 import type { Tile } from '../src/types.js';
 
-// Button face: what you see on each tile in the picker
-// Suit is indicated by color + row label, so just show the value
-const TILE_FACES: Record<string, string> = {
-  '1b': '1', '2b': '2', '3b': '3', '4b': '4', '5b': '5',
-  '6b': '6', '7b': '7', '8b': '8', '9b': '9',
-  '1d': '1', '2d': '2', '3d': '3', '4d': '4', '5d': '5',
-  '6d': '6', '7d': '7', '8d': '8', '9d': '9',
-  '1c': '一', '2c': '二', '3c': '三', '4c': '四', '5c': '五',
-  '6c': '六', '7c': '七', '8c': '八', '9c': '九',
-  'Ew': '東', 'Sw': '南', 'Ww': '西', 'Nw': '北',
-  'Rd': '中', 'Gd': '發', 'Wd': '',
-  'F': '花',
-};
+// Import all tile SVGs — Vite handles these as URLs
+const tileModules = import.meta.glob('./tiles/*.svg', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
 
-// Full display: tile face + suit indicator for meld display
-const SUIT_MARKS: Record<string, string> = {
-  'b': '竹', 'd': '●', 'c': '萬',
-};
-
-export function tileFace(tile: Tile): string {
-  return TILE_FACES[tile] ?? tile;
+// Build lookup: tile shorthand → resolved image URL
+const TILE_IMAGES: Record<string, string> = {};
+for (const [path, url] of Object.entries(tileModules)) {
+  const filename = path.split('/').pop()?.replace('.svg', '');
+  if (filename) TILE_IMAGES[filename] = url;
 }
 
-export function displayTile(tile: Tile): string {
-  const face = TILE_FACES[tile];
-  if (!face) return tile;
-  // Honors and flowers are self-describing
-  if (tile.length === 1 || tile[1] === 'w' || (tile[1] === 'd' && tile[0] !== '1')) return face;
-  // Number tiles: face + suit mark
-  const suitMark = SUIT_MARKS[tile[1]];
-  return suitMark ? `${face}${suitMark}` : face;
+export function tileImage(tile: Tile): string | undefined {
+  return TILE_IMAGES[tile];
 }
 
-export function displayTiles(tiles: Tile[]): string {
-  return tiles.map(displayTile).join(' ');
+// Text fallbacks for contexts where images don't work (selects, etc.)
+const TILE_NAMES: Record<string, string> = {
+  '1b': '1 Bamboo', '2b': '2 Bamboo', '3b': '3 Bamboo', '4b': '4 Bamboo', '5b': '5 Bamboo',
+  '6b': '6 Bamboo', '7b': '7 Bamboo', '8b': '8 Bamboo', '9b': '9 Bamboo',
+  '1d': '1 Dots', '2d': '2 Dots', '3d': '3 Dots', '4d': '4 Dots', '5d': '5 Dots',
+  '6d': '6 Dots', '7d': '7 Dots', '8d': '8 Dots', '9d': '9 Dots',
+  '1c': '1 Char', '2c': '2 Char', '3c': '3 Char', '4c': '4 Char', '5c': '5 Char',
+  '6c': '6 Char', '7c': '7 Char', '8c': '8 Char', '9c': '9 Char',
+  'Ew': 'East', 'Sw': 'South', 'Ww': 'West', 'Nw': 'North',
+  'Rd': 'Red', 'Gd': 'Green', 'Wd': 'White',
+  'F': 'Flower',
+};
+
+export function tileName(tile: Tile): string {
+  return TILE_NAMES[tile] ?? tile;
 }

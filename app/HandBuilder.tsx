@@ -2,7 +2,8 @@ import { useState } from 'react';
 import type { Meld, MeldType, Tile } from '../src/types.js';
 import type { ValidationError } from '../src/validate-hand.js';
 import { TilePicker } from './TilePicker.tsx';
-import { displayTiles, displayTile } from './tile-display.js';
+import { tileName } from './tile-display.js';
+import { TileImage } from './TileImage.tsx';
 
 const ORPHAN_TILES: Tile[] = [
   '1b', '9b', '1d', '9d', '1c', '9c',
@@ -43,12 +44,19 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
             <li key={i} className="meld-item">
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span className="meld-tiles">{displayTiles(meld.tiles)}</span>
+                  <span className="meld-tiles">
+                    {[...new Set(meld.tiles)].map(t => (
+                      <TileImage key={t} tile={t} size={24} />
+                    ))}
+                    {meld.type !== 'flower' && meld.type !== 'orphans' && (
+                      <span className="meld-count">x{meld.tiles.length}</span>
+                    )}
+                  </span>
                   <span className="meld-type">{meld.type}</span>
                 </div>
                 <div className="meld-meta">
                   {meld.concealed && 'concealed'}
-                  {meld.winTile && ` · won with ${displayTile(meld.winTile)}`}
+                  {meld.winTile && <> · won with <TileImage tile={meld.winTile} size={16} /></>}
                 </div>
                 {error && <div className="meld-error">{error.message}</div>}
               </div>
@@ -182,7 +190,7 @@ function AddSetSheet({ onAdd, onCancel }: {
               >
                 <option value="">Select tile</option>
                 {ORPHAN_TILES.map(t => (
-                  <option key={t} value={t}>{t}</option>
+                  <option key={t} value={t}>{tileName(t)}</option>
                 ))}
               </select>
             </div>
@@ -195,7 +203,7 @@ function AddSetSheet({ onAdd, onCancel }: {
               >
                 <option value="">Select tile</option>
                 {ORPHAN_TILES.map(t => (
-                  <option key={t} value={t}>{t}</option>
+                  <option key={t} value={t}>{tileName(t)}</option>
                 ))}
               </select>
             </div>
@@ -222,7 +230,9 @@ function AddSetSheet({ onAdd, onCancel }: {
 
           {tiles.length > 0 && (
             <div>
-              <div className="selected-tiles">Selected: {displayTiles(tiles)}</div>
+              <div className="selected-tiles">
+                Selected: {tiles.map((t, i) => <TileImage key={i} tile={t} size={24} />)}
+              </div>
               <div className="form-row">
                 <span className="form-label">Winning tile in this set?</span>
                 <select
@@ -232,7 +242,7 @@ function AddSetSheet({ onAdd, onCancel }: {
                 >
                   <option value="">No</option>
                   {[...new Set(tiles)].map(t => (
-                    <option key={t} value={t}>{t}</option>
+                    <option key={t} value={t}>{tileName(t)}</option>
                   ))}
                 </select>
               </div>
