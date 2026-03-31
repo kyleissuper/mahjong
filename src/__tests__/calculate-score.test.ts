@@ -361,4 +361,34 @@ describe('calculateScore', () => {
     // D pays C 11, dealer A not involved
     expect(result).toEqual({ A: 0, B: 0, C: 11, D: -11 });
   });
+
+  it('Hand 13 — terminals & honors, all pongs, dealer discard win (10 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: true },
+        { type: 'pong', tiles: ['9d', '9d', '9d'], concealed: false },
+        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: false, winTile: '9b' },
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'pair', tiles: ['Wd', 'Wd'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'B',
+      method: 'discard',
+      from: 'C',
+      dealer: 'B',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // terminals & honors (+4), all pongs (+4), wind pong (+1),
+    // can only win with one (+1) = 10 pts
+    // C pays B (dealer): 10+1=11
+    expect(result).toEqual({ A: 0, B: 11, C: -11, D: 0 });
+  });
 });
