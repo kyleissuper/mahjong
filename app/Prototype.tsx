@@ -158,13 +158,12 @@ export function Prototype() {
     }));
   }
 
-  function tapTile(tile: Tile) {
-    if (phase === 'win-tile') {
-      setState(s => ({ ...s, winTile: tile, phase: 'done' }));
-      return;
-    }
+  function pickWinTile(tile: Tile) {
+    setState(s => ({ ...s, winTile: tile, phase: 'done' }));
+  }
 
-    if (phase === 'done') return;
+  function tapTile(tile: Tile) {
+    if (phase === 'win-tile' || phase === 'done') return;
 
     // Flower: accumulate into a single flower meld
     if (tile === 'F') {
@@ -300,11 +299,16 @@ export function Prototype() {
   const isEntering = phase === 'exposed' || phase === 'concealed';
 
   function renderSet(meld: Meld, key: string, onTap?: () => void) {
+    const pickingWin = phase === 'win-tile';
     return (
-      <div key={key} className={`proto-set ${onTap ? 'proto-set-tappable' : ''}`} onClick={onTap}>
+      <div key={key} className={`proto-set ${onTap && !pickingWin ? 'proto-set-tappable' : ''}`} onClick={pickingWin ? undefined : onTap}>
         <div className="proto-set-tiles">
           {meld.tiles.map((t, j) => (
-            <span key={j} className="tile-frame tile-sm">
+            <span
+              key={j}
+              className={`tile-frame tile-sm ${pickingWin ? 'tile-pickable' : ''} ${winTile === t ? 'tile-won' : ''}`}
+              onClick={pickingWin ? (e) => { e.stopPropagation(); pickWinTile(t); } : undefined}
+            >
               <TileImage tile={t} size={18} />
             </span>
           ))}
@@ -339,64 +343,58 @@ export function Prototype() {
   return (
     <div className="proto">
       <div className="proto-header">
-        <span className="proto-phase">
-          {phase === 'exposed' && 'Entering exposed sets'}
-          {phase === 'concealed' && 'Entering concealed sets'}
-          {phase === 'win-tile' && 'Tap the tile you won with'}
-          {phase === 'done' && 'Hand complete'}
-        </span>
+        <span className="proto-phase">Mahjong Scorer</span>
         <button onClick={reset} className="proto-btn-sm">Reset</button>
       </div>
 
       {/* Hand display */}
       <div className="proto-hand">
-        {isEntering && (
-          <div className={`proto-row ${phase === 'exposed' ? 'proto-row-active' : ''}`}>
-            <span className="proto-row-label">Exposed</span>
-            <div className="proto-sets">
-              {exposed.map((m, i) => renderSet(m, `e${i}`, () => editSet('exposed', i)))}
-              {phase === 'exposed'
-                ? renderCurrentSet()
-                : <div className="proto-set proto-set-placeholder" onClick={() => {
-                    if (currentSet.tiles.length > 0) commitCurrentSet();
-                    setState(s => ({ ...s, phase: 'exposed' }));
-                  }}>
-                    <div className="proto-set-tiles">
-                      <span className="tile-frame tile-sm tile-empty" />
-                      <span className="tile-frame tile-sm tile-empty" />
-                      <span className="tile-frame tile-sm tile-empty" />
-                    </div>
-                    <span className="proto-set-label">tap to add</span>
-                  </div>
-              }
-            </div>
-          </div>
+        {phase === 'win-tile' && (
+          <div className="proto-pick-hint">Tap the tile you won with</div>
         )}
 
-        {isEntering && (
-          <div className={`proto-row ${phase === 'concealed' ? 'proto-row-active' : ''}`}>
-            <span className="proto-row-label">Concealed</span>
-            <div className="proto-sets">
-              {concealed.map((m, i) => renderSet(m, `c${i}`, () => editSet('concealed', i)))}
-              {phase === 'concealed'
-                ? renderCurrentSet()
-                : <div className="proto-set proto-set-placeholder" onClick={() => {
-                    if (currentSet.tiles.length > 0) commitCurrentSet();
-                    setState(s => ({ ...s, phase: 'concealed' }));
-                  }}>
-                    <div className="proto-set-tiles">
-                      <span className="tile-frame tile-sm tile-empty" />
-                      <span className="tile-frame tile-sm tile-empty" />
-                      <span className="tile-frame tile-sm tile-empty" />
-                    </div>
-                    <span className="proto-set-label">tap to add</span>
+        <div className={`proto-row ${phase === 'exposed' ? 'proto-row-active' : ''}`}>
+          <span className="proto-row-label">Exposed</span>
+          <div className="proto-sets">
+            {exposed.map((m, i) => renderSet(m, `e${i}`, () => editSet('exposed', i)))}
+            {isEntering && (phase === 'exposed'
+              ? renderCurrentSet()
+              : <div className="proto-set proto-set-placeholder" onClick={() => {
+                  if (currentSet.tiles.length > 0) commitCurrentSet();
+                  setState(s => ({ ...s, phase: 'exposed' }));
+                }}>
+                  <div className="proto-set-tiles">
+                    <span className="tile-frame tile-sm tile-empty" />
+                    <span className="tile-frame tile-sm tile-empty" />
+                    <span className="tile-frame tile-sm tile-empty" />
                   </div>
-              }
-            </div>
+                  <span className="proto-set-label">tap to add</span>
+                </div>
+            )}
           </div>
-        )}
+        </div>
 
-        {/* Win tile display */}
+        <div className={`proto-row ${phase === 'concealed' ? 'proto-row-active' : ''}`}>
+          <span className="proto-row-label">Concealed</span>
+          <div className="proto-sets">
+            {concealed.map((m, i) => renderSet(m, `c${i}`, () => editSet('concealed', i)))}
+            {isEntering && (phase === 'concealed'
+              ? renderCurrentSet()
+              : <div className="proto-set proto-set-placeholder" onClick={() => {
+                  if (currentSet.tiles.length > 0) commitCurrentSet();
+                  setState(s => ({ ...s, phase: 'concealed' }));
+                }}>
+                  <div className="proto-set-tiles">
+                    <span className="tile-frame tile-sm tile-empty" />
+                    <span className="tile-frame tile-sm tile-empty" />
+                    <span className="tile-frame tile-sm tile-empty" />
+                  </div>
+                  <span className="proto-set-label">tap to add</span>
+                </div>
+            )}
+          </div>
+        </div>
+
         {winTile && (
           <div className="proto-win-tile">
             Won with: <span className="tile-frame tile-sm"><TileImage tile={winTile} size={20} /></span>
@@ -418,7 +416,7 @@ export function Prototype() {
       )}
 
       {/* Tile picker grid + undo */}
-      {phase !== 'done' && (
+      {isEntering && (
         <div className="proto-grid">
           {ALL_SUITS.map(({ name, tiles }) => (
             <div key={name} className="proto-suit">

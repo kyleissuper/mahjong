@@ -117,6 +117,31 @@
   outline-offset: 2px;
 }
 
+.proto-pick-hint {
+  text-align: center;
+  padding: 8px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2d6a4f;
+  background: #52b78822;
+  border-radius: 6px;
+}
+
+.tile-pickable {
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.tile-pickable:active {
+  transform: scale(1.15);
+}
+
+.tile-won {
+  outline: 2px solid #2d6a4f;
+  outline-offset: 1px;
+}
+
 /* Win tile */
 .proto-win-tile {
   padding: 6px 0;
