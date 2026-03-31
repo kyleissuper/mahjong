@@ -389,6 +389,7 @@ export function Prototype() {
           <div className="proto-pick-hint">Tap the tile you won with</div>
         )}
 
+        {(exposed.length > 0 || isEntering) && (
         <div className={`proto-row ${phase === 'exposed' ? 'proto-row-active' : ''}`}>
           <span className="proto-row-label">Exposed</span>
           <div className="proto-sets">
@@ -415,7 +416,9 @@ export function Prototype() {
             )}
           </div>
         </div>
+        )}
 
+        {(concealed.length > 0 || isEntering) && (
         <div className={`proto-row ${phase === 'concealed' ? 'proto-row-active' : ''}`}>
           <span className="proto-row-label">Concealed</span>
           <div className="proto-sets">
@@ -442,6 +445,7 @@ export function Prototype() {
             )}
           </div>
         </div>
+        )}
 
         {winTilePos && (() => {
           const sets = winTilePos.row === 'exposed' ? exposed : concealed;
@@ -509,10 +513,9 @@ export function Prototype() {
       )}
 
       {phase === 'done' && (
-        <div className="proto-summary">
-          <p>Total tiles: {allTiles.length}</p>
-          <p>Sets: {totalSets} + {hasPair ? 'pair' : 'no pair'} + {flowers} flowers</p>
-          <button onClick={reset} className="proto-btn">Start over</button>
+        <div className="proto-actions">
+          <button onClick={() => setState(s => ({ ...s, phase: 'concealed', winTilePos: null }))} className="proto-btn">← Back to editing</button>
+          <button onClick={reset} className="proto-btn">New hand</button>
         </div>
       )}
     </div>
