@@ -166,7 +166,11 @@ export function Prototype() {
   }
 
   function pickWinTile(pos: WinTilePos) {
-    setState(s => ({ ...s, winTilePos: pos, phase: 'done' }));
+    setState(s => ({ ...s, winTilePos: pos }));
+  }
+
+  function confirmWinTile() {
+    setState(s => ({ ...s, phase: 'done' }));
   }
 
   function tapTile(tile: Tile) {
@@ -427,6 +431,14 @@ export function Prototype() {
       </div>
 
       {/* Action buttons */}
+      {phase === 'win-tile' && (
+        <div className="proto-actions">
+          {winTilePos && (
+            <button onClick={confirmWinTile} className="proto-btn proto-btn-primary">Confirm →</button>
+          )}
+          <button onClick={() => setState(s => ({ ...s, phase: 'concealed', winTilePos: null }))} className="proto-btn">← Back to editing</button>
+        </div>
+      )}
       {isEntering && (
         <div className="proto-actions">
           {currentSet.tiles.length >= 3 && detectMeldType(currentSet.tiles) !== 'invalid' && (
