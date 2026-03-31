@@ -543,4 +543,34 @@ describe('calculateScore', () => {
     // B pays D 16, dealer C not involved
     expect(result).toEqual({ A: 0, B: -16, C: 0, D: 16 });
   });
+
+  it('Hand 19 — little winds, dealer self-pick (14 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'pong', tiles: ['Sw', 'Sw', 'Sw'], concealed: false },
+        { type: 'pong', tiles: ['Ww', 'Ww', 'Ww'], concealed: false },
+        { type: 'chow', tiles: ['3b', '4b', '5b'], concealed: true, winTile: '4b' },
+        { type: 'pair', tiles: ['Nw', 'Nw'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'self-pick',
+      dealer: 'A',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // little winds (+12, absorbs windPong), semi-pure (+4),
+    // self-pick (+1), can only win with one (+1),
+    // no 1s/9s with honors (+1) = 19 pts
+    // Dealer self-pick: each loser pays 19+1=20
+    expect(result).toEqual({ A: 60, B: -20, C: -20, D: -20 });
+  });
 });
