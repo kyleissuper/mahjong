@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Meld, MeldType, Tile } from '../src/types.js';
 import type { ValidationError } from '../src/validate-hand.js';
 import { TilePicker } from './TilePicker.tsx';
+import { displayTiles, tileChar } from './tile-display.js';
 
 const ORPHAN_TILES: Tile[] = [
   '1b', '9b', '1d', '9d', '1c', '9c',
@@ -42,12 +43,12 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
             <li key={i} className="meld-item">
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span className="meld-tiles">{meld.tiles.join(' ')}</span>
+                  <span className="meld-tiles">{displayTiles(meld.tiles)}</span>
                   <span className="meld-type">{meld.type}</span>
                 </div>
                 <div className="meld-meta">
                   {meld.concealed && 'concealed'}
-                  {meld.winTile && ` · won with ${meld.winTile}`}
+                  {meld.winTile && ` · won with ${tileChar(meld.winTile)}`}
                 </div>
                 {error && <div className="meld-error">{error.message}</div>}
               </div>
@@ -221,7 +222,7 @@ function AddSetSheet({ onAdd, onCancel }: {
 
           {tiles.length > 0 && (
             <div>
-              <div className="selected-tiles">Selected: {tiles.join(' ')}</div>
+              <div className="selected-tiles">Selected: {displayTiles(tiles)}</div>
               <div className="form-row">
                 <span className="form-label">Winning tile in this set?</span>
                 <select

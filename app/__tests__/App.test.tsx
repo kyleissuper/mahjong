@@ -85,7 +85,7 @@ describe('App integration', () => {
     // since the UI prevents this. Instead, test that errors from the engine display.
     // For now just verify the app renders without crashing with valid input
     await addPong(user, 'Ew');
-    expect(screen.getByText(/Ew Ew Ew/)).toBeInTheDocument();
+    expect(screen.getByText(/🀀🀀🀀/)).toBeInTheDocument();
   });
 
   it('scores all-pairs hand', async () => {

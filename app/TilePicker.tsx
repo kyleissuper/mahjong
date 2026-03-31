@@ -1,11 +1,12 @@
 import type { Tile, MeldType } from '../src/types.js';
+import { tileChar, tileLabel } from './tile-display.js';
 
 const SUITS = [
-  { name: 'Bamboo', tiles: ['1b', '2b', '3b', '4b', '5b', '6b', '7b', '8b', '9b'] },
-  { name: 'Dots', tiles: ['1d', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d'] },
-  { name: 'Characters', tiles: ['1c', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c'] },
-  { name: 'Winds', tiles: ['Ew', 'Sw', 'Ww', 'Nw'] },
-  { name: 'Dragons', tiles: ['Rd', 'Gd', 'Wd'] },
+  { name: 'Bamboo', suit: 'b', tiles: ['1b', '2b', '3b', '4b', '5b', '6b', '7b', '8b', '9b'] },
+  { name: 'Dots', suit: 'd', tiles: ['1d', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d'] },
+  { name: 'Characters', suit: 'c', tiles: ['1c', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c'] },
+  { name: 'Winds', suit: 'w', tiles: ['Ew', 'Sw', 'Ww', 'Nw'] },
+  { name: 'Dragons', suit: 'h', tiles: ['Rd', 'Gd', 'Wd'] },
 ];
 
 interface Props {
@@ -34,8 +35,11 @@ export function TilePicker({ selected, onToggle, meldType }: Props) {
                   onClick={() => onToggle(tile)}
                   disabled={disabled}
                   aria-pressed={selected.includes(tile)}
+                  aria-label={tile}
+                  title={tile}
                 >
-                  {tile}
+                  <span className="tile-btn-char">{tileChar(tile)}</span>
+                  <span className="tile-btn-label">{tileLabel(tile)}</span>
                 </button>
               ))}
             </div>

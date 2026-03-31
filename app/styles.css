@@ -116,10 +116,8 @@ body {
 }
 
 .meld-tiles {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--charcoal);
+  font-size: 1.4rem;
+  line-height: 1;
   letter-spacing: 0.02em;
 }
 
@@ -266,22 +264,35 @@ body {
 
 .tile-btn {
   width: 38px;
-  height: 44px;
+  height: 50px;
   border-radius: var(--radius-sm);
   border: 1.5px solid #d4cfc5;
   background: linear-gradient(to bottom, #fefcf8, #f5f0e8);
   color: var(--charcoal);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
-  font-weight: 500;
   cursor: pointer;
   box-shadow: var(--tile-shadow);
   transition: all 0.1s;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 1px;
   user-select: none;
   -webkit-user-select: none;
+  padding: 2px 0;
+}
+
+.tile-btn-char {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.tile-btn-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  font-weight: 500;
+  opacity: 0.6;
+  line-height: 1;
 }
 
 .tile-btn:active {
