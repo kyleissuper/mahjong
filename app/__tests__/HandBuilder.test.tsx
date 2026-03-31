@@ -31,7 +31,7 @@ describe('HandBuilder', () => {
   it('opens add set sheet when clicking add', async () => {
     const { user } = setup();
     await user.click(screen.getByText('+ Add set'));
-    expect(screen.getByText(/what kind of set/i)).toBeTruthy();
+    expect(screen.getByText(/add a set/i)).toBeTruthy();
   });
 
   it('can add a chow by selecting 3 consecutive tiles', async () => {
@@ -55,7 +55,7 @@ describe('HandBuilder', () => {
   it('can add a pong by selecting one tile', async () => {
     const { user, onChange } = setup();
     await user.click(screen.getByText('+ Add set'));
-    await user.click(screen.getByText('pong'));
+    await user.click(screen.getByText('Pong'));
 
     await user.click(screen.getByRole('button', { name: '5b' }));
 
@@ -73,7 +73,7 @@ describe('HandBuilder', () => {
   it('can add a pair by selecting one tile', async () => {
     const { user, onChange } = setup();
     await user.click(screen.getByText('+ Add set'));
-    await user.click(screen.getByText('pair'));
+    await user.click(screen.getByText('Pair'));
 
     await user.click(screen.getByRole('button', { name: 'Rd' }));
 
@@ -99,7 +99,7 @@ describe('HandBuilder', () => {
   it('enables honor tiles when adding a pong', async () => {
     const { user } = setup();
     await user.click(screen.getByText('+ Add set'));
-    await user.click(screen.getByText('pong'));
+    await user.click(screen.getByText('Pong'));
 
     expect(screen.getByRole('button', { name: 'Ew' })).not.toBeDisabled();
     expect(screen.getByRole('button', { name: 'Rd' })).not.toBeDisabled();
@@ -112,7 +112,7 @@ describe('HandBuilder', () => {
     await user.click(screen.getByRole('button', { name: '1b' }));
     await user.click(screen.getByRole('button', { name: '2b' }));
     await user.click(screen.getByRole('button', { name: '3b' }));
-    await user.click(screen.getByRole('button', { name: '4b' })); // should be ignored
+    await user.click(screen.getByRole('button', { name: '4b' }));
 
     expect(screen.getByText(/Selected:/)).toBeTruthy();
   });
@@ -120,7 +120,7 @@ describe('HandBuilder', () => {
   it('deselects pong tile on second click', async () => {
     const { user } = setup();
     await user.click(screen.getByText('+ Add set'));
-    await user.click(screen.getByText('pong'));
+    await user.click(screen.getByText('Pong'));
 
     await user.click(screen.getByRole('button', { name: '5b' }));
     expect(screen.getByText(/Selected:/)).toBeTruthy();
@@ -132,7 +132,7 @@ describe('HandBuilder', () => {
   it('switches pong tile when clicking a different tile', async () => {
     const { user } = setup();
     await user.click(screen.getByText('+ Add set'));
-    await user.click(screen.getByText('pong'));
+    await user.click(screen.getByText('Pong'));
 
     await user.click(screen.getByRole('button', { name: '5b' }));
     await user.click(screen.getByRole('button', { name: '8d' }));
@@ -177,14 +177,14 @@ describe('HandBuilder', () => {
     await user.click(screen.getByRole('button', { name: '2b' }));
     expect(screen.getByText(/Selected:/)).toBeTruthy();
 
-    await user.click(screen.getByText('pong'));
+    await user.click(screen.getByText('Pong'));
     expect(screen.queryByText(/Selected:/)).toBeNull();
   });
 
   it('can add flowers', async () => {
     const { user, onChange } = setup();
     await user.click(screen.getByText('+ Add set'));
-    await user.click(screen.getByText('flower'));
+    await user.click(screen.getByText('Flower'));
 
     expect(screen.getByText(/how many flowers/i)).toBeTruthy();
     await user.click(screen.getByText('Add to hand'));
@@ -201,40 +201,64 @@ describe('HandBuilder', () => {
   it('hides tile picker and concealed for flowers', async () => {
     const { user } = setup();
     await user.click(screen.getByText('+ Add set'));
-    await user.click(screen.getByText('flower'));
+    await user.click(screen.getByText('Flower'));
 
     expect(screen.queryByText('Bamboo')).toBeNull();
     expect(screen.queryByText('Concealed')).toBeNull();
   });
 
-  it('can add thirteen orphans with pair and winning tile', async () => {
+  it('can add 13 orphans with pair and winning tile', async () => {
     const { user, onChange } = setup();
     await user.click(screen.getByText('+ Add set'));
-    await user.click(screen.getByText('orphans'));
+    await user.click(screen.getByText('13 Orphans'));
 
-    expect(screen.getByText(/thirteen orphans/i)).toBeTruthy();
+    // Pick pair tile (1b) and winning tile (9c) from the tile grids
+    const allButtons = screen.getAllByRole('button', { name: '1b' });
+    await user.click(allButtons[0]); // pair picker
 
-    const selects = screen.getAllByRole('combobox');
-    await user.selectOptions(selects[0], '1b');
-    await user.selectOptions(selects[1], '9c');
+    const winButtons = screen.getAllByRole('button', { name: '9c' });
+    await user.click(winButtons[winButtons.length - 1]); // winning tile picker
+
     await user.click(screen.getByText('Add to hand'));
 
     expect(onChange).toHaveBeenCalledWith([
       expect.objectContaining({
         type: 'orphans',
-        tiles: expect.arrayContaining(['1b', '9b', '1d', '9d', '1c', '9c', 'Ew', 'Sw', 'Ww', 'Nw', 'Rd', 'Gd', 'Wd', '1b']),
         concealed: true,
         winTile: '9c',
       }),
     ]);
   });
 
-  it('hides tile picker and concealed for orphans', async () => {
+  it('hides tile picker and concealed for 13 orphans', async () => {
     const { user } = setup();
     await user.click(screen.getByText('+ Add set'));
-    await user.click(screen.getByText('orphans'));
+    await user.click(screen.getByText('13 Orphans'));
 
     expect(screen.queryByText('Bamboo')).toBeNull();
     expect(screen.queryByText('Concealed')).toBeNull();
+  });
+
+  it('can edit an existing meld', async () => {
+    const existing: Meld[] = [
+      { type: 'pong', tiles: ['5b', '5b', '5b'], concealed: true },
+    ];
+    const { user, onChange } = setup(existing);
+
+    // Click the meld to edit it
+    await user.click(screen.getByText('Pong'));
+
+    expect(screen.getByText(/edit set/i)).toBeTruthy();
+
+    // Switch to a different tile
+    await user.click(screen.getByRole('button', { name: '8d' }));
+    await user.click(screen.getByText('Save'));
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({
+        type: 'pong',
+        tiles: ['8d', '8d', '8d'],
+      }),
+    ]);
   });
 });

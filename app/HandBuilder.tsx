@@ -11,6 +11,17 @@ const ORPHAN_TILES: Tile[] = [
   'Rd', 'Gd', 'Wd',
 ];
 
+const TYPE_LABELS: Record<MeldType, string> = {
+  chow: 'Chow',
+  pong: 'Pong',
+  kong: 'Kong',
+  pair: 'Pair',
+  flower: 'Flower',
+  orphans: '13 Orphans',
+};
+
+const MELD_TYPES: MeldType[] = ['chow', 'pong', 'kong', 'pair', 'flower', 'orphans'];
+
 interface Props {
   melds: Meld[];
   errors: ValidationError[];
@@ -18,22 +29,29 @@ interface Props {
 }
 
 export function HandBuilder({ melds, errors, onChange }: Props) {
-  const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<number | null>(null);
 
-  function addMeld(meld: Meld) {
-    onChange([...melds, meld]);
-    setAdding(false);
+  function saveMeld(meld: Meld) {
+    if (editing !== null && editing < melds.length) {
+      onChange(melds.map((m, i) => i === editing ? meld : m));
+    } else {
+      onChange([...melds, meld]);
+    }
+    setEditing(null);
   }
 
   function removeMeld(index: number) {
     onChange(melds.filter((_, i) => i !== index));
+    if (editing === index) setEditing(null);
   }
+
+  const isEditing = editing !== null;
 
   return (
     <section className="section">
       <h2 className="section-title">Your hand</h2>
 
-      {melds.length === 0 && (
+      {melds.length === 0 && !isEditing && (
         <p className="empty-hand">No sets yet. Add your first set to start scoring.</p>
       )}
 
@@ -41,8 +59,8 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
         {melds.map((meld, i) => {
           const error = errors.find(e => e.meld === i);
           return (
-            <li key={i} className="meld-item">
-              <div style={{ flex: 1 }}>
+            <li key={i} className={`meld-item ${editing === i ? 'meld-item-editing' : ''}`}>
+              <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setEditing(i)}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className="meld-tiles">
                     {meld.tiles.map((t, j) => (
@@ -51,7 +69,7 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
                       </span>
                     ))}
                   </span>
-                  <span className="meld-type">{meld.type}</span>
+                  <span className="meld-type">{TYPE_LABELS[meld.type]}</span>
                 </div>
                 <div className="meld-meta">
                   {meld.concealed && 'concealed'}
@@ -65,26 +83,64 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
         })}
       </ul>
 
-      {adding
-        ? <AddSetSheet onAdd={addMeld} onCancel={() => setAdding(false)} />
-        : <button className="add-set-btn" onClick={() => setAdding(true)}>+ Add set</button>
+      {isEditing
+        ? <SetSheet
+            initial={editing < melds.length ? melds[editing] : undefined}
+            onSave={saveMeld}
+            onCancel={() => setEditing(null)}
+          />
+        : <button className="add-set-btn" onClick={() => setEditing(melds.length)}>+ Add set</button>
       }
     </section>
   );
 }
 
-const MELD_TYPES: MeldType[] = ['chow', 'pong', 'kong', 'pair', 'flower', 'orphans'];
+function OrphanTilePicker({ selected, onSelect, label }: {
+  selected: Tile | null;
+  onSelect: (tile: Tile | null) => void;
+  label: string;
+}) {
+  return (
+    <div>
+      <div className="form-label" style={{ marginBottom: 6 }}>{label}</div>
+      <div className="tile-row">
+        {ORPHAN_TILES.map(tile => (
+          <button
+            key={tile}
+            className="tile-frame tile-btn"
+            aria-pressed={selected === tile}
+            aria-label={tile}
+            onClick={() => onSelect(selected === tile ? null : tile)}
+          >
+            <TileImage tile={tile} size={22} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
-function AddSetSheet({ onAdd, onCancel }: {
-  onAdd: (meld: Meld) => void;
+function SetSheet({ initial, onSave, onCancel }: {
+  initial?: Meld;
+  onSave: (meld: Meld) => void;
   onCancel: () => void;
 }) {
-  const [type, setType] = useState<MeldType>('chow');
-  const [concealed, setConcealed] = useState(true);
-  const [tiles, setTiles] = useState<Tile[]>([]);
-  const [winTile, setWinTile] = useState<Tile | null>(null);
-  const [flowerCount, setFlowerCount] = useState(1);
-  const [orphanPair, setOrphanPair] = useState<Tile | null>(null);
+  const [type, setType] = useState<MeldType>(initial?.type ?? 'chow');
+  const [concealed, setConcealed] = useState(initial?.concealed ?? true);
+  const [tiles, setTiles] = useState<Tile[]>(
+    initial && initial.type !== 'flower' && initial.type !== 'orphans' ? initial.tiles : [],
+  );
+  const [winTile, setWinTile] = useState<Tile | null>(initial?.winTile ?? null);
+  const [flowerCount, setFlowerCount] = useState(
+    initial?.type === 'flower' ? initial.tiles.length : 1,
+  );
+  const [orphanPair, setOrphanPair] = useState<Tile | null>(() => {
+    if (initial?.type !== 'orphans') return null;
+    const counts = new Map<Tile, number>();
+    for (const t of initial.tiles) counts.set(t, (counts.get(t) ?? 0) + 1);
+    for (const [t, c] of counts) if (c > 1) return t;
+    return null;
+  });
 
   function changeType(t: MeldType) {
     setType(t);
@@ -93,14 +149,14 @@ function AddSetSheet({ onAdd, onCancel }: {
     setOrphanPair(null);
   }
 
-  function handleAdd() {
+  function handleSave() {
     if (type === 'flower') {
-      onAdd({ type: 'flower', tiles: Array(flowerCount).fill('F'), concealed: false });
+      onSave({ type: 'flower', tiles: Array(flowerCount).fill('F'), concealed: false });
       return;
     }
     if (type === 'orphans') {
       const pair = orphanPair ?? ORPHAN_TILES[0];
-      onAdd({
+      onSave({
         type: 'orphans',
         tiles: [...ORPHAN_TILES, pair],
         concealed: true,
@@ -108,7 +164,7 @@ function AddSetSheet({ onAdd, onCancel }: {
       });
       return;
     }
-    onAdd({
+    onSave({
       type,
       tiles,
       concealed,
@@ -136,16 +192,18 @@ function AddSetSheet({ onAdd, onCancel }: {
     }
   }
 
-  const canAdd =
+  const canSave =
     type === 'flower' ? flowerCount >= 1 :
     type === 'orphans' ? true :
     type === 'kong' ? tiles.length === 4 :
     type === 'pair' ? tiles.length === 2 :
     tiles.length === 3;
 
+  const isNew = !initial;
+
   return (
     <div className="sheet">
-      <h3 className="sheet-title">What kind of set?</h3>
+      <h3 className="sheet-title">{isNew ? 'Add a set' : 'Edit set'}</h3>
 
       <div className="type-selector">
         {MELD_TYPES.map(t => (
@@ -155,7 +213,7 @@ function AddSetSheet({ onAdd, onCancel }: {
             aria-pressed={type === t}
             onClick={() => changeType(t)}
           >
-            {t}
+            {TYPE_LABELS[t]}
           </button>
         ))}
       </div>
@@ -177,35 +235,19 @@ function AddSetSheet({ onAdd, onCancel }: {
       {type === 'orphans' && (
         <div>
           <p className="orphans-info">
-            Thirteen orphans: one of each terminal and honor tile + one duplicate.
+            One of each terminal and honor tile + one duplicate.
           </p>
           <div className="orphans-fields">
-            <div className="form-row">
-              <span className="form-label">Which tile is the pair?</span>
-              <select
-                className="select-input"
-                value={orphanPair ?? ''}
-                onChange={e => setOrphanPair(e.target.value || null)}
-              >
-                <option value="">Select tile</option>
-                {ORPHAN_TILES.map(t => (
-                  <option key={t} value={t}>{tileName(t)}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-row">
-              <span className="form-label">Which tile completed the hand?</span>
-              <select
-                className="select-input"
-                value={winTile ?? ''}
-                onChange={e => setWinTile(e.target.value || null)}
-              >
-                <option value="">Select tile</option>
-                {ORPHAN_TILES.map(t => (
-                  <option key={t} value={t}>{tileName(t)}</option>
-                ))}
-              </select>
-            </div>
+            <OrphanTilePicker
+              selected={orphanPair}
+              onSelect={setOrphanPair}
+              label="Which tile is the pair?"
+            />
+            <OrphanTilePicker
+              selected={winTile}
+              onSelect={setWinTile}
+              label="Which tile completed the hand?"
+            />
           </div>
         </div>
       )}
@@ -251,8 +293,8 @@ function AddSetSheet({ onAdd, onCancel }: {
       )}
 
       <div className="sheet-actions">
-        <button className="btn-primary" onClick={handleAdd} disabled={!canAdd}>
-          Add to hand
+        <button className="btn-primary" onClick={handleSave} disabled={!canSave}>
+          {isNew ? 'Add to hand' : 'Save'}
         </button>
         <button className="btn-secondary" onClick={onCancel}>Cancel</button>
       </div>

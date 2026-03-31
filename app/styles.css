@@ -151,6 +151,11 @@ body {
   margin-top: 4px;
 }
 
+.meld-item-editing {
+  border-color: var(--jade);
+  box-shadow: 0 0 0 1px var(--jade);
+}
+
 .meld-remove {
   width: 28px;
   height: 28px;
