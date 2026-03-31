@@ -1,7 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400">
-  <!-- Tile background matching FluffyStuff style -->
-  <rect width="300" height="400" rx="20" fill="#eee8d0" stroke="#c8b888" stroke-width="3"/>
-  <rect x="15" y="15" width="270" height="370" rx="12" fill="#faf6eb"/>
   <!-- White dragon: blue rectangle border (白板 style for HK mahjong) -->
-  <rect x="75" y="100" width="150" height="200" rx="8" fill="none" stroke="#2962b0" stroke-width="12"/>
+  <rect x="65" y="90" width="170" height="220" rx="8" fill="none" stroke="#2962b0" stroke-width="14"/>
 </svg>
