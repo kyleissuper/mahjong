@@ -72,6 +72,10 @@ const rules: Rule[] = [
   { name: 'threeSuitPongs', score: threeSuitPongs },
   { name: 'allPairs', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258', 'canOnlyWinWithOne'] },
   { name: 'allHonors', score: allHonors, absorbs: ['allPongs', 'windPong', 'dragonPong', 'terminalsAndHonors', 'noTerminalsWithHonors', 'only2Suits'] },
+  { name: 'heavenlyGates', score: heavenlyGates, absorbs: [
+    'pure', 'cleanDoorstep', 'cleanDoorstepAndSelfPick',
+    'canOnlyWinWithOne', 'pairOf258', 'noFlowersNoHonors', 'oneToNineChain',
+  ] },
   { name: 'thirteenOrphans', score: thirteenOrphans, absorbs: [
     'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'terminalsAndHonors',
     'allPongs', 'windPong', 'dragonPong', 'noTerminalsWithHonors',
@@ -209,6 +213,20 @@ function threeSuitPongs(hand: Hand): number {
 function allPairs(hand: Hand): number {
   const pairs = hand.melds.filter(m => m.type === 'pair');
   return pairs.length === 7 ? 12 : 0;
+}
+
+function heavenlyGates(hand: Hand): number {
+  const tiles = hand.melds.flatMap(m => m.tiles);
+  if (tiles.length !== 14) return 0;
+  const suits = new Set(tiles.map(suit));
+  if (suits.size !== 1 || !isNumberTile(tiles[0])) return 0;
+
+  const counts = new Map<number, number>();
+  for (const t of tiles) counts.set(numValue(t), (counts.get(numValue(t)) ?? 0) + 1);
+
+  //  base pattern: 1×3, 2-8×1, 9×3 — the extra tile adds +1 to any value
+  const base = [3, 1, 1, 1, 1, 1, 1, 1, 3]; // required counts for values 1-9
+  return base.every((need, i) => (counts.get(i + 1) ?? 0) >= need) ? 16 : 0;
 }
 
 function thirteenOrphans(hand: Hand): number {

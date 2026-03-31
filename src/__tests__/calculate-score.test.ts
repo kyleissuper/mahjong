@@ -846,4 +846,64 @@ describe('calculateScore', () => {
     expect(result.handValue).toBe(19);
     expect(result.scores).toEqual({ A: 0, B: 0, C: -19, D: 19 });
   });
+
+  it('Hand 25 — heavenly gates (17 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: true },
+        { type: 'chow', tiles: ['2d', '3d', '4d'], concealed: true },
+        { type: 'chow', tiles: ['6d', '7d', '8d'], concealed: true },
+        { type: 'pong', tiles: ['9d', '9d', '9d'], concealed: true },
+        { type: 'pair', tiles: ['5d', '5d'], concealed: true, winTile: '5d' },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'C',
+      method: 'self-pick',
+      dealer: 'D',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'selfPick', points: 1 },
+      { name: 'heavenlyGates', points: 16 },
+    ]);
+    expect(result.handValue).toBe(17);
+    expect(result.scores).toEqual({ A: -17, B: -17, C: 52, D: -18 });
+  });
+
+  it('Hand 25b — heavenly gates, different meld decomposition', () => {
+    // 1,1,1,2,2,3,4,5,6,7,8,9,9,9 in bamboo (extra tile = 2)
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: true },
+        { type: 'chow', tiles: ['3b', '4b', '5b'], concealed: true },
+        { type: 'pair', tiles: ['2b', '2b'], concealed: true, winTile: '2b' },
+        { type: 'pong', tiles: ['1b', '1b', '1b'], concealed: true },
+        { type: 'chow', tiles: ['6b', '7b', '8b'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'self-pick',
+      dealer: 'B',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules.find(r => r.name === 'heavenlyGates')).toEqual(
+      { name: 'heavenlyGates', points: 16 },
+    );
+  });
 });
