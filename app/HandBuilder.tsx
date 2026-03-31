@@ -29,8 +29,8 @@ function MeldSlot({ meld, error, expanded, onToggle, onSave, onRemove }: {
 }) {
   return (
     <div className={`meld-slot ${expanded ? 'meld-slot-open' : ''}`}>
-      {meld && !expanded && (
-        <div className="meld-row" onClick={onToggle}>
+      {meld && (
+        <div className="meld-row" onClick={expanded ? undefined : onToggle}>
           <div className="meld-content">
             <span className="meld-tiles">
               {(meld.type === 'orphans' ? [...new Set(meld.tiles)] : meld.tiles).map((t, j) => (
@@ -45,7 +45,7 @@ function MeldSlot({ meld, error, expanded, onToggle, onSave, onRemove }: {
               {meld.winTile && <span className="meld-tag">win</span>}
             </span>
           </div>
-          {onRemove && <button className="meld-x" onClick={e => { e.stopPropagation(); onRemove(); }}>×</button>}
+          {onRemove && !expanded && <button className="meld-x" onClick={e => { e.stopPropagation(); onRemove(); }}>×</button>}
         </div>
       )}
 
