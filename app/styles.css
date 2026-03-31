@@ -111,7 +111,7 @@ body {
 .meld-tiles {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   flex-wrap: wrap;
   margin-bottom: 3px;
 }
