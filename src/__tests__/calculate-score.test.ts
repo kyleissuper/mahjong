@@ -1072,4 +1072,69 @@ describe('calculateScore', () => {
     expect(result.handValue).toBe(2);
     expect(result.scores).toEqual({ A: 0, B: 2, C: -2, D: 0 });
   });
+
+  it('Hand 32 — win from last wall tile, self-pick (4 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['4d', '5d', '6d'], concealed: true, winTile: '6d' },
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: false },
+        { type: 'pong', tiles: ['Ww', 'Ww', 'Ww'], concealed: false },
+        { type: 'chow', tiles: ['7c', '8c', '9c'], concealed: false },
+        { type: 'pair', tiles: ['5b', '5b'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'self-pick',
+      dealer: 'B',
+      dealerRounds: 1,
+      special: ['lastTile'],
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'windPong', points: 1 },
+      { name: 'pairOf258', points: 1 },
+      { name: 'selfPick', points: 1 },
+      { name: 'lastWallTile', points: 1 },
+    ]);
+    expect(result.handValue).toBe(4);
+    expect(result.scores).toEqual({ A: 13, B: -5, C: -4, D: -4 });
+  });
+
+  it('Hand 33 — win from last discard (3 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: true, winTile: '2b' },
+        { type: 'pong', tiles: ['6d', '6d', '6d'], concealed: false },
+        { type: 'chow', tiles: ['4c', '5c', '6c'], concealed: false },
+        { type: 'pong', tiles: ['8b', '8b', '8b'], concealed: false },
+        { type: 'pair', tiles: ['2d', '2d'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'D',
+      method: 'discard',
+      from: 'A',
+      dealer: 'C',
+      dealerRounds: 1,
+      special: ['lastTile'],
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'lastDiscard', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(6);
+    expect(result.scores).toEqual({ A: -6, B: 0, C: 0, D: 6 });
+  });
 });

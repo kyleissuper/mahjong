@@ -45,6 +45,8 @@ const rules: Rule[] = [
   { name: 'only2Suits', score: only2Suits },
   { name: 'noTerminalsWithHonors', score: noTerminalsWithHonors },
   { name: 'threeSuitsWithWindAndDragon', score: threeSuitsWithWindAndDragon },
+  { name: 'lastWallTile', score: lastWallTile },
+  { name: 'lastDiscard', score: lastDiscard },
   { name: 'splitKong', score: splitKong },
   { name: 'winFromButt', score: winFromButt },
   { name: 'hiddenKong', score: hiddenKong },
@@ -262,6 +264,14 @@ function allHonors(hand: Hand): number {
 
 function allGreens(hand: Hand): number {
   return allTiles(hand).every(t => suit(t) === 'b' || t === 'Gd') ? 14 : 0;
+}
+
+function lastWallTile(_hand: Hand, { method, special }: Win): number {
+  return method === 'self-pick' && special.includes('lastTile') ? 1 : 0;
+}
+
+function lastDiscard(_hand: Hand, { method, special }: Win): number {
+  return method === 'discard' && special.includes('lastTile') ? 1 : 0;
 }
 
 function splitKong({ melds }: Hand): number {
