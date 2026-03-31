@@ -225,11 +225,6 @@ export function Prototype() {
     }
   }
 
-  function switchToConcealed() {
-    commitCurrentSet();
-    setState(s => ({ ...s, phase: 'concealed' }));
-  }
-
   function goToWinTile() {
     commitCurrentSet();
     setState(s => ({ ...s, phase: 'win-tile' }));
@@ -355,22 +350,48 @@ export function Prototype() {
 
       {/* Hand display */}
       <div className="proto-hand">
-        {(exposed.length > 0 || (isEntering && phase === 'exposed')) && (
-          <div className="proto-row">
+        {isEntering && (
+          <div className={`proto-row ${phase === 'exposed' ? 'proto-row-active' : ''}`}>
             <span className="proto-row-label">Exposed</span>
             <div className="proto-sets">
               {exposed.map((m, i) => renderSet(m, `e${i}`, () => editSet('exposed', i)))}
-              {phase === 'exposed' && renderCurrentSet()}
+              {phase === 'exposed'
+                ? renderCurrentSet()
+                : <div className="proto-set proto-set-placeholder" onClick={() => {
+                    if (currentSet.tiles.length > 0) commitCurrentSet();
+                    setState(s => ({ ...s, phase: 'exposed' }));
+                  }}>
+                    <div className="proto-set-tiles">
+                      <span className="tile-frame tile-sm tile-empty" />
+                      <span className="tile-frame tile-sm tile-empty" />
+                      <span className="tile-frame tile-sm tile-empty" />
+                    </div>
+                    <span className="proto-set-label">tap to add</span>
+                  </div>
+              }
             </div>
           </div>
         )}
 
-        {(concealed.length > 0 || (isEntering && phase === 'concealed')) && (
-          <div className="proto-row">
+        {isEntering && (
+          <div className={`proto-row ${phase === 'concealed' ? 'proto-row-active' : ''}`}>
             <span className="proto-row-label">Concealed</span>
             <div className="proto-sets">
               {concealed.map((m, i) => renderSet(m, `c${i}`, () => editSet('concealed', i)))}
-              {phase === 'concealed' && renderCurrentSet()}
+              {phase === 'concealed'
+                ? renderCurrentSet()
+                : <div className="proto-set proto-set-placeholder" onClick={() => {
+                    if (currentSet.tiles.length > 0) commitCurrentSet();
+                    setState(s => ({ ...s, phase: 'concealed' }));
+                  }}>
+                    <div className="proto-set-tiles">
+                      <span className="tile-frame tile-sm tile-empty" />
+                      <span className="tile-frame tile-sm tile-empty" />
+                      <span className="tile-frame tile-sm tile-empty" />
+                    </div>
+                    <span className="proto-set-label">tap to add</span>
+                  </div>
+              }
             </div>
           </div>
         )}
@@ -392,12 +413,7 @@ export function Prototype() {
           {currentSet.tiles.length === 2 && currentSet.tiles[0] === currentSet.tiles[1] && !hasPair && (
             <button onClick={commitAsPair} className="proto-btn">It's the pair</button>
           )}
-          {phase === 'exposed' && (
-            <button onClick={switchToConcealed} className="proto-btn">Done with exposed →</button>
-          )}
-          {phase === 'concealed' && (
-            <button onClick={goToWinTile} className="proto-btn">Done with concealed →</button>
-          )}
+          <button onClick={goToWinTile} className="proto-btn">Done → pick winning tile</button>
         </div>
       )}
 

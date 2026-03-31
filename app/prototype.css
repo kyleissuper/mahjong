@@ -85,6 +85,19 @@
 .proto-set-label.valid { color: #2d6a4f; }
 .proto-set-label.invalid { color: #c1440e; }
 
+.proto-row-active .proto-row-label {
+  color: #2d6a4f;
+}
+
+.proto-set-placeholder {
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.proto-set-placeholder:active {
+  opacity: 0.8;
+}
+
 .proto-set-tappable {
   cursor: pointer;
   border-radius: 6px;
