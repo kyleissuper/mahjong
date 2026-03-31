@@ -82,4 +82,35 @@ describe('App integration', () => {
     await addPong(user, 'Ew');
     expect(screen.getByText(/Ew Ew Ew/)).toBeInTheDocument();
   });
+
+  it('scores all-pairs hand', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    for (const tile of ['2b', '5b', '9b', '3d', '7d', 'Ew', 'Rd']) {
+      await addPair(user, tile);
+    }
+
+    await setWinContext(user, { method: 'self-pick', winner: 'B', dealer: 'D' });
+
+    expect(screen.getByText(/Score: 13 pts/)).toBeInTheDocument();
+    expect(screen.getByText(/All pairs: \+12/)).toBeInTheDocument();
+    expect(screen.getByText(/Self-pick: \+1/)).toBeInTheDocument();
+  });
+
+  it('scores thirteen orphans', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByText('+ Add set'));
+    await user.click(screen.getByRole('button', { name: 'orphans' }));
+    await user.selectOptions(screen.getByLabelText(/which tile is the pair/i), '1b');
+    await user.selectOptions(screen.getByLabelText(/which tile completed/i), '9c');
+    await user.click(screen.getByText('Add to hand'));
+
+    await setWinContext(user, { method: 'self-pick', winner: 'A', dealer: 'A' });
+
+    expect(screen.getByText(/Score: 16 pts/)).toBeInTheDocument();
+    expect(screen.getByText(/Thirteen orphans: \+14/)).toBeInTheDocument();
+  });
 });

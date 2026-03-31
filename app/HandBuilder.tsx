@@ -3,6 +3,12 @@ import type { Meld, MeldType, Tile } from '../src/types.js';
 import type { ValidationError } from '../src/validate-hand.js';
 import { TilePicker } from './TilePicker.tsx';
 
+const ORPHAN_TILES: Tile[] = [
+  '1b', '9b', '1d', '9d', '1c', '9c',
+  'Ew', 'Sw', 'Ww', 'Nw',
+  'Rd', 'Gd', 'Wd',
+];
+
 interface Props {
   melds: Meld[];
   errors: ValidationError[];
@@ -50,6 +56,8 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
   );
 }
 
+const MELD_TYPES: MeldType[] = ['chow', 'pong', 'kong', 'pair', 'flower', 'orphans'];
+
 function AddSetSheet({ onAdd, onCancel }: {
   onAdd: (meld: Meld) => void;
   onCancel: () => void;
@@ -58,11 +66,31 @@ function AddSetSheet({ onAdd, onCancel }: {
   const [concealed, setConcealed] = useState(true);
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [winTile, setWinTile] = useState<Tile | null>(null);
+  const [flowerCount, setFlowerCount] = useState(1);
+  const [orphanPair, setOrphanPair] = useState<Tile | null>(null);
 
-  const expectedCount = type === 'kong' ? 4 : type === 'pair' ? 2 : 3;
-  const canAdd = tiles.length === expectedCount;
+  function changeType(t: MeldType) {
+    setType(t);
+    setTiles([]);
+    setWinTile(null);
+    setOrphanPair(null);
+  }
 
   function handleAdd() {
+    if (type === 'flower') {
+      onAdd({ type: 'flower', tiles: Array(flowerCount).fill('F'), concealed: false });
+      return;
+    }
+    if (type === 'orphans') {
+      const pair = orphanPair ?? ORPHAN_TILES[0];
+      onAdd({
+        type: 'orphans',
+        tiles: [...ORPHAN_TILES, pair],
+        concealed: true,
+        winTile: winTile ?? undefined,
+      });
+      return;
+    }
     onAdd({
       type,
       tiles,
@@ -73,33 +101,40 @@ function AddSetSheet({ onAdd, onCancel }: {
 
   function selectTile(tile: Tile) {
     if (type === 'pong' || type === 'kong' || type === 'pair') {
-      // Identical tiles — clicking picks the tile, clicking again deselects
       if (tiles[0] === tile) {
         setTiles([]);
         setWinTile(null);
       } else {
-        setTiles(Array(expectedCount).fill(tile));
+        const count = type === 'kong' ? 4 : type === 'pair' ? 2 : 3;
+        setTiles(Array(count).fill(tile));
       }
     } else {
-      // Chow — toggle individual tiles
+      const max = 3;
       if (tiles.includes(tile)) {
         setTiles(tiles.filter(t => t !== tile));
         if (winTile === tile) setWinTile(null);
-      } else if (tiles.length < expectedCount) {
+      } else if (tiles.length < max) {
         setTiles([...tiles, tile]);
       }
     }
   }
+
+  const canAdd =
+    type === 'flower' ? flowerCount >= 1 :
+    type === 'orphans' ? true :
+    type === 'kong' ? tiles.length === 4 :
+    type === 'pair' ? tiles.length === 2 :
+    tiles.length === 3;
 
   return (
     <div>
       <h3>What kind of set?</h3>
 
       <div>
-        {(['chow', 'pong', 'kong', 'pair'] as MeldType[]).map(t => (
+        {MELD_TYPES.map(t => (
           <button
             key={t}
-            onClick={() => { setType(t); setTiles([]); setWinTile(null); }}
+            onClick={() => changeType(t)}
             style={{ fontWeight: type === t ? 'bold' : 'normal' }}
           >
             {t}
@@ -107,37 +142,84 @@ function AddSetSheet({ onAdd, onCancel }: {
         ))}
       </div>
 
-      <label>
-        <input
-          type="checkbox"
-          checked={concealed}
-          onChange={e => setConcealed(e.target.checked)}
-        />
-        Concealed
-      </label>
+      {type === 'flower' && (
+        <label>
+          How many flowers?{' '}
+          <input
+            type="number"
+            min={1}
+            max={8}
+            value={flowerCount}
+            onChange={e => setFlowerCount(parseInt(e.target.value) || 1)}
+          />
+        </label>
+      )}
 
-      <TilePicker
-        selected={tiles}
-        onToggle={selectTile}
-        meldType={type}
-      />
-
-      {tiles.length > 0 && (
+      {type === 'orphans' && (
         <div>
-          <p>Selected: {tiles.join(' ')}</p>
+          <p>Thirteen orphans: one of each terminal and honor tile + one duplicate.</p>
           <label>
-            Winning tile in this set?{' '}
+            Which tile is the pair?{' '}
+            <select
+              value={orphanPair ?? ''}
+              onChange={e => setOrphanPair(e.target.value || null)}
+            >
+              <option value="">Select tile</option>
+              {ORPHAN_TILES.map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Which tile completed the hand?{' '}
             <select
               value={winTile ?? ''}
               onChange={e => setWinTile(e.target.value || null)}
             >
-              <option value="">No</option>
-              {[...new Set(tiles)].map(t => (
+              <option value="">Select tile</option>
+              {ORPHAN_TILES.map(t => (
                 <option key={t} value={t}>{t}</option>
               ))}
             </select>
           </label>
         </div>
+      )}
+
+      {type !== 'flower' && type !== 'orphans' && (
+        <>
+          <label>
+            <input
+              type="checkbox"
+              checked={concealed}
+              onChange={e => setConcealed(e.target.checked)}
+            />
+            Concealed
+          </label>
+
+          <TilePicker
+            selected={tiles}
+            onToggle={selectTile}
+            meldType={type}
+          />
+
+          {tiles.length > 0 && (
+            <div>
+              <p>Selected: {tiles.join(' ')}</p>
+              <label>
+                Winning tile in this set?{' '}
+                <select
+                  value={winTile ?? ''}
+                  onChange={e => setWinTile(e.target.value || null)}
+                >
+                  <option value="">No</option>
+                  {[...new Set(tiles)].map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
+        </>
       )}
 
       <div>

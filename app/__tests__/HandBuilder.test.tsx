@@ -180,4 +180,60 @@ describe('HandBuilder', () => {
     await user.click(screen.getByText('pong'));
     expect(screen.queryByText(/Selected:/)).toBeNull();
   });
+
+  it('can add flowers', async () => {
+    const { user, onChange } = setup();
+    await user.click(screen.getByText('+ Add set'));
+    await user.click(screen.getByText('flower'));
+
+    expect(screen.getByText(/how many flowers/i)).toBeTruthy();
+    await user.click(screen.getByText('Add to hand'));
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({
+        type: 'flower',
+        tiles: ['F'],
+        concealed: false,
+      }),
+    ]);
+  });
+
+  it('hides tile picker and concealed for flowers', async () => {
+    const { user } = setup();
+    await user.click(screen.getByText('+ Add set'));
+    await user.click(screen.getByText('flower'));
+
+    expect(screen.queryByText('Bamboo')).toBeNull();
+    expect(screen.queryByText('Concealed')).toBeNull();
+  });
+
+  it('can add thirteen orphans with pair and winning tile', async () => {
+    const { user, onChange } = setup();
+    await user.click(screen.getByText('+ Add set'));
+    await user.click(screen.getByText('orphans'));
+
+    expect(screen.getByText(/thirteen orphans/i)).toBeTruthy();
+
+    await user.selectOptions(screen.getByLabelText(/which tile is the pair/i), '1b');
+    await user.selectOptions(screen.getByLabelText(/which tile completed/i), '9c');
+    await user.click(screen.getByText('Add to hand'));
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({
+        type: 'orphans',
+        tiles: expect.arrayContaining(['1b', '9b', '1d', '9d', '1c', '9c', 'Ew', 'Sw', 'Ww', 'Nw', 'Rd', 'Gd', 'Wd', '1b']),
+        concealed: true,
+        winTile: '9c',
+      }),
+    ]);
+  });
+
+  it('hides tile picker and concealed for orphans', async () => {
+    const { user } = setup();
+    await user.click(screen.getByText('+ Add set'));
+    await user.click(screen.getByText('orphans'));
+
+    expect(screen.queryByText('Bamboo')).toBeNull();
+    expect(screen.queryByText('Concealed')).toBeNull();
+  });
 });
