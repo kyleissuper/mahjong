@@ -965,4 +965,38 @@ describe('calculateScore', () => {
     expect(result.handValue).toBe(21);
     expect(result.scores).toEqual({ A: 66, B: -22, C: -22, D: -22 });
   });
+
+  it('Hand 27 — earthly hand, non-dealer wins on first discard (18 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: true, winTile: '2b' },
+        { type: 'pong', tiles: ['6d', '6d', '6d'], concealed: true },
+        { type: 'chow', tiles: ['4c', '5c', '6c'], concealed: true },
+        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: true },
+        { type: 'pair', tiles: ['5d', '5d'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'B',
+      method: 'discard',
+      from: 'A',
+      dealer: 'A',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+      firstTurn: true,
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'earthlyHand', points: 16 },
+    ]);
+    expect(result.handValue).toBe(18);
+    expect(result.scores).toEqual({ A: -19, B: 19, C: 0, D: 0 });
+  });
 });

@@ -75,6 +75,9 @@ const rules: Rule[] = [
   { name: 'heavenlyHand', score: heavenlyHand, absorbs: [
     'selfPick', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'noFlowersNoHonors',
   ] },
+  { name: 'earthlyHand', score: earthlyHand, absorbs: [
+    'cleanDoorstep', 'noFlowersNoHonors',
+  ] },
   { name: 'heavenlyGates', score: heavenlyGates, absorbs: [
     'pure', 'cleanDoorstep', 'cleanDoorstepAndSelfPick',
     'canOnlyWinWithOne', 'pairOf258', 'noFlowersNoHonors', 'oneToNineChain',
@@ -220,6 +223,10 @@ function allPairs(hand: Hand): number {
 
 function heavenlyHand(_hand: Hand, win: Win): number {
   return win.method === 'self-pick' && win.winner === win.dealer && win.firstTurn ? 20 : 0;
+}
+
+function earthlyHand(_hand: Hand, win: Win): number {
+  return win.method === 'discard' && win.winner !== win.dealer && win.firstTurn ? 16 : 0;
 }
 
 function heavenlyGates(hand: Hand): number {
