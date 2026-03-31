@@ -1,0 +1,185 @@
+@import './styles.css';
+
+.proto {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 8px 12px 40px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.proto-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0 12px;
+}
+
+.proto-phase {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2d6a4f;
+}
+
+.proto-actions-top {
+  display: flex;
+  gap: 4px;
+}
+
+.proto-btn-sm {
+  padding: 4px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+/* Hand display */
+.proto-hand {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #ebe4d6;
+  padding: 10px;
+  margin-bottom: 10px;
+  min-height: 60px;
+}
+
+.proto-row {
+  margin-bottom: 8px;
+}
+
+.proto-row-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8a8070;
+  font-weight: 600;
+}
+
+.proto-sets {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.proto-set {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.proto-set-tiles {
+  display: flex;
+  gap: 2px;
+}
+
+.proto-set-label {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  color: #8a8070;
+  letter-spacing: 0.04em;
+}
+
+/* Current set being built */
+.proto-current {
+  padding: 8px 0;
+  border-top: 1px dashed #ebe4d6;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.proto-placeholder {
+  font-size: 0.75rem;
+  color: #bbb;
+  font-style: italic;
+}
+
+.proto-set-status {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #8a8070;
+}
+
+.proto-set-status.valid { color: #2d6a4f; }
+.proto-set-status.invalid { color: #c1440e; }
+
+/* Win tile */
+.proto-win-tile {
+  padding: 6px 0;
+  font-size: 0.8rem;
+  color: #555;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-top: 1px solid #ebe4d6;
+  margin-top: 6px;
+}
+
+/* Actions */
+.proto-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.proto-btn {
+  padding: 8px 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.proto-btn-primary {
+  background: #2d6a4f;
+  color: white;
+  border-color: #2d6a4f;
+}
+
+/* Tile grid */
+.proto-grid {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #ebe4d6;
+  padding: 8px;
+}
+
+.proto-suit {
+  margin-bottom: 6px;
+}
+
+.proto-suit-name {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8a8070;
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+
+.proto-suit-tiles {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.tile-active {
+  outline: 2px solid #2d6a4f;
+  outline-offset: -1px;
+}
+
+/* Summary */
+.proto-summary {
+  text-align: center;
+  padding: 20px;
+  font-size: 0.9rem;
+  color: #555;
+}
