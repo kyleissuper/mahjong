@@ -38,6 +38,7 @@ const rules: Rule[] = [
   { name: 'noFlowersNoHonors', score: noFlowersNoHonors },
   { name: 'oneToNineChain', score: oneToNineChain },
   { name: 'littleDragons', score: littleDragons, absorbs: ['dragonPong'] },
+  { name: 'bigDragons', score: bigDragons, absorbs: ['littleDragons', 'dragonPong'] },
   { name: 'semiPure', score: semiPure, absorbs: ['only2Suits'] },
   { name: 'fourConsecutivePongs', score: fourConsecutivePongs, absorbs: ['allPongs', 'threeConsecutivePongs'] },
   { name: 'terminalsAndHonors', score: terminalsAndHonors },
@@ -124,10 +125,15 @@ function fourConsecutivePongs(hand: Hand): number {
   }) ? 8 : 0;
 }
 
+function bigDragons(hand: Hand): number {
+  const dragonPongs = hand.melds.filter(m => m.type === 'pong' && isDragon(m.tiles[0]));
+  return dragonPongs.length === 3 ? 12 : 0;
+}
+
 function terminalsAndHonors(hand: Hand): number {
-  const sets = hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower');
+  const sets = hand.melds.filter(m => m.type !== 'flower');
   return sets.every(m =>
-    isDragon(m.tiles[0]) || isWind(m.tiles[0]) || isTerminal(m.tiles[0])
+    m.tiles.some(t => isDragon(t) || isWind(t) || isTerminal(t))
   ) ? 4 : 0;
 }
 

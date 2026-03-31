@@ -513,4 +513,34 @@ describe('calculateScore', () => {
     // A pays C 14, dealer B not involved
     expect(result).toEqual({ A: -14, B: 0, C: 14, D: 0 });
   });
+
+  it('Hand 18 — big dragons, semi-pure (16 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Rd', 'Rd', 'Rd'], concealed: true },
+        { type: 'pong', tiles: ['Gd', 'Gd', 'Gd'], concealed: false },
+        { type: 'pong', tiles: ['Wd', 'Wd', 'Wd'], concealed: false },
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: false, winTile: '1b' },
+        { type: 'pair', tiles: ['6b', '6b'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'D',
+      method: 'discard',
+      from: 'B',
+      dealer: 'C',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // big dragons (+12, absorbs littleDragons and dragonPong),
+    // semi-pure (+4) = 16 pts
+    // B pays D 16, dealer C not involved
+    expect(result).toEqual({ A: 0, B: -16, C: 0, D: 16 });
+  });
 });
