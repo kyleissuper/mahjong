@@ -746,4 +746,34 @@ describe('calculateScore', () => {
     expect(result.handValue).toBe(16);
     expect(result.scores).toEqual({ A: 51, B: -17, C: -17, D: -17 });
   });
+
+  it('pong wait with two possible winning tiles should NOT be canOnlyWinWithOne', () => {
+    // 3 chows + pong of 2b (winTile) + pair of 6c
+    // But before winning, hand had: 3 chows + 2b,2b + 6c,6c
+    // Either 2b or 6c completes the hand — NOT single wait
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['3d', '4d', '5d'], concealed: true },
+        { type: 'chow', tiles: ['6d', '7d', '8d'], concealed: true },
+        { type: 'chow', tiles: ['1c', '2c', '3c'], concealed: false },
+        { type: 'pong', tiles: ['2b', '2b', '2b'], concealed: false, winTile: '2b' },
+        { type: 'pair', tiles: ['6c', '6c'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'discard',
+      from: 'B',
+      dealer: 'C',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeUndefined();
+  });
 });
