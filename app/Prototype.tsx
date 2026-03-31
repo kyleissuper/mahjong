@@ -115,6 +115,7 @@ const ALL_SUITS = [
   { name: 'Characters', tiles: ['1c','2c','3c','4c','5c','6c','7c','8c','9c'] },
   { name: 'Winds', tiles: ['Ew','Sw','Ww','Nw'] },
   { name: 'Dragons', tiles: ['Rd','Gd','Wd'] },
+  { name: 'Flower', tiles: ['F'] },
 ];
 
 // --- Main component ---
@@ -164,6 +165,17 @@ export function Prototype() {
     }
 
     if (phase === 'done') return;
+
+    // Flower: auto-commit immediately as exposed
+    if (tile === 'F') {
+      const flowerMeld: Meld = { type: 'flower', tiles: ['F'], concealed: false };
+      setState(s => ({
+        ...s,
+        exposed: [...s.exposed, flowerMeld],
+        flowers: s.flowers + 1,
+      }));
+      return;
+    }
 
     const current = currentSet.tiles;
 
@@ -217,14 +229,6 @@ export function Prototype() {
 
   function commitAsPair() {
     commitCurrentSet(true);
-  }
-
-  function addFlower() {
-    setState(s => ({
-      ...s,
-      flowers: s.flowers + 1,
-      exposed: [...s.exposed, { type: 'flower', tiles: ['F'], concealed: false }],
-    }));
   }
 
   function undo() {
@@ -344,18 +348,17 @@ export function Prototype() {
       {/* Action buttons */}
       {(phase === 'exposed' || phase === 'concealed') && (
         <div className="proto-actions">
-          {currentSet.tiles.length === 2 && currentSet.tiles[0] === currentSet.tiles[1] && !hasPair && (
-            <button onClick={commitAsPair} className="proto-btn">It's a pair</button>
-          )}
           {currentSet.tiles.length >= 3 && detectMeldType(currentSet.tiles) !== 'invalid' && (
-            <button onClick={() => commitCurrentSet()} className="proto-btn">Next set</button>
+            <button onClick={() => commitCurrentSet()} className="proto-btn proto-btn-primary">Next set →</button>
           )}
-          <button onClick={addFlower} className="proto-btn">+ Flower</button>
+          {currentSet.tiles.length === 2 && currentSet.tiles[0] === currentSet.tiles[1] && !hasPair && (
+            <button onClick={commitAsPair} className="proto-btn">It's the pair</button>
+          )}
           {phase === 'exposed' && (
-            <button onClick={switchToConcealed} className="proto-btn proto-btn-primary">Done with exposed →</button>
+            <button onClick={switchToConcealed} className="proto-btn">Done with exposed</button>
           )}
           {phase === 'concealed' && (
-            <button onClick={goToWinTile} className="proto-btn proto-btn-primary">Done → pick win tile</button>
+            <button onClick={goToWinTile} className="proto-btn">Pick winning tile</button>
           )}
         </div>
       )}
