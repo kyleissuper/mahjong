@@ -239,4 +239,34 @@ describe('calculateScore', () => {
     // B (dealer) pays A: 3+1=4
     expect(result).toEqual({ A: 4, B: -4, C: 0, D: 0 });
   });
+
+  it('Hand 9 — win from the butt, hidden kong, 2 flowers (7 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['3d', '3d', '3d'], concealed: false },
+        { type: 'kong', tiles: ['8c', '8c', '8c', '8c'], concealed: true },
+        { type: 'chow', tiles: ['4b', '5b', '6b'], concealed: true, winTile: '6b' },
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: false },
+        { type: 'pair', tiles: ['5d', '5d'], concealed: true },
+        { type: 'flower', tiles: ['F', 'F'], concealed: false },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'C',
+      method: 'self-pick',
+      dealer: 'D',
+      dealerRounds: 1,
+      fromButt: true,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // win from butt (+1), self-pick (+1), hidden kong (+2),
+    // flower x2 (+2), 2/5/8 pair (+1) = 7 pts
+    // A→C: 7, B→C: 7, D(dealer)→C: 7+1=8
+    expect(result).toEqual({ A: -7, B: -7, C: 22, D: -8 });
+  });
 });
