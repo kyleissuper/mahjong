@@ -123,12 +123,7 @@ body {
 .meld-tiles {
   display: flex;
   align-items: center;
-  gap: 3px;
-}
-
-.meld-tile-img {
-  border-radius: 3px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  gap: 4px;
 }
 
 .meld-meta {
@@ -272,25 +267,30 @@ body {
   flex-wrap: wrap;
 }
 
-.tile-btn {
-  width: 36px;
-  height: 48px;
+/* Shared tile frame — used in picker buttons and meld display */
+.tile-frame {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-sm);
   border: 1.5px solid #d4cfc5;
   background: linear-gradient(to bottom, #fefcf8, #f5f0e8);
-  cursor: pointer;
   box-shadow: var(--tile-shadow);
-  transition: all 0.1s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-  -webkit-user-select: none;
-  padding: 4px;
+  padding: 3px;
+  flex-shrink: 0;
 }
 
-.tile-btn img {
+.tile-frame img {
+  display: block;
   pointer-events: none;
+}
+
+/* Picker buttons extend the frame with interactivity */
+.tile-btn {
+  cursor: pointer;
+  transition: all 0.1s;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .tile-btn:active {

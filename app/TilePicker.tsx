@@ -1,5 +1,5 @@
 import type { Tile, MeldType } from '../src/types.js';
-import { TileImage } from './TileImage.tsx';
+import { tileImage, tileName } from './tile-display.js';
 
 const SUITS = [
   { name: 'Bamboo', tiles: ['1b', '2b', '3b', '4b', '5b', '6b', '7b', '8b', '9b'] },
@@ -31,14 +31,14 @@ export function TilePicker({ selected, onToggle, meldType }: Props) {
               {tiles.map(tile => (
                 <button
                   key={tile}
-                  className="tile-btn"
+                  className="tile-frame tile-btn"
                   onClick={() => onToggle(tile)}
                   disabled={disabled}
                   aria-pressed={selected.includes(tile)}
                   aria-label={tile}
                   title={tile}
                 >
-                  <TileImage tile={tile} size={28} />
+                  <img src={tileImage(tile)} alt={tileName(tile)} width={28} height={39} draggable={false} />
                 </button>
               ))}
             </div>

@@ -4,21 +4,17 @@ import { tileImage, tileName } from './tile-display.js';
 interface Props {
   tile: Tile;
   size?: number;
-  className?: string;
 }
 
-export function TileImage({ tile, size = 32, className }: Props) {
+export function TileImage({ tile, size = 32 }: Props) {
   const src = tileImage(tile);
   if (!src) return <span>{tile}</span>;
 
+  const height = Math.round(size * 1.4);
+
   return (
-    <img
-      src={src}
-      alt={tileName(tile)}
-      width={size}
-      height={Math.round(size * 1.4)}
-      className={className}
-      draggable={false}
-    />
+    <span className="tile-frame" style={{ width: size, height }}>
+      <img src={src} alt={tileName(tile)} width={size} height={height} draggable={false} />
+    </span>
   );
 }
