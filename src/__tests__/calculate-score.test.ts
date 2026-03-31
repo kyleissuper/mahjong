@@ -148,4 +148,35 @@ describe('calculateScore', () => {
     // D pays C 5, dealer B not involved
     expect(result).toEqual({ A: 0, B: 0, C: 5, D: -5 });
   });
+
+  it('Hand 6 — clean doorstep & self-pick, three hidden pongs, dealer extra round (12 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['2d', '2d', '2d'], concealed: true },
+        { type: 'pong', tiles: ['6d', '6d', '6d'], concealed: true },
+        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: true },
+        { type: 'chow', tiles: ['4c', '5c', '6c'], concealed: true },
+        { type: 'pair', tiles: ['5c', '5c'], concealed: true, winTile: '5c' },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'D',
+      method: 'self-pick',
+      dealer: 'C',
+      dealerRounds: 2,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // clean doorstep & self-pick (+3) absorbs cleanDoorstep (+1) and selfPick (+1)
+    // three hidden pongs (+4), no flowers/no honors (+3),
+    // can only win with one (+1), 2/5/8 pair (+1) = 12 pts
+    // Dealer C extra round 1: dealerRounds=2, bonus=1+(1×2)=3
+    // A→D: 12, B→D: 12, C(dealer)→D: 12+3=15
+    expect(result).toEqual({ A: -12, B: -12, C: -15, D: 39 });
+  });
 });

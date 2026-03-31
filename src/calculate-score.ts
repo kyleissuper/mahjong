@@ -22,10 +22,13 @@ const rules: Rule[] = [
   { name: 'allPongs', score: allPongs },
   { name: 'selfPick', score: selfPick },
   { name: 'only2Suits', score: only2Suits },
-  { name: 'noTerminalsNoHonors', score: noTerminalsNoHonors },
   { name: 'noTerminalsWithHonors', score: noTerminalsWithHonors },
   { name: 'cleanDoorstep', score: cleanDoorstep },
+  { name: 'cleanDoorstepAndSelfPick', score: cleanDoorstepAndSelfPick, absorbs: ['cleanDoorstep', 'selfPick'] },
+  { name: 'threeHiddenPongs', score: threeHiddenPongs },
+  { name: 'noFlowersNoHonors', score: noFlowersNoHonors },
   { name: 'oneToNineChain', score: oneToNineChain },
+  { name: 'noTerminalsNoHonors', score: noTerminalsNoHonors, absorbs: ['noFlowersNoHonors'] },
   { name: 'allGreens', score: allGreens, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits'] },
 ];
 
@@ -86,6 +89,23 @@ function cleanDoorstep(hand: Hand): number {
   return sets.every(m => m.concealed) ? 1 : 0;
 }
 
+function cleanDoorstepAndSelfPick(hand: Hand, win: Win): number {
+  return cleanDoorstep(hand) > 0 && selfPick(hand, win) > 0 ? 3 : 0;
+}
+
+function threeHiddenPongs(hand: Hand): number {
+  const hiddenPongs = hand.melds.filter(m =>
+    (m.type === 'pong' || m.type === 'kong') && m.concealed);
+  return hiddenPongs.length >= 3 ? 4 : 0;
+}
+
+function noFlowersNoHonors(hand: Hand): number {
+  const tiles = hand.melds.flatMap(m => m.tiles);
+  const hasHonors = tiles.some(t => isDragon(t) || isWind(t));
+  const hasFlowers = hand.melds.some(m => m.type === 'flower');
+  return !hasHonors && !hasFlowers ? 3 : 0;
+}
+
 function oneToNineChain(hand: Hand): number {
   const chows = hand.melds.filter(m => m.type === 'chow');
   const bySuit = Map.groupBy(chows, m => suit(m.tiles[0]));
@@ -115,8 +135,10 @@ function resolvePayments(points: number, win: Win): RoundScore {
     ? win.players.filter(p => p !== win.winner)
     : [win.from!];
 
-  const dealerBonus = (loser: Player) =>
-    loser === win.dealer || win.winner === win.dealer ? win.dealerRounds : 0;
+  const dealerBonus = (loser: Player) => {
+    if (loser !== win.dealer && win.winner !== win.dealer) return 0;
+    return 1 + (win.dealerRounds - 1) * 2;
+  };
 
   const payments = losers.map(loser => ({
     from: loser,
