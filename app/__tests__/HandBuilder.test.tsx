@@ -20,20 +20,19 @@ function tile(name: string) {
 
 function addButton() {
   return screen.queryByRole('button', { name: 'Add set' })
-    ?? screen.getByText(/tap to add/i);
+    ?? screen.getByText('+ Add set');
 }
 
 describe('HandBuilder', () => {
   describe('empty state', () => {
     it('prompts to add first set', () => {
       renderHand();
-      expect(screen.getByText(/tap to add/i)).toBeInTheDocument();
+      expect(screen.getByText('+ Add set')).toBeInTheDocument();
     });
 
-    it('shows "tap to add" as the add button when empty', () => {
+    it('shows add button even when empty', () => {
       renderHand();
-      expect(screen.getByText(/tap to add/i)).toBeInTheDocument();
-      expect(screen.queryByText('+ Add set')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Add set' })).toBeInTheDocument();
     });
   });
 
@@ -415,18 +414,16 @@ describe('HandBuilder', () => {
       expect(screen.queryByText('Save')).not.toBeInTheDocument();
     });
 
-    it('collapses editor when clicking the same meld again', async () => {
-      const { user } = renderHand([
+    it('collapses editor via cancel', async () => {
+      const { user, onChange } = renderHand([
         { type: 'pong', tiles: ['5b', '5b', '5b'], concealed: true },
       ]);
-      // Open
-      const meldRow = screen.getByText('hidden').closest('.meld-row')!;
-      await user.click(meldRow);
+      await user.click(screen.getByText('Pong'));
       expect(screen.getByText('Save')).toBeInTheDocument();
 
-      // Collapse
-      await user.click(meldRow);
+      await user.click(screen.getByText('Cancel'));
       expect(screen.queryByText('Save')).not.toBeInTheDocument();
+      expect(onChange).not.toHaveBeenCalled();
     });
   });
 
@@ -438,7 +435,7 @@ describe('HandBuilder', () => {
       await user.click(screen.getByText('Cancel'));
 
       expect(onChange).not.toHaveBeenCalled();
-      expect(screen.getByText(/tap to add/i)).toBeInTheDocument();
+      expect(screen.getByText('+ Add set')).toBeInTheDocument();
     });
   });
 });

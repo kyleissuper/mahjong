@@ -198,33 +198,42 @@ body {
 
 .tile-btn:disabled { opacity: 0.25; cursor: not-allowed; }
 
-/* === Sheet Overlay === */
-
-.sheet-overlay {
-  padding: 4px 0;
+.add-set-btn {
+  width: 100%;
+  padding: 12px;
+  border: 2px dashed var(--ivory-dark);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--warm-gray);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
 }
 
-.sheet {
+/* === Meld Slot === */
+
+.meld-slot {
+  margin-bottom: 4px;
+}
+
+.meld-slot-open {
   background: white;
   border-radius: var(--radius);
-  box-shadow: var(--card-shadow);
   border: 1px solid var(--ivory-dark);
-  overflow: hidden;
+  padding: 8px;
 }
 
-.sheet-header {
-  padding: 10px 10px 0;
+.meld-slot-open .meld-row { padding: 0; border: none; }
+
+.meld-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.sheet-body {
-  padding: 10px;
-}
-
-.sheet-actions {
+.meld-editor-actions {
   display: flex;
   gap: 6px;
-  padding: 10px;
-  border-top: 1px solid var(--ivory-dark);
 }
 
 /* === Type Selector === */

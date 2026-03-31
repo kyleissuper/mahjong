@@ -13,7 +13,7 @@ function tile(name: string) {
 
 function addButton() {
   return screen.queryByRole('button', { name: 'Add set' })
-    ?? screen.getByText(/tap to add/i);
+    ?? screen.getByText('+ Add set');
 }
 
 function winField(label: string) {
@@ -104,7 +104,7 @@ describe('App', () => {
   describe('empty state', () => {
     it('shows only the hand builder initially', () => {
       render(<App />);
-      expect(screen.getByText(/tap to add/i)).toBeInTheDocument();
+      expect(screen.getByText('+ Add set')).toBeInTheDocument();
       expect(screen.queryByText('Winner')).not.toBeInTheDocument();
       expect(screen.queryByText('points')).not.toBeInTheDocument();
     });
@@ -219,7 +219,7 @@ describe('App', () => {
 
       await user.click(screen.getByText('Score next hand'));
 
-      expect(screen.getByText(/tap to add/i)).toBeInTheDocument();
+      expect(screen.getByText('+ Add set')).toBeInTheDocument();
       expect(screen.queryByText('points')).not.toBeInTheDocument();
     });
   });
