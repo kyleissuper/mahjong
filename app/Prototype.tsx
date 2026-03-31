@@ -101,7 +101,7 @@ function setStatusLabel(tiles: Tile[]): string {
   const type = detectMeldType(tiles);
   switch (type) {
     case 'incomplete': {
-      if (tiles.length === 2 && tiles[0] === tiles[1]) return 'pong? kong?';
+      if (tiles.length === 2 && tiles[0] === tiles[1]) return 'pair? pong?';
       if (tiles.length === 1) return 'picking...';
       return 'picking...';
     }
@@ -431,6 +431,9 @@ export function Prototype() {
         <div className="proto-actions">
           {currentSet.tiles.length >= 3 && detectMeldType(currentSet.tiles) !== 'invalid' && (
             <button onClick={() => commitCurrentSet()} className="proto-btn proto-btn-primary">Next set →</button>
+          )}
+          {currentSet.tiles.length === 2 && currentSet.tiles[0] === currentSet.tiles[1] && (
+            <button onClick={() => commitCurrentSet(true)} className="proto-btn proto-btn-primary">Next set →</button>
           )}
           {currentSet.tiles.length > 0 && (
             <button onClick={() => setState(s => ({ ...s, currentSet: { tiles: [] } }))} className="proto-btn proto-btn-danger">Delete set</button>
