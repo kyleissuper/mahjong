@@ -244,10 +244,10 @@
   outline-offset: -1px;
 }
 
-/* Summary */
-.proto-summary {
+.proto-hint {
   text-align: center;
-  padding: 20px;
-  font-size: 0.9rem;
-  color: #555;
+  padding: 12px;
+  color: #8a8070;
+  font-size: 0.8rem;
+  font-style: italic;
 }

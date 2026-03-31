@@ -1,6 +1,9 @@
-import { useState, useCallback } from 'react';
-import type { Tile, MeldType, Meld } from '../src/types.js';
+import { useState, useMemo } from 'react';
+import type { Tile, MeldType, Meld, Win, ScoreResult } from '../src/types.js';
+import { calculateScore } from '../src/calculate-score.js';
 import { TileImage } from './TileImage.tsx';
+import { WinContext } from './WinContext.tsx';
+import { ScoreBreakdown } from './ScoreBreakdown.tsx';
 import './prototype.css';
 
 // --- Types ---
@@ -140,12 +143,46 @@ export function Prototype() {
 
   const { exposed, concealed, currentExposed, currentConcealed, phase, winTilePos, flowers } = state;
   const currentSet = phase === 'exposed' ? currentExposed : currentConcealed;
-  const currentSetKey = phase === 'exposed' ? 'currentExposed' : 'currentConcealed';
+
+  const [win, setWin] = useState<Partial<Win>>({
+    method: 'discard',
+    dealerRounds: 1,
+    special: [],
+  });
 
   const allMelds = [...exposed, ...concealed];
   const regularSets = allMelds.filter(m => m.type !== 'flower' && m.type !== 'pair').length;
   const hasPair = allMelds.some(m => m.type === 'pair');
   const needsPair = regularSets >= 4 && !hasPair;
+
+  // Build Hand for scoring engine
+  const scoringResult: ScoreResult | null = useMemo(() => {
+    if (phase !== 'done' || !winTilePos) return null;
+    const { winner, dealer, method = 'discard', dealerRounds = 1, special = [] } = win;
+    if (!winner || !dealer) return null;
+    if (method !== 'self-pick' && !win.from) return null;
+
+    // Resolve win tile position to actual tile value and set it on the meld
+    const melds = allMelds.map((m, i) => {
+      const row = i < exposed.length ? 'exposed' : 'concealed';
+      const idx = row === 'exposed' ? i : i - exposed.length;
+      if (winTilePos.row === row && winTilePos.set === idx) {
+        return { ...m, winTile: m.tiles[winTilePos.tile] };
+      }
+      return m;
+    });
+
+    try {
+      return calculateScore({ melds }, {
+        players: ['A', 'B', 'C', 'D'],
+        winner, dealer, method,
+        from: win.from,
+        dealerRounds, special,
+      });
+    } catch {
+      return null;
+    }
+  }, [phase, winTilePos, win, allMelds, exposed.length]);
 
   function activeSetKey(s: HandState) {
     return s.phase === 'exposed' ? 'currentExposed' as const : 'currentConcealed' as const;
@@ -512,7 +549,20 @@ export function Prototype() {
         </div>
       )}
 
-      {phase === 'done' && (
+      {/* Win context + score — shown after melds are done */}
+      {(phase === 'done' || phase === 'win-tile') && allMelds.length > 0 && (
+        <WinContext win={win} onChange={setWin} />
+      )}
+
+      {scoringResult && (
+        <ScoreBreakdown result={scoringResult} onReset={reset} />
+      )}
+
+      {phase === 'done' && !scoringResult && (
+        <p className="proto-hint">Fill in winner and dealer to see the score.</p>
+      )}
+
+      {(phase === 'done' || phase === 'win-tile') && (
         <div className="proto-actions">
           <button onClick={() => setState(s => ({ ...s, phase: 'concealed', winTilePos: null }))} className="proto-btn">← Back to editing</button>
         </div>
