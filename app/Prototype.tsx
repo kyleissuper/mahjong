@@ -291,13 +291,13 @@ export function Prototype() {
         };
       }
       // Remove last committed set from current phase
-      const key = s.phase === 'exposed' ? 'exposed' : 'concealed';
-      const sets = s[key];
+      const rowKey = s.phase === 'exposed' ? 'exposed' as const : 'concealed' as const;
+      const sets = s[rowKey];
       if (sets.length > 0) {
         const last = sets[sets.length - 1];
         return {
           ...s,
-          [key]: sets.slice(0, -1),
+          [rowKey]: sets.slice(0, -1),
           [activeSetKey(s)]: { tiles: last.tiles },
         };
       }
@@ -438,9 +438,6 @@ export function Prototype() {
                     }
                   </div>
                   <span className="proto-set-label">{currentConcealed.tiles.length > 0 ? setStatusLabel(currentConcealed.tiles) : 'tap to add'}</span>
-                    <span className="tile-frame tile-sm tile-empty" />
-                  </div>
-                  <span className="proto-set-label">tap to add</span>
                 </div>
             )}
           </div>
