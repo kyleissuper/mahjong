@@ -11,12 +11,18 @@ interface SetInProgress {
 
 type Phase = 'exposed' | 'concealed' | 'win-tile' | 'done';
 
+interface WinTilePos {
+  row: 'exposed' | 'concealed';
+  set: number;
+  tile: number;
+}
+
 interface HandState {
   exposed: Meld[];
   concealed: Meld[];
   currentSet: SetInProgress;
   phase: Phase;
-  winTile: Tile | null;
+  winTilePos: WinTilePos | null;
   flowers: number;
 }
 
@@ -126,11 +132,11 @@ export function Prototype() {
     concealed: [],
     currentSet: { tiles: [] },
     phase: 'exposed',
-    winTile: null,
+    winTilePos: null,
     flowers: 0,
   });
 
-  const { exposed, concealed, currentSet, phase, winTile, flowers } = state;
+  const { exposed, concealed, currentSet, phase, winTilePos, flowers } = state;
 
   const allMelds = [...exposed, ...concealed];
   const regularSets = allMelds.filter(m => m.type !== 'flower' && m.type !== 'pair').length;
@@ -159,8 +165,8 @@ export function Prototype() {
     }));
   }
 
-  function pickWinTile(tile: Tile) {
-    setState(s => ({ ...s, winTile: tile, phase: 'done' }));
+  function pickWinTile(pos: WinTilePos) {
+    setState(s => ({ ...s, winTilePos: pos, phase: 'done' }));
   }
 
   function tapTile(tile: Tile) {
@@ -284,7 +290,7 @@ export function Prototype() {
   function reset() {
     setState({
       exposed: [], concealed: [], currentSet: { tiles: [] },
-      phase: 'exposed', winTile: null, flowers: 0,
+      phase: 'exposed', winTilePos: null, flowers: 0,
     });
   }
 
@@ -309,20 +315,23 @@ export function Prototype() {
   const allTiles = allMelds.flatMap(m => m.tiles).concat(currentSet.tiles);
   const isEntering = phase === 'exposed' || phase === 'concealed';
 
-  function renderSet(meld: Meld, key: string, onTap?: () => void) {
+  function renderSet(meld: Meld, row: 'exposed' | 'concealed', setIdx: number, onTap?: () => void) {
     const pickingWin = phase === 'win-tile';
     return (
-      <div key={key} className={`proto-set ${onTap && !pickingWin ? 'proto-set-tappable' : ''}`} onClick={pickingWin ? undefined : onTap}>
+      <div key={`${row}${setIdx}`} className={`proto-set ${onTap && !pickingWin ? 'proto-set-tappable' : ''}`} onClick={pickingWin ? undefined : onTap}>
         <div className="proto-set-tiles">
-          {meld.tiles.map((t, j) => (
-            <span
-              key={j}
-              className={`tile-frame tile-sm ${pickingWin ? 'tile-pickable' : ''} ${winTile === t ? 'tile-won' : ''}`}
-              onClick={pickingWin ? (e) => { e.stopPropagation(); pickWinTile(t); } : undefined}
-            >
-              <TileImage tile={t} size={18} />
-            </span>
-          ))}
+          {meld.tiles.map((t, j) => {
+            const isWon = winTilePos?.row === row && winTilePos.set === setIdx && winTilePos.tile === j;
+            return (
+              <span
+                key={j}
+                className={`tile-frame tile-sm ${pickingWin ? 'tile-pickable' : ''} ${isWon ? 'tile-won' : ''}`}
+                onClick={pickingWin ? (e) => { e.stopPropagation(); pickWinTile({ row, set: setIdx, tile: j }); } : undefined}
+              >
+                <TileImage tile={t} size={18} />
+              </span>
+            );
+          })}
         </div>
         <span className="proto-set-label">{meld.type}</span>
       </div>
@@ -367,7 +376,7 @@ export function Prototype() {
         <div className={`proto-row ${phase === 'exposed' ? 'proto-row-active' : ''}`}>
           <span className="proto-row-label">Exposed</span>
           <div className="proto-sets">
-            {exposed.map((m, i) => renderSet(m, `e${i}`, () => editSet('exposed', i)))}
+            {exposed.map((m, i) => renderSet(m, 'exposed', i, () => editSet('exposed', i)))}
             {isEntering && (phase === 'exposed'
               ? renderCurrentSet()
               : <div className="proto-set proto-set-placeholder" onClick={() => {
@@ -388,7 +397,7 @@ export function Prototype() {
         <div className={`proto-row ${phase === 'concealed' ? 'proto-row-active' : ''}`}>
           <span className="proto-row-label">Concealed</span>
           <div className="proto-sets">
-            {concealed.map((m, i) => renderSet(m, `c${i}`, () => editSet('concealed', i)))}
+            {concealed.map((m, i) => renderSet(m, 'concealed', i, () => editSet('concealed', i)))}
             {isEntering && (phase === 'concealed'
               ? renderCurrentSet()
               : <div className="proto-set proto-set-placeholder" onClick={() => {
@@ -406,11 +415,15 @@ export function Prototype() {
           </div>
         </div>
 
-        {winTile && (
-          <div className="proto-win-tile">
-            Won with: <span className="tile-frame tile-sm"><TileImage tile={winTile} size={20} /></span>
-          </div>
-        )}
+        {winTilePos && (() => {
+          const sets = winTilePos.row === 'exposed' ? exposed : concealed;
+          const tile = sets[winTilePos.set]?.tiles[winTilePos.tile];
+          return tile ? (
+            <div className="proto-win-tile">
+              Won with: <span className="tile-frame tile-sm"><TileImage tile={tile} size={20} /></span>
+            </div>
+          ) : null;
+        })()}
       </div>
 
       {/* Action buttons */}
