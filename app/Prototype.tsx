@@ -133,8 +133,9 @@ export function Prototype() {
   const { exposed, concealed, currentSet, phase, winTile, flowers } = state;
 
   const allMelds = [...exposed, ...concealed];
-  const totalSets = allMelds.filter(m => m.type !== 'flower').length;
+  const regularSets = allMelds.filter(m => m.type !== 'flower' && m.type !== 'pair').length;
   const hasPair = allMelds.some(m => m.type === 'pair');
+  const needsPair = regularSets >= 4 && !hasPair;
 
   function commitCurrentSet(asPair = false) {
     const tiles = currentSet.tiles;
@@ -208,7 +209,21 @@ export function Prototype() {
 
     // Can this tile extend the current set?
     if (current.length === 0 || couldExtendToValid(current, tile)) {
-      setState(s => ({ ...s, currentSet: { tiles: [...current, tile] } }));
+      const newTiles = [...current, tile];
+      setState(s => {
+        // Auto-commit as pair if we need one and have 2 identical
+        const sets = [...s.exposed, ...s.concealed].filter(m => m.type !== 'flower' && m.type !== 'pair').length;
+        const needPair = sets >= 4 && !s.exposed.concat(s.concealed).some(m => m.type === 'pair');
+        if (needPair && newTiles.length === 2 && newTiles[0] === newTiles[1]) {
+          const meld: Meld = { type: 'pair', tiles: newTiles, concealed: s.phase === 'concealed' };
+          return {
+            ...s,
+            [s.phase]: [...s[s.phase], meld],
+            currentSet: { tiles: [] },
+          };
+        }
+        return { ...s, currentSet: { tiles: newTiles } };
+      });
     } else {
       // Doesn't fit → commit current if valid, start new
       const detected = detectMeldType(current);
@@ -227,10 +242,6 @@ export function Prototype() {
   function goToWinTile() {
     commitCurrentSet();
     setState(s => ({ ...s, phase: 'win-tile' }));
-  }
-
-  function commitAsPair() {
-    commitCurrentSet(true);
   }
 
   function undo() {
@@ -407,9 +418,6 @@ export function Prototype() {
         <div className="proto-actions">
           {currentSet.tiles.length >= 3 && detectMeldType(currentSet.tiles) !== 'invalid' && (
             <button onClick={() => commitCurrentSet()} className="proto-btn proto-btn-primary">Next set →</button>
-          )}
-          {currentSet.tiles.length === 2 && currentSet.tiles[0] === currentSet.tiles[1] && !hasPair && (
-            <button onClick={commitAsPair} className="proto-btn">It's the pair</button>
           )}
           {currentSet.tiles.length > 0 && (
             <button onClick={() => setState(s => ({ ...s, currentSet: { tiles: [] } }))} className="proto-btn proto-btn-danger">Delete set</button>
