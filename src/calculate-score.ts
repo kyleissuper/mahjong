@@ -10,8 +10,8 @@ export function calculateScore(hand: Hand, win: Win): RoundScore {
 type Rule = (hand: Hand, win: Win) => number;
 
 const rules: Rule[] = [
-  dragonPong, pairOf258, canOnlyWinWithOne,
-  allChows, selfPick, only2Suits, noTerminalsNoHonors,
+  dragonPong, windPong, pairOf258, canOnlyWinWithOne,
+  allChows, selfPick, only2Suits, noTerminalsNoHonors, noTerminalsWithHonors,
 ];
 
 function calculateHandValue(hand: Hand, win: Win): number {
@@ -34,6 +34,10 @@ function canOnlyWinWithOne(hand: Hand): number {
   return 0;
 }
 
+function windPong(hand: Hand): number {
+  return hand.melds.filter(m => m.type === 'pong' && isWind(m.tiles[0])).length;
+}
+
 function allChows(hand: Hand): number {
   const sets = hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower');
   return sets.every(m => m.type === 'chow') ? 1 : 0;
@@ -51,6 +55,13 @@ function only2Suits(hand: Hand): number {
 function noTerminalsNoHonors(hand: Hand): number {
   const tiles = hand.melds.flatMap(m => m.tiles);
   return tiles.every(t => isNumberTile(t) && !isTerminal(t)) ? 3 : 0;
+}
+
+function noTerminalsWithHonors(hand: Hand): number {
+  const tiles = hand.melds.flatMap(m => m.tiles);
+  const hasHonors = tiles.some(t => isDragon(t) || isWind(t));
+  const noTerminals = tiles.filter(isNumberTile).every(t => !isTerminal(t));
+  return hasHonors && noTerminals ? 1 : 0;
 }
 
 // --- Payment resolution ---

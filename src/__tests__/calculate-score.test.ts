@@ -60,4 +60,33 @@ describe('calculateScore', () => {
     // Winner gets 8+8+9 = 25
     expect(result).toEqual({ A: 25, B: -9, C: -8, D: -8 });
   });
+
+  it('Hand 3 — wind pong, no 1s/9s with honors, discard win (3 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'pong', tiles: ['3b', '3b', '3b'], concealed: false },
+        { type: 'pong', tiles: ['7d', '7d', '7d'], concealed: false },
+        { type: 'chow', tiles: ['4c', '5c', '6c'], concealed: true, winTile: '6c' },
+        { type: 'pair', tiles: ['2b', '2b'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'discard',
+      from: 'C',
+      dealer: 'B',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // wind pong (+1), 2/5/8 pair (+1), no 1s/9s with honors (+1) = 3 pts
+    // C pays A 3 points, neither is dealer
+    expect(result).toEqual({ A: 3, B: 0, C: -3, D: 0 });
+  });
 });
