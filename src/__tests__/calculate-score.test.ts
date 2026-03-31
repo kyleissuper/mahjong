@@ -419,9 +419,9 @@ describe('calculateScore', () => {
       melds: [
         { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: true },
         { type: 'pong', tiles: ['9d', '9d', '9d'], concealed: false },
-        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: false, winTile: '9b' },
+        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: false },
         { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
-        { type: 'pair', tiles: ['Wd', 'Wd'], concealed: true },
+        { type: 'pair', tiles: ['Wd', 'Wd'], concealed: true, winTile: 'Wd' },
       ],
     };
 

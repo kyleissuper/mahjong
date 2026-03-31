@@ -92,7 +92,7 @@ function pairOf258(hand: Hand): number {
 function canOnlyWinWithOne(hand: Hand): number {
   const meld = winningMeld(hand);
   if (!meld?.winTile) return 0;
-  if (meld.type === 'pair' || meld.type === 'pong' || meld.type === 'kong') return 1;
+  if (meld.type === 'pair') return 1;
   if (meld.type === 'chow' && chowCanOnlyWinWithOne(meld)) return 1;
   if (meld.type === 'orphans') {
     const count = meld.tiles.filter(t => t === meld.winTile).length;
