@@ -391,4 +391,33 @@ describe('calculateScore', () => {
     // C pays B (dealer): 10+1=11
     expect(result).toEqual({ A: 0, B: 11, C: -11, D: 0 });
   });
+
+  it('Hand 14 — little dragons (8 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Rd', 'Rd', 'Rd'], concealed: false },
+        { type: 'pong', tiles: ['Gd', 'Gd', 'Gd'], concealed: false },
+        { type: 'chow', tiles: ['4b', '5b', '6b'], concealed: true, winTile: '6b' },
+        { type: 'chow', tiles: ['1d', '2d', '3d'], concealed: false },
+        { type: 'pair', tiles: ['Wd', 'Wd'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'discard',
+      from: 'B',
+      dealer: 'C',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // little dragons (+8, absorbs dragonPong x2) = 8 pts
+    // B pays A 8, dealer C not involved
+    expect(result).toEqual({ A: 8, B: -8, C: 0, D: 0 });
+  });
 });

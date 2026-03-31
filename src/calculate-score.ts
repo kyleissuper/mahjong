@@ -35,6 +35,7 @@ const rules: Rule[] = [
   { name: 'threeConsecutivePongs', score: threeConsecutivePongs },
   { name: 'noFlowersNoHonors', score: noFlowersNoHonors },
   { name: 'oneToNineChain', score: oneToNineChain },
+  { name: 'littleDragons', score: littleDragons, absorbs: ['dragonPong'] },
   { name: 'terminalsAndHonors', score: terminalsAndHonors },
   { name: 'pure', score: pure },
   { name: 'fourHiddenPongs', score: fourHiddenPongs, absorbs: ['allPongs', 'threeHiddenPongs'] },
@@ -91,6 +92,13 @@ function only2Suits(hand: Hand): number {
 function allPongs(hand: Hand): number {
   const sets = hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower');
   return sets.every(m => m.type === 'pong' || m.type === 'kong') ? 4 : 0;
+}
+
+function littleDragons(hand: Hand): number {
+  const dragons = ['Rd', 'Gd', 'Wd'];
+  const dragonPongs = hand.melds.filter(m => m.type === 'pong' && isDragon(m.tiles[0]));
+  const dragonPair = hand.melds.find(m => m.type === 'pair' && isDragon(m.tiles[0]));
+  return dragonPongs.length === 2 && dragonPair ? 8 : 0;
 }
 
 function terminalsAndHonors(hand: Hand): number {
