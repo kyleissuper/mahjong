@@ -93,7 +93,7 @@ describe('calculateScore', () => {
   it('Hand 4 — all greens, all pongs, dealer self-pick (20 pts)', () => {
     const hand: Hand = {
       melds: [
-        { type: 'pong', tiles: ['1b', '1b', '1b'], concealed: false },
+        { type: 'pong', tiles: ['1b', '1b', '1b'], concealed: true },
         { type: 'pong', tiles: ['5b', '5b', '5b'], concealed: false },
         { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: false },
         { type: 'pong', tiles: ['Gd', 'Gd', 'Gd'], concealed: false },
@@ -178,5 +178,35 @@ describe('calculateScore', () => {
     // Dealer C extra round 1: dealerRounds=2, bonus=1+(1×2)=3
     // A→D: 12, B→D: 12, C(dealer)→D: 12+3=15
     expect(result).toEqual({ A: -12, B: -12, C: -15, D: 39 });
+  });
+
+  it('Hand 7 — stolen kong, all from others, discard-style payment (5 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['2c', '3c', '4c'], concealed: false },
+        { type: 'chow', tiles: ['6c', '7c', '8c'], concealed: false },
+        { type: 'pong', tiles: ['Nw', 'Nw', 'Nw'], concealed: false },
+        { type: 'chow', tiles: ['1d', '2d', '3d'], concealed: false },
+        { type: 'pair', tiles: ['8d', '8d'], concealed: true, winTile: '8d' },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'B',
+      method: 'stolen-kong',
+      from: 'A',
+      dealer: 'A',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // stolen kong (+1), all from others (+1), wind pong (+1),
+    // can only win with one (+1), 2/5/8 pair (+1) = 5 pts
+    // A (dealer) pays B: 5+1=6
+    expect(result).toEqual({ A: -6, B: 6, C: 0, D: 0 });
   });
 });
