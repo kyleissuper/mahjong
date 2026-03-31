@@ -71,18 +71,20 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
                 className={`meld-row ${editing === i ? 'meld-row-active' : ''}`}
                 onClick={() => setEditing(editing === i ? null : i)}
               >
-                <span className="meld-tiles">
-                  {(meld.type === 'orphans' ? [...new Set(meld.tiles)] : meld.tiles).map((t, j) => (
-                    <span key={j} className="tile-frame tile-sm">
-                      <TileImage tile={t} size={meld.type === 'orphans' ? 14 : 20} />
-                    </span>
-                  ))}
-                </span>
-                <span className="meld-info">
-                  <span className="meld-type">{TYPE_LABELS[meld.type]}</span>
-                  {meld.concealed && <span className="meld-tag">hidden</span>}
-                  {meld.winTile && <span className="meld-tag">win</span>}
-                </span>
+                <div className="meld-content">
+                  <span className="meld-tiles">
+                    {(meld.type === 'orphans' ? [...new Set(meld.tiles)] : meld.tiles).map((t, j) => (
+                      <span key={j} className="tile-frame tile-sm">
+                        <TileImage tile={t} size={meld.type === 'orphans' ? 14 : 20} />
+                      </span>
+                    ))}
+                  </span>
+                  <span className="meld-info">
+                    <span className="meld-type">{TYPE_LABELS[meld.type]}</span>
+                    {meld.concealed && <span className="meld-tag">hidden</span>}
+                    {meld.winTile && <span className="meld-tag">win</span>}
+                  </span>
+                </div>
                 <button className="meld-x" onClick={e => { e.stopPropagation(); removeMeld(i); }}>×</button>
               </div>
               {error && <div className="meld-error">{error.message}</div>}
