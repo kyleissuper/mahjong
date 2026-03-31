@@ -65,12 +65,23 @@ function AddSetSheet({ onAdd, onCancel }: {
     });
   }
 
-  function toggleTile(tile: Tile) {
-    if (tiles.includes(tile)) {
-      setTiles(tiles.filter(t => t !== tile));
-      if (winTile === tile) setWinTile(null);
-    } else if (tiles.length < expectedCount) {
-      setTiles([...tiles, tile]);
+  function selectTile(tile: Tile) {
+    if (type === 'pong' || type === 'kong' || type === 'pair') {
+      // Identical tiles — clicking picks the tile, clicking again deselects
+      if (tiles[0] === tile) {
+        setTiles([]);
+        setWinTile(null);
+      } else {
+        setTiles(Array(expectedCount).fill(tile));
+      }
+    } else {
+      // Chow — toggle individual tiles
+      if (tiles.includes(tile)) {
+        setTiles(tiles.filter(t => t !== tile));
+        if (winTile === tile) setWinTile(null);
+      } else if (tiles.length < expectedCount) {
+        setTiles([...tiles, tile]);
+      }
     }
   }
 
@@ -101,7 +112,7 @@ function AddSetSheet({ onAdd, onCancel }: {
 
       <TilePicker
         selected={tiles}
-        onToggle={toggleTile}
+        onToggle={selectTile}
         meldType={type}
       />
 
