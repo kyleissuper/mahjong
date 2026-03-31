@@ -50,7 +50,10 @@
   padding: 10px;
   margin-bottom: 10px;
   min-height: 60px;
-  /* leave room for sticky bottom sheet */
+}
+
+/* Leave room for sticky bottom sheet only during entering */
+.proto-entering .proto-hand {
   margin-bottom: 320px;
 }
 

@@ -434,7 +434,7 @@ export function Prototype() {
   }
 
   return (
-    <div className="proto">
+    <div className={`proto ${isEntering ? 'proto-entering' : ''}`}>
       <div className="proto-header">
         <span className="proto-phase">Mahjong Scorer</span>
         <button onClick={reset} className="proto-btn-sm">Reset</button>
