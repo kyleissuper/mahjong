@@ -209,4 +209,34 @@ describe('calculateScore', () => {
     // A (dealer) pays B: 5+1=6
     expect(result).toEqual({ A: -6, B: 6, C: 0, D: 0 });
   });
+
+  it('Hand 8 — flower, wind pong, dealer discard win (3 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['1d', '2d', '3d'], concealed: false },
+        { type: 'chow', tiles: ['5b', '6b', '7b'], concealed: true },
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'chow', tiles: ['3d', '4d', '5d'], concealed: false, winTile: '3d' },
+        { type: 'pair', tiles: ['2c', '2c'], concealed: true },
+        { type: 'flower', tiles: ['F'], concealed: false },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'discard',
+      from: 'B',
+      dealer: 'B',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // flower (+1), wind pong (+1), 2/5/8 pair (+1) = 3 pts
+    // B (dealer) pays A: 3+1=4
+    expect(result).toEqual({ A: 4, B: -4, C: 0, D: 0 });
+  });
 });

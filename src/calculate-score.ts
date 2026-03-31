@@ -14,6 +14,7 @@ interface Rule {
 }
 
 const rules: Rule[] = [
+  { name: 'flower', score: flower },
   { name: 'dragonPong', score: dragonPong },
   { name: 'windPong', score: windPong },
   { name: 'pairOf258', score: pairOf258 },
@@ -40,6 +41,10 @@ function calculateHandValue(hand: Hand, win: Win): number {
   return fired
     .filter(r => !absorbed.has(r.name))
     .reduce((total, r) => total + r.score(hand, win), 0);
+}
+
+function flower(hand: Hand): number {
+  return hand.melds.filter(m => m.type === 'flower').reduce((sum, m) => sum + m.tiles.length, 0);
 }
 
 function dragonPong(hand: Hand): number {
