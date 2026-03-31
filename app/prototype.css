@@ -171,6 +171,29 @@
   flex-wrap: wrap;
 }
 
+.proto-undo {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  color: #555;
+}
+
+.proto-undo:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.proto-undo:active:not(:disabled) {
+  background: #ebe4d6;
+}
+
 .tile-active {
   outline: 2px solid #2d6a4f;
   outline-offset: -1px;

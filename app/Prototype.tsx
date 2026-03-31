@@ -267,10 +267,7 @@ export function Prototype() {
           {phase === 'win-tile' && 'Tap the tile you won with'}
           {phase === 'done' && 'Hand complete'}
         </span>
-        <div className="proto-actions-top">
-          <button onClick={undo} className="proto-btn-sm">Undo</button>
-          <button onClick={reset} className="proto-btn-sm">Reset</button>
-        </div>
+        <button onClick={reset} className="proto-btn-sm">Reset</button>
       </div>
 
       {/* Hand display */}
@@ -363,7 +360,7 @@ export function Prototype() {
         </div>
       )}
 
-      {/* Tile picker grid */}
+      {/* Tile picker grid + undo */}
       {phase !== 'done' && (
         <div className="proto-grid">
           {ALL_SUITS.map(({ name, tiles }) => (
@@ -383,6 +380,13 @@ export function Prototype() {
               </div>
             </div>
           ))}
+          <button
+            onClick={undo}
+            disabled={currentSet.tiles.length === 0 && allMelds.length === 0}
+            className="proto-undo"
+          >
+            ← Undo
+          </button>
         </div>
       )}
 
