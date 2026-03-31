@@ -776,4 +776,40 @@ describe('calculateScore', () => {
 
     expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeUndefined();
   });
+
+  it('Hand 23 — two double chows (16 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['2b', '3b', '4b'], concealed: true },
+        { type: 'chow', tiles: ['2b', '3b', '4b'], concealed: true },
+        { type: 'chow', tiles: ['7d', '8d', '9d'], concealed: true },
+        { type: 'chow', tiles: ['7d', '8d', '9d'], concealed: true, winTile: '8d' },
+        { type: 'pair', tiles: ['5c', '5c'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'D',
+      method: 'discard',
+      from: 'C',
+      dealer: 'B',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'allChows', points: 1 },
+      { name: 'cleanDoorstep', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
+      { name: 'twoDoubleChows', points: 12 },
+    ]);
+    expect(result.handValue).toBe(19);
+    expect(result.scores).toEqual({ A: 0, B: 0, C: -19, D: 19 });
+  });
 });
