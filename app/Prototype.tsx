@@ -166,14 +166,22 @@ export function Prototype() {
 
     if (phase === 'done') return;
 
-    // Flower: auto-commit immediately as exposed
+    // Flower: accumulate into a single flower meld
     if (tile === 'F') {
-      const flowerMeld: Meld = { type: 'flower', tiles: ['F'], concealed: false };
-      setState(s => ({
-        ...s,
-        exposed: [...s.exposed, flowerMeld],
-        flowers: s.flowers + 1,
-      }));
+      setState(s => {
+        const existing = s.exposed.findIndex(m => m.type === 'flower');
+        if (existing >= 0) {
+          const updated = s.exposed.map((m, i) =>
+            i === existing ? { ...m, tiles: [...m.tiles, 'F'] } : m
+          );
+          return { ...s, exposed: updated, flowers: s.flowers + 1 };
+        }
+        return {
+          ...s,
+          exposed: [...s.exposed, { type: 'flower', tiles: ['F'], concealed: false }],
+          flowers: s.flowers + 1,
+        };
+      });
       return;
     }
 
@@ -236,6 +244,23 @@ export function Prototype() {
       if (s.currentSet.tiles.length > 0) {
         return { ...s, currentSet: { tiles: s.currentSet.tiles.slice(0, -1) } };
       }
+      // Check if last action was a flower (shrink or remove the flower group)
+      const flowerIdx = s.exposed.findIndex(m => m.type === 'flower');
+      if (flowerIdx >= 0 && s.flowers > 0) {
+        const flowerMeld = s.exposed[flowerIdx];
+        if (flowerMeld.tiles.length > 1) {
+          return {
+            ...s,
+            exposed: s.exposed.map((m, i) => i === flowerIdx ? { ...m, tiles: m.tiles.slice(0, -1) } : m),
+            flowers: s.flowers - 1,
+          };
+        }
+        return {
+          ...s,
+          exposed: s.exposed.filter((_, i) => i !== flowerIdx),
+          flowers: 0,
+        };
+      }
       // Remove last committed set from current phase
       const key = s.phase === 'exposed' ? 'exposed' : 'concealed';
       const sets = s[key];
@@ -244,8 +269,7 @@ export function Prototype() {
         return {
           ...s,
           [key]: sets.slice(0, -1),
-          currentSet: { tiles: last.type === 'flower' ? [] : last.tiles },
-          flowers: last.type === 'flower' ? s.flowers - 1 : s.flowers,
+          currentSet: { tiles: last.tiles },
         };
       }
       return s;
