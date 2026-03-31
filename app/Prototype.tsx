@@ -651,6 +651,19 @@ export function Prototype() {
                 ))}
               </div>
               <div className="proto-score-payments">
+                {scoringResult.payments.map((p, i) => (
+                  <div key={i} className="proto-payment-row">
+                    <span className="proto-payment-flow">{p.from} → {p.to}</span>
+                    <span className="proto-payment-amount">
+                      {p.total}
+                      {p.dealerBonus > 0 && (
+                        <span className="proto-payment-bonus"> ({p.base} + {p.dealerBonus} dealer)</span>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="proto-score-net">
                 {Object.entries(scoringResult.scores).map(([player, delta]) => (
                   <div key={player} className="proto-score-pay">
                     <span className="proto-score-pay-player">{player}</span>

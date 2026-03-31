@@ -37,10 +37,19 @@ export interface AppliedRule {
   points: number;
 }
 
+export interface Payment {
+  from: Player;
+  to: Player;
+  base: number;
+  dealerBonus: number;
+  total: number;
+}
+
 export interface ScoreResult {
   scores: Record<Player, number>;
   handValue: number;
   appliedRules: AppliedRule[];
+  payments: Payment[];
 }
 
 export type RoundScore = Record<Player, number>;

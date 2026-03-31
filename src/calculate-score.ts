@@ -1,11 +1,11 @@
-import type { Hand, Meld, Win, RoundScore, Tile, Player, ScoreResult, AppliedRule } from './types.js';
+import type { Hand, Meld, Win, RoundScore, Tile, Player, ScoreResult, AppliedRule, Payment } from './types.js';
 import { isDragon, isWind, isHonor, isNumberTile, isTerminal, is258, numValue, suit } from './tiles.js';
 
 export function calculateScore(hand: Hand, win: Win): ScoreResult {
   const appliedRules = getAppliedRules(hand, win);
   const handValue = appliedRules.reduce((sum, r) => sum + r.points, 0);
-  const scores = resolvePayments(handValue, win);
-  return { scores, handValue, appliedRules };
+  const { scores, payments } = resolvePayments(handValue, win);
+  return { scores, handValue, appliedRules, payments };
 }
 
 // --- Rule resolution ---
@@ -362,27 +362,27 @@ function noTerminalsWithHonors(hand: Hand): number {
 
 // --- Payment resolution ---
 
-function resolvePayments(points: number, win: Win): RoundScore {
+function resolvePayments(points: number, win: Win): { scores: RoundScore; payments: Payment[] } {
   const losers = win.method === 'self-pick'
     ? win.players.filter(p => p !== win.winner)
     : [win.from!];
 
-  const dealerBonus = (loser: Player) => {
+  const getDealerBonus = (loser: Player) => {
     if (loser !== win.dealer && win.winner !== win.dealer) return 0;
     return 1 + (win.dealerRounds - 1) * 2;
   };
 
-  const payments = losers.map(loser => ({
-    from: loser,
-    to: win.winner,
-    amount: points + dealerBonus(loser),
-  }));
+  const payments: Payment[] = losers.map(loser => {
+    const bonus = getDealerBonus(loser);
+    return { from: loser, to: win.winner, base: points, dealerBonus: bonus, total: points + bonus };
+  });
 
   const net = (player: Player) =>
     payments.reduce((sum, p) =>
-      sum + (p.to === player ? p.amount : 0) - (p.from === player ? p.amount : 0), 0);
+      sum + (p.to === player ? p.total : 0) - (p.from === player ? p.total : 0), 0);
 
-  return Object.fromEntries(win.players.map(p => [p, net(p)]));
+  const scores = Object.fromEntries(win.players.map(p => [p, net(p)]));
+  return { scores, payments };
 }
 
 // --- Helpers ---

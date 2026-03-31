@@ -431,6 +431,36 @@
 }
 
 .proto-score-payments {
+  padding: 8px 14px;
+  border-top: 1px solid #ebe4d6;
+}
+
+.proto-payment-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 0.8rem;
+}
+
+.proto-payment-flow {
+  font-weight: 500;
+  color: #2b2b2b;
+}
+
+.proto-payment-amount {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: #2b2b2b;
+}
+
+.proto-payment-bonus {
+  font-weight: 400;
+  font-size: 0.7rem;
+  color: #8a8070;
+}
+
+.proto-score-net {
   display: flex;
   padding: 10px 14px;
   border-top: 1px solid #ebe4d6;
