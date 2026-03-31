@@ -1007,4 +1007,38 @@ describe('calculateScore', () => {
     expect(result.handValue).toBe(23);
     expect(result.scores).toEqual({ A: -24, B: 70, C: -23, D: -23 });
   });
+
+  it('Hand 30 — prodigy hand, clean doorstep (15 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['4b', '5b', '6b'], concealed: true, winTile: '5b' },
+        { type: 'pong', tiles: ['8d', '8d', '8d'], concealed: true },
+        { type: 'chow', tiles: ['1c', '2c', '3c'], concealed: true },
+        { type: 'chow', tiles: ['7c', '8c', '9c'], concealed: true },
+        { type: 'pair', tiles: ['2d', '2d'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'C',
+      method: 'discard',
+      from: 'D',
+      dealer: 'B',
+      dealerRounds: 1,
+      special: ['prodigy'],
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'cleanDoorstep', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
+      { name: 'prodigyHand', points: 12 },
+    ]);
+    expect(result.handValue).toBe(18);
+    expect(result.scores).toEqual({ A: 0, B: 0, C: 18, D: -18 });
+  });
 });

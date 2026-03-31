@@ -30,7 +30,7 @@ export interface Win {
   special: WinCondition[];
 }
 
-export type WinCondition = 'fromButt' | 'lastTile' | 'firstTurn';
+export type WinCondition = 'fromButt' | 'lastTile' | 'firstTurn' | 'prodigy';
 
 export interface AppliedRule {
   name: string;
