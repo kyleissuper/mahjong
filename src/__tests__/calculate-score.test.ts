@@ -27,9 +27,13 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // 3 pts, discard win, neither winner nor discarder is dealer
-    // D pays A 3 points, B and C unaffected
-    expect(result).toEqual({ A: 3, B: 0, C: 0, D: -3 });
+    expect(result.appliedRules).toEqual([
+      { name: 'dragonPong', points: 1 },
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+    ]);
+    expect(result.handValue).toBe(3);
+    expect(result.scores).toEqual({ A: 3, B: 0, C: 0, D: -3 });
   });
 
   it('Hand 2 — all chows, self-pick, only 2 suits, no 1s/9s/honors (8 pts)', () => {
@@ -55,10 +59,16 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // 8 pts, self-pick, winner is NOT dealer
-    // Non-dealer losers pay 8 each, dealer pays 8+1=9
-    // Winner gets 8+8+9 = 25
-    expect(result).toEqual({ A: 25, B: -9, C: -8, D: -8 });
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'allChows', points: 1 },
+      { name: 'selfPick', points: 1 },
+      { name: 'only2Suits', points: 1 },
+      { name: 'noTerminalsNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(8);
+    expect(result.scores).toEqual({ A: 25, B: -9, C: -8, D: -8 });
   });
 
   it('Hand 3 — wind pong, no 1s/9s with honors, discard win (3 pts)', () => {
@@ -85,9 +95,13 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // wind pong (+1), 2/5/8 pair (+1), no 1s/9s with honors (+1) = 3 pts
-    // C pays A 3 points, neither is dealer
-    expect(result).toEqual({ A: 3, B: 0, C: -3, D: 0 });
+    expect(result.appliedRules).toEqual([
+      { name: 'windPong', points: 1 },
+      { name: 'pairOf258', points: 1 },
+      { name: 'noTerminalsWithHonors', points: 1 },
+    ]);
+    expect(result.handValue).toBe(3);
+    expect(result.scores).toEqual({ A: 3, B: 0, C: -3, D: 0 });
   });
 
   it('Hand 4 — all greens, all pongs, dealer self-pick (20 pts)', () => {
@@ -113,11 +127,14 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // All Greens (+14) absorbs Semi-Pure (+4) and Green Dragon pong (+1)
-    // ALL pongs (+4), self-pick (+1), can only win with one (+1) = 20 pts
-    // Dealer self-pick: each loser pays 20+1=21
-    // A gets 63, others pay 21 each
-    expect(result).toEqual({ A: 63, B: -21, C: -21, D: -21 });
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'allPongs', points: 4 },
+      { name: 'selfPick', points: 1 },
+      { name: 'allGreens', points: 14 },
+    ]);
+    expect(result.handValue).toBe(20);
+    expect(result.scores).toEqual({ A: 63, B: -21, C: -21, D: -21 });
   });
 
   it('Hand 5 — clean doorstep, 1-9 chain, discard win (5 pts)', () => {
@@ -144,9 +161,13 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // clean doorstep (+1), 1-9 chain (+3), can only win with one (+1) = 5 pts
-    // D pays C 5, dealer B not involved
-    expect(result).toEqual({ A: 0, B: 0, C: 5, D: -5 });
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'cleanDoorstep', points: 1 },
+      { name: 'oneToNineChain', points: 3 },
+    ]);
+    expect(result.handValue).toBe(5);
+    expect(result.scores).toEqual({ A: 0, B: 0, C: 5, D: -5 });
   });
 
   it('Hand 6 — clean doorstep & self-pick, three hidden pongs, dealer extra round (12 pts)', () => {
@@ -172,12 +193,15 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // clean doorstep & self-pick (+3) absorbs cleanDoorstep (+1) and selfPick (+1)
-    // three hidden pongs (+4), no flowers/no honors (+3),
-    // can only win with one (+1), 2/5/8 pair (+1) = 12 pts
-    // Dealer C extra round 1: dealerRounds=2, bonus=1+(1×2)=3
-    // A→D: 12, B→D: 12, C(dealer)→D: 12+3=15
-    expect(result).toEqual({ A: -12, B: -12, C: -15, D: 39 });
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'cleanDoorstepAndSelfPick', points: 3 },
+      { name: 'threeHiddenPongs', points: 4 },
+      { name: 'noFlowersNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(12);
+    expect(result.scores).toEqual({ A: -12, B: -12, C: -15, D: 39 });
   });
 
   it('Hand 7 — stolen kong, all from others, discard-style payment (5 pts)', () => {
@@ -204,10 +228,15 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // stolen kong (+1), all from others (+1), wind pong (+1),
-    // can only win with one (+1), 2/5/8 pair (+1) = 5 pts
-    // A (dealer) pays B: 5+1=6
-    expect(result).toEqual({ A: -6, B: 6, C: 0, D: 0 });
+    expect(result.appliedRules).toEqual([
+      { name: 'windPong', points: 1 },
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'stolenKong', points: 1 },
+      { name: 'allFromOthers', points: 1 },
+    ]);
+    expect(result.handValue).toBe(5);
+    expect(result.scores).toEqual({ A: -6, B: 6, C: 0, D: 0 });
   });
 
   it('Hand 8 — flower, wind pong, dealer discard win (3 pts)', () => {
@@ -235,9 +264,13 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // flower (+1), wind pong (+1), 2/5/8 pair (+1) = 3 pts
-    // B (dealer) pays A: 3+1=4
-    expect(result).toEqual({ A: 4, B: -4, C: 0, D: 0 });
+    expect(result.appliedRules).toEqual([
+      { name: 'flower', points: 1 },
+      { name: 'windPong', points: 1 },
+      { name: 'pairOf258', points: 1 },
+    ]);
+    expect(result.handValue).toBe(3);
+    expect(result.scores).toEqual({ A: 4, B: -4, C: 0, D: 0 });
   });
 
   it('Hand 9 — win from the butt, hidden kong, 2 flowers (7 pts)', () => {
@@ -264,10 +297,15 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // win from butt (+1), self-pick (+1), hidden kong (+2),
-    // flower x2 (+2), 2/5/8 pair (+1) = 7 pts
-    // A→C: 7, B→C: 7, D(dealer)→C: 7+1=8
-    expect(result).toEqual({ A: -7, B: -7, C: 22, D: -8 });
+    expect(result.appliedRules).toEqual([
+      { name: 'flower', points: 2 },
+      { name: 'pairOf258', points: 1 },
+      { name: 'selfPick', points: 1 },
+      { name: 'winFromButt', points: 1 },
+      { name: 'hiddenKong', points: 2 },
+    ]);
+    expect(result.handValue).toBe(7);
+    expect(result.scores).toEqual({ A: -7, B: -7, C: 22, D: -8 });
   });
 
   it('Hand 10 — pure, four hidden pongs, clean doorstep & self-pick (27 pts)', () => {
@@ -293,15 +331,18 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // fourHiddenPongs (+12, absorbs allPongs +4 and threeHiddenPongs +4)
-    // pure (+8), cleanDoorstepAndSelfPick (+3, absorbs cleanDoorstep +1 and selfPick +1)
-    // noFlowersNoHonors (+3, absorbed by noTerminalsNoHonors... wait, hand HAS terminals)
-    // noFlowersNoHonors (+3), canOnlyWinWithOne (+1) = 27 pts
-    // A(dealer)→B: 27+1=28, C→B: 27, D→B: 27
-    expect(result).toEqual({ A: -28, B: 82, C: -27, D: -27 });
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'cleanDoorstepAndSelfPick', points: 3 },
+      { name: 'noFlowersNoHonors', points: 3 },
+      { name: 'pure', points: 8 },
+      { name: 'fourHiddenPongs', points: 12 },
+    ]);
+    expect(result.handValue).toBe(27);
+    expect(result.scores).toEqual({ A: -28, B: 82, C: -27, D: -27 });
   });
 
-  it('Hand 11 — 1-9 chain, split kong, clean doorstep (7 pts)', () => {
+  it('Hand 11 — 1-9 chain, split kong, clean doorstep (10 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: true },
@@ -325,13 +366,19 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // 1-9 chain (+3), split kong (+1), clean doorstep (+1),
-    // 2/5/8 pair (+1), only 2 suits (+1), no flowers/no honors (+3) = 10 pts
-    // A pays D 10, dealer C not involved
-    expect(result).toEqual({ A: -10, B: 0, C: 0, D: 10 });
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'only2Suits', points: 1 },
+      { name: 'splitKong', points: 1 },
+      { name: 'cleanDoorstep', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
+      { name: 'oneToNineChain', points: 3 },
+    ]);
+    expect(result.handValue).toBe(10);
+    expect(result.scores).toEqual({ A: -10, B: 0, C: 0, D: 10 });
   });
 
-  it('Hand 12 — three consecutive pongs, no terminals/honors (10 pts)', () => {
+  it('Hand 12 — three consecutive pongs, no terminals/honors (11 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['3b', '3b', '3b'], concealed: false },
@@ -355,11 +402,16 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // three consecutive pongs (+4), no terminals/no honors (+3),
-    // all from others (+1), 2/5/8 pair (+1), can only win with one (+1),
-    // only 2 suits (+1) = 11 pts
-    // D pays C 11, dealer A not involved
-    expect(result).toEqual({ A: 0, B: 0, C: 11, D: -11 });
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'only2Suits', points: 1 },
+      { name: 'allFromOthers', points: 1 },
+      { name: 'threeConsecutivePongs', points: 4 },
+      { name: 'noTerminalsNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(11);
+    expect(result.scores).toEqual({ A: 0, B: 0, C: 11, D: -11 });
   });
 
   it('Hand 13 — terminals & honors, all pongs, dealer discard win (10 pts)', () => {
@@ -386,10 +438,14 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // terminals & honors (+4), all pongs (+4), wind pong (+1),
-    // can only win with one (+1) = 10 pts
-    // C pays B (dealer): 10+1=11
-    expect(result).toEqual({ A: 0, B: 11, C: -11, D: 0 });
+    expect(result.appliedRules).toEqual([
+      { name: 'windPong', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'allPongs', points: 4 },
+      { name: 'terminalsAndHonors', points: 4 },
+    ]);
+    expect(result.handValue).toBe(10);
+    expect(result.scores).toEqual({ A: 0, B: 11, C: -11, D: 0 });
   });
 
   it('Hand 14 — little dragons (8 pts)', () => {
@@ -416,9 +472,11 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // little dragons (+8, absorbs dragonPong x2) = 8 pts
-    // B pays A 8, dealer C not involved
-    expect(result).toEqual({ A: 8, B: -8, C: 0, D: 0 });
+    expect(result.appliedRules).toEqual([
+      { name: 'littleDragons', points: 8 },
+    ]);
+    expect(result.handValue).toBe(8);
+    expect(result.scores).toEqual({ A: 8, B: -8, C: 0, D: 0 });
   });
 
   it('Hand 15 — three suit chow, double chow, all chows (11 pts)', () => {
@@ -445,11 +503,16 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // three suit chow (+4), no terminals/no honors (+3),
-    // double chow (+1), all chows (+1), clean doorstep (+1),
-    // 2/5/8 pair (+1) = 11 pts
-    // D (dealer) pays A: 11+1=12
-    expect(result).toEqual({ A: 12, B: 0, C: 0, D: -12 });
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'allChows', points: 1 },
+      { name: 'cleanDoorstep', points: 1 },
+      { name: 'doubleChow', points: 1 },
+      { name: 'threeSuitChow', points: 4 },
+      { name: 'noTerminalsNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(11);
+    expect(result.scores).toEqual({ A: 12, B: 0, C: 0, D: -12 });
   });
 
   it('Hand 16 — all 1s/9s, three suit pongs, dealer extra round 4 (26 pts)', () => {
@@ -475,12 +538,15 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // all 1s/9s (+16, absorbs terminalsAndHonors +4),
-    // three suit pongs (+4), all pongs (+4),
-    // self-pick (+1), can only win with one (+1) = 26 pts
-    // Dealer bonus: 1 + (4 × 2) = 9
-    // A(dealer)→B: 26+9=35, C→B: 26, D→B: 26
-    expect(result).toEqual({ A: -35, B: 87, C: -26, D: -26 });
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'allPongs', points: 4 },
+      { name: 'selfPick', points: 1 },
+      { name: 'all1sOr9s', points: 16 },
+      { name: 'threeSuitPongs', points: 4 },
+    ]);
+    expect(result.handValue).toBe(26);
+    expect(result.scores).toEqual({ A: -35, B: 87, C: -26, D: -26 });
   });
 
   it('Hand 17 — four consecutive pongs, semi-pure (14 pts)', () => {
@@ -507,11 +573,14 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // four consecutive pongs (+8, absorbs allPongs +4 and threeConsecutivePongs +4),
-    // semi-pure (+4), no 1s/9s with honors (+1),
-    // can only win with one (+1) = 14 pts
-    // A pays C 14, dealer B not involved
-    expect(result).toEqual({ A: -14, B: 0, C: 14, D: 0 });
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'noTerminalsWithHonors', points: 1 },
+      { name: 'semiPure', points: 4 },
+      { name: 'fourConsecutivePongs', points: 8 },
+    ]);
+    expect(result.handValue).toBe(14);
+    expect(result.scores).toEqual({ A: -14, B: 0, C: 14, D: 0 });
   });
 
   it('Hand 18 — big dragons, semi-pure (16 pts)', () => {
@@ -538,13 +607,15 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // big dragons (+12, absorbs littleDragons and dragonPong),
-    // semi-pure (+4) = 16 pts
-    // B pays D 16, dealer C not involved
-    expect(result).toEqual({ A: 0, B: -16, C: 0, D: 16 });
+    expect(result.appliedRules).toEqual([
+      { name: 'bigDragons', points: 12 },
+      { name: 'semiPure', points: 4 },
+    ]);
+    expect(result.handValue).toBe(16);
+    expect(result.scores).toEqual({ A: 0, B: -16, C: 0, D: 16 });
   });
 
-  it('Hand 19 — little winds, dealer self-pick (14 pts)', () => {
+  it('Hand 19 — little winds, dealer self-pick (19 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
@@ -567,10 +638,14 @@ describe('calculateScore', () => {
 
     const result = calculateScore(hand, win);
 
-    // little winds (+12, absorbs windPong), semi-pure (+4),
-    // self-pick (+1), can only win with one (+1),
-    // no 1s/9s with honors (+1) = 19 pts
-    // Dealer self-pick: each loser pays 19+1=20
-    expect(result).toEqual({ A: 60, B: -20, C: -20, D: -20 });
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'selfPick', points: 1 },
+      { name: 'noTerminalsWithHonors', points: 1 },
+      { name: 'littleWinds', points: 12 },
+      { name: 'semiPure', points: 4 },
+    ]);
+    expect(result.handValue).toBe(19);
+    expect(result.scores).toEqual({ A: 60, B: -20, C: -20, D: -20 });
   });
 });

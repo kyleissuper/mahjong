@@ -31,4 +31,15 @@ export interface Win {
   lastTile: boolean;
 }
 
+export interface AppliedRule {
+  name: string;
+  points: number;
+}
+
+export interface ScoreResult {
+  scores: Record<Player, number>;
+  handValue: number;
+  appliedRules: AppliedRule[];
+}
+
 export type RoundScore = Record<Player, number>;

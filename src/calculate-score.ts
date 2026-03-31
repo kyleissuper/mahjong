@@ -1,8 +1,10 @@
-import type { Hand, Meld, Win, RoundScore, Tile, Player } from './types.js';
+import type { Hand, Meld, Win, RoundScore, Tile, Player, ScoreResult, AppliedRule } from './types.js';
 
-export function calculateScore(hand: Hand, win: Win): RoundScore {
-  const points = calculateHandValue(hand, win);
-  return resolvePayments(points, win);
+export function calculateScore(hand: Hand, win: Win): ScoreResult {
+  const appliedRules = getAppliedRules(hand, win);
+  const handValue = appliedRules.reduce((sum, r) => sum + r.points, 0);
+  const scores = resolvePayments(handValue, win);
+  return { scores, handValue, appliedRules };
 }
 
 // --- Scoring rules ---
@@ -51,12 +53,13 @@ const rules: Rule[] = [
   { name: 'allGreens', score: allGreens, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
 ];
 
-function calculateHandValue(hand: Hand, win: Win): number {
-  const fired = rules.filter(r => r.score(hand, win) > 0);
+function getAppliedRules(hand: Hand, win: Win): AppliedRule[] {
+  const fired = rules.map(r => ({ name: r.name, points: r.score(hand, win), absorbs: r.absorbs }))
+    .filter(r => r.points > 0);
   const absorbed = new Set(fired.flatMap(r => r.absorbs ?? []));
   return fired
     .filter(r => !absorbed.has(r.name))
-    .reduce((total, r) => total + r.score(hand, win), 0);
+    .map(({ name, points }) => ({ name, points }));
 }
 
 function flower(hand: Hand): number {
