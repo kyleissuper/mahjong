@@ -562,14 +562,7 @@ export function Prototype() {
       {/* Post-melds flow */}
       {phase === 'done' && (
         <div className="proto-finish">
-          {/* Step 1: Winning tile */}
-          <div className="proto-step">
-            <div className="proto-step-label">
-              {winTilePos ? '✓ Winning tile selected' : 'Tap the winning tile above'}
-            </div>
-          </div>
-
-          {/* Step 2: How did you win? */}
+          {/* Step 1: How did you win? */}
           <div className="proto-step">
             <div className="proto-step-label">How did you win?</div>
             <div className="proto-step-row">
