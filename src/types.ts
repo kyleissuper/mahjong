@@ -29,6 +29,7 @@ export interface Win {
   dealerRounds: number;
   fromButt: boolean;
   lastTile: boolean;
+  firstTurn: boolean;
 }
 
 export interface AppliedRule {

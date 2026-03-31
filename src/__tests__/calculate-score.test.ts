@@ -23,6 +23,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -55,6 +56,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -91,6 +93,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -123,6 +126,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -157,6 +161,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -189,6 +194,7 @@ describe('calculateScore', () => {
       dealerRounds: 2,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -224,6 +230,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -260,6 +267,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -293,6 +301,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: true,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -327,6 +336,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -362,6 +372,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -398,6 +409,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -434,6 +446,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -468,6 +481,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -499,6 +513,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -534,6 +549,7 @@ describe('calculateScore', () => {
       dealerRounds: 5,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -569,6 +585,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -603,6 +620,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -634,6 +652,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -669,6 +688,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -702,6 +722,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -734,6 +755,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -770,6 +792,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -797,6 +820,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -831,6 +855,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -866,6 +891,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -898,6 +924,7 @@ describe('calculateScore', () => {
       dealerRounds: 1,
       fromButt: false,
       lastTile: false,
+      firstTurn: false,
     };
 
     const result = calculateScore(hand, win);
@@ -905,5 +932,37 @@ describe('calculateScore', () => {
     expect(result.appliedRules.find(r => r.name === 'heavenlyGates')).toEqual(
       { name: 'heavenlyGates', points: 16 },
     );
+  });
+
+  it('Hand 26 — heavenly hand, dealer wins on deal (21 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['3b', '3b', '3b'], concealed: true },
+        { type: 'pong', tiles: ['7d', '7d', '7d'], concealed: true },
+        { type: 'chow', tiles: ['4c', '5c', '6c'], concealed: true },
+        { type: 'chow', tiles: ['1d', '2d', '3d'], concealed: true },
+        { type: 'pair', tiles: ['8b', '8b'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'self-pick',
+      dealer: 'A',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+      firstTurn: true,
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'heavenlyHand', points: 20 },
+    ]);
+    expect(result.handValue).toBe(21);
+    expect(result.scores).toEqual({ A: 66, B: -22, C: -22, D: -22 });
   });
 });

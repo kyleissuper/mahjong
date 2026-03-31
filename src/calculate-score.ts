@@ -72,6 +72,9 @@ const rules: Rule[] = [
   { name: 'threeSuitPongs', score: threeSuitPongs },
   { name: 'allPairs', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258', 'canOnlyWinWithOne'] },
   { name: 'allHonors', score: allHonors, absorbs: ['allPongs', 'windPong', 'dragonPong', 'terminalsAndHonors', 'noTerminalsWithHonors', 'only2Suits'] },
+  { name: 'heavenlyHand', score: heavenlyHand, absorbs: [
+    'selfPick', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'noFlowersNoHonors',
+  ] },
   { name: 'heavenlyGates', score: heavenlyGates, absorbs: [
     'pure', 'cleanDoorstep', 'cleanDoorstepAndSelfPick',
     'canOnlyWinWithOne', 'pairOf258', 'noFlowersNoHonors', 'oneToNineChain',
@@ -213,6 +216,10 @@ function threeSuitPongs(hand: Hand): number {
 function allPairs(hand: Hand): number {
   const pairs = hand.melds.filter(m => m.type === 'pair');
   return pairs.length === 7 ? 12 : 0;
+}
+
+function heavenlyHand(_hand: Hand, win: Win): number {
+  return win.method === 'self-pick' && win.winner === win.dealer && win.firstTurn ? 20 : 0;
 }
 
 function heavenlyGates(hand: Hand): number {
