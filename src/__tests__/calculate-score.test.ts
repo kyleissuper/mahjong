@@ -680,4 +680,37 @@ describe('calculateScore', () => {
     expect(result.handValue).toBe(13);
     expect(result.scores).toEqual({ A: 0, B: 0, C: 13, D: -13 });
   });
+
+  it('Hand 21 — all pairs, self-pick (13 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pair', tiles: ['2b', '2b'], concealed: true },
+        { type: 'pair', tiles: ['5b', '5b'], concealed: true },
+        { type: 'pair', tiles: ['9b', '9b'], concealed: true },
+        { type: 'pair', tiles: ['3d', '3d'], concealed: true },
+        { type: 'pair', tiles: ['7d', '7d'], concealed: true, winTile: '7d' },
+        { type: 'pair', tiles: ['Ew', 'Ew'], concealed: true },
+        { type: 'pair', tiles: ['Rd', 'Rd'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'B',
+      method: 'self-pick',
+      dealer: 'D',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'selfPick', points: 1 },
+      { name: 'allPairs', points: 12 },
+    ]);
+    expect(result.handValue).toBe(13);
+    expect(result.scores).toEqual({ A: -13, B: 40, C: -13, D: -14 });
+  });
 });

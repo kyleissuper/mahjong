@@ -7,13 +7,31 @@ export function calculateScore(hand: Hand, win: Win): ScoreResult {
   return { scores, handValue, appliedRules };
 }
 
-// --- Scoring rules ---
+// --- Rule resolution ---
 
 interface Rule {
   name: string;
   score: (hand: Hand, win: Win) => number;
   absorbs?: string[];
 }
+
+type FiredRule = { name: string; points: number; absorbs?: string[] };
+
+function getAppliedRules(hand: Hand, win: Win): AppliedRule[] {
+  const fired = rules
+    .map(r => ({ name: r.name, points: r.score(hand, win), absorbs: r.absorbs }))
+    .filter(r => r.points > 0);
+  return resolveAbsorption(fired);
+}
+
+function resolveAbsorption(all: FiredRule[], survivors: FiredRule[] = all): AppliedRule[] {
+  const absorbed = new Set(survivors.flatMap(r => r.absorbs ?? []));
+  const next = all.filter(r => !absorbed.has(r.name));
+  if (next.length === survivors.length) return next.map(({ name, points }) => ({ name, points }));
+  return resolveAbsorption(all, next);
+}
+
+// --- Rules ---
 
 const rules: Rule[] = [
   { name: 'flower', score: flower },
@@ -50,18 +68,10 @@ const rules: Rule[] = [
   { name: 'noTerminalsNoHonors', score: noTerminalsNoHonors, absorbs: ['noFlowersNoHonors'] },
   { name: 'all1sOr9s', score: all1sOr9s, absorbs: ['terminalsAndHonors', 'noFlowersNoHonors'] },
   { name: 'threeSuitPongs', score: threeSuitPongs },
+  { name: 'allPairs', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258', 'canOnlyWinWithOne'] },
   { name: 'allHonors', score: allHonors, absorbs: ['allPongs', 'windPong', 'dragonPong', 'terminalsAndHonors', 'noTerminalsWithHonors', 'only2Suits'] },
   { name: 'allGreens', score: allGreens, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
 ];
-
-function getAppliedRules(hand: Hand, win: Win): AppliedRule[] {
-  const fired = rules.map(r => ({ name: r.name, points: r.score(hand, win), absorbs: r.absorbs }))
-    .filter(r => r.points > 0);
-  const absorbed = new Set(fired.flatMap(r => r.absorbs ?? []));
-  return fired
-    .filter(r => !absorbed.has(r.name))
-    .map(({ name, points }) => ({ name, points }));
-}
 
 function flower(hand: Hand): number {
   return hand.melds.filter(m => m.type === 'flower').reduce((sum, m) => sum + m.tiles.length, 0);
@@ -172,6 +182,11 @@ function threeSuitPongs(hand: Hand): number {
     const suits = new Set(melds.map(m => suit(m.tiles[0])));
     return suits.has('b') && suits.has('d') && suits.has('c');
   }) ? 4 : 0;
+}
+
+function allPairs(hand: Hand): number {
+  const pairs = hand.melds.filter(m => m.type === 'pair');
+  return pairs.length === 7 ? 12 : 0;
 }
 
 function allHonors(hand: Hand): number {
