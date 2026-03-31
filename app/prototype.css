@@ -179,6 +179,16 @@
   border-color: #2d6a4f;
 }
 
+.proto-btn-danger {
+  color: #c1440e;
+  border-color: #c1440e44;
+}
+
+.proto-btn-danger:active {
+  background: #c1440e;
+  color: white;
+}
+
 /* Tile grid */
 .proto-grid {
   background: white;

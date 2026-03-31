@@ -403,13 +403,16 @@ export function Prototype() {
       </div>
 
       {/* Action buttons */}
-      {(phase === 'exposed' || phase === 'concealed') && (
+      {isEntering && (
         <div className="proto-actions">
           {currentSet.tiles.length >= 3 && detectMeldType(currentSet.tiles) !== 'invalid' && (
             <button onClick={() => commitCurrentSet()} className="proto-btn proto-btn-primary">Next set →</button>
           )}
           {currentSet.tiles.length === 2 && currentSet.tiles[0] === currentSet.tiles[1] && !hasPair && (
             <button onClick={commitAsPair} className="proto-btn">It's the pair</button>
+          )}
+          {currentSet.tiles.length > 0 && (
+            <button onClick={() => setState(s => ({ ...s, currentSet: { tiles: [] } }))} className="proto-btn proto-btn-danger">Delete set</button>
           )}
           <button onClick={goToWinTile} className="proto-btn">Done → pick winning tile</button>
         </div>
