@@ -259,8 +259,59 @@ export function Prototype() {
     });
   }
 
+  function editSet(row: 'exposed' | 'concealed', index: number) {
+    if (phase !== row && phase !== 'exposed' && phase !== 'concealed') return;
+    // Commit current set first if it has tiles
+    if (currentSet.tiles.length > 0) {
+      commitCurrentSet();
+    }
+    const sets = row === 'exposed' ? exposed : concealed;
+    const meld = sets[index];
+    if (!meld || meld.type === 'flower') return;
+    setState(s => ({
+      ...s,
+      phase: row,
+      [row]: sets.filter((_, i) => i !== index),
+      currentSet: { tiles: meld.tiles },
+    }));
+  }
+
   const currentStatus = setStatusLabel(currentSet.tiles);
   const allTiles = allMelds.flatMap(m => m.tiles).concat(currentSet.tiles);
+  const isEntering = phase === 'exposed' || phase === 'concealed';
+
+  function renderSet(meld: Meld, key: string, onTap?: () => void) {
+    return (
+      <div key={key} className={`proto-set ${onTap ? 'proto-set-tappable' : ''}`} onClick={onTap}>
+        <div className="proto-set-tiles">
+          {meld.tiles.map((t, j) => (
+            <span key={j} className="tile-frame tile-sm">
+              <TileImage tile={t} size={18} />
+            </span>
+          ))}
+        </div>
+        <span className="proto-set-label">{meld.type}</span>
+      </div>
+    );
+  }
+
+  function renderCurrentSet() {
+    if (currentSet.tiles.length === 0) return null;
+    return (
+      <div className="proto-set proto-set-active">
+        <div className="proto-set-tiles">
+          {currentSet.tiles.map((t, j) => (
+            <span key={j} className="tile-frame tile-sm">
+              <TileImage tile={t} size={18} />
+            </span>
+          ))}
+        </div>
+        <span className={`proto-set-label ${currentStatus.includes('✓') ? 'valid' : currentStatus.includes('✗') ? 'invalid' : ''}`}>
+          {currentStatus}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="proto">
@@ -276,64 +327,23 @@ export function Prototype() {
 
       {/* Hand display */}
       <div className="proto-hand">
-        {exposed.length > 0 && (
+        {(exposed.length > 0 || (isEntering && phase === 'exposed')) && (
           <div className="proto-row">
             <span className="proto-row-label">Exposed</span>
             <div className="proto-sets">
-              {exposed.map((m, i) => (
-                <div key={`e${i}`} className="proto-set">
-                  <div className="proto-set-tiles">
-                    {m.tiles.map((t, j) => (
-                      <span key={j} className="tile-frame tile-sm">
-                        <TileImage tile={t} size={18} />
-                      </span>
-                    ))}
-                  </div>
-                  <span className="proto-set-label">{m.type}</span>
-                </div>
-              ))}
+              {exposed.map((m, i) => renderSet(m, `e${i}`, () => editSet('exposed', i)))}
+              {phase === 'exposed' && renderCurrentSet()}
             </div>
           </div>
         )}
 
-        {concealed.length > 0 && (
+        {(concealed.length > 0 || (isEntering && phase === 'concealed')) && (
           <div className="proto-row">
             <span className="proto-row-label">Concealed</span>
             <div className="proto-sets">
-              {concealed.map((m, i) => (
-                <div key={`c${i}`} className="proto-set">
-                  <div className="proto-set-tiles">
-                    {m.tiles.map((t, j) => (
-                      <span key={j} className="tile-frame tile-sm">
-                        <TileImage tile={t} size={18} />
-                      </span>
-                    ))}
-                  </div>
-                  <span className="proto-set-label">{m.type}</span>
-                </div>
-              ))}
+              {concealed.map((m, i) => renderSet(m, `c${i}`, () => editSet('concealed', i)))}
+              {phase === 'concealed' && renderCurrentSet()}
             </div>
-          </div>
-        )}
-
-        {/* Current set being built */}
-        {(phase === 'exposed' || phase === 'concealed') && (
-          <div className="proto-current">
-            <div className="proto-set-tiles">
-              {currentSet.tiles.map((t, j) => (
-                <span key={j} className="tile-frame tile-sm">
-                  <TileImage tile={t} size={22} />
-                </span>
-              ))}
-              {currentSet.tiles.length === 0 && (
-                <span className="proto-placeholder">tap a tile below</span>
-              )}
-            </div>
-            {currentSet.tiles.length > 0 && (
-              <span className={`proto-set-status ${currentStatus.includes('✓') ? 'valid' : currentStatus.includes('✗') ? 'invalid' : ''}`}>
-                {currentStatus}
-              </span>
-            )}
           </div>
         )}
 

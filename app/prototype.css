@@ -82,30 +82,27 @@
   letter-spacing: 0.04em;
 }
 
-/* Current set being built */
-.proto-current {
-  padding: 8px 0;
-  border-top: 1px dashed #ebe4d6;
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.proto-set-label.valid { color: #2d6a4f; }
+.proto-set-label.invalid { color: #c1440e; }
+
+.proto-set-tappable {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 4px;
+  margin: -4px;
 }
 
-.proto-placeholder {
-  font-size: 0.75rem;
-  color: #bbb;
-  font-style: italic;
+.proto-set-tappable:active {
+  background: #ebe4d6;
 }
 
-.proto-set-status {
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: #8a8070;
+.proto-set-active {
+  border-radius: 6px;
+  padding: 4px;
+  margin: -4px;
+  outline: 2px solid #2d6a4f;
+  outline-offset: 2px;
 }
-
-.proto-set-status.valid { color: #2d6a4f; }
-.proto-set-status.invalid { color: #c1440e; }
 
 /* Win tile */
 .proto-win-tile {
