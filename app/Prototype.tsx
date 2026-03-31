@@ -2,9 +2,34 @@ import { useState, useMemo } from 'react';
 import type { Tile, MeldType, Meld, Win, ScoreResult } from '../src/types.js';
 import { calculateScore } from '../src/calculate-score.js';
 import { TileImage } from './TileImage.tsx';
-import { WinContext } from './WinContext.tsx';
-import { ScoreBreakdown } from './ScoreBreakdown.tsx';
 import './prototype.css';
+
+const RULE_LABELS: Record<string, string> = {
+  flower: 'Flower', dragonPong: 'Dragon pong', windPong: 'Wind pong',
+  pairOf258: '2/5/8 pair', canOnlyWinWithOne: 'Single tile wait',
+  allChows: 'All chows', allPongs: 'All pongs', selfPick: 'Self-pick',
+  only2Suits: 'Only 2 suits', noTerminalsWithHonors: 'No 1s/9s (w/ honors)',
+  threeSuitsWithWindAndDragon: '3 suits + wind + dragon',
+  splitKong: 'Split kong', lastWallTile: 'Last wall tile',
+  lastDiscard: 'Last discard', winFromButt: 'Win from butt',
+  hiddenKong: 'Hidden kong', stolenKong: 'Stolen kong',
+  allFromOthers: 'All from others', cleanDoorstep: 'Clean doorstep',
+  cleanDoorstepAndSelfPick: 'Concealed self-pick',
+  threeHiddenPongs: '3 hidden pongs', doubleChow: 'Double chow',
+  threeSuitChow: '3 suit chow', threeConsecutivePongs: '3 consec. pongs',
+  noFlowersNoHonors: 'No flowers/honors', oneToNineChain: '1-9 chain',
+  twoKongMahjong: '2 kong mahjong', twoDoubleChows: '2 double chows',
+  littleDragons: 'Little dragons', littleWinds: 'Little winds',
+  bigDragons: 'Big dragons', bigWinds: 'Big winds', semiPure: 'Semi-pure',
+  fourConsecutivePongs: '4 consec. pongs', terminalsAndHonors: 'Terminals & honors',
+  pure: 'Pure', fourHiddenPongs: '4 hidden pongs',
+  noTerminalsNoHonors: 'No 1s/9s, no honors', allKongs: 'All kongs',
+  all1sOr9s: 'All 1s or 9s', threeSuitPongs: '3 suit pongs',
+  allPairs: 'All pairs', allHonors: 'All honors',
+  prodigyHand: 'Prodigy', heavenlyHand: 'Heavenly hand',
+  earthlyHand: 'Earthly hand', heavenlyGates: 'Heavenly gates',
+  thirteenOrphans: '13 orphans', allGreens: 'All greens',
+};
 
 // --- Types ---
 
@@ -534,22 +559,121 @@ export function Prototype() {
         </div>
       )}
 
-      {/* Win context + score — shown after melds are done */}
-      {phase === 'done' && allMelds.length > 0 && (
-        <WinContext win={win} onChange={setWin} />
-      )}
-
-      {scoringResult && (
-        <ScoreBreakdown result={scoringResult} onReset={reset} />
-      )}
-
-      {phase === 'done' && !scoringResult && (
-        <p className="proto-hint">Fill in winner and dealer to see the score.</p>
-      )}
-
+      {/* Post-melds flow */}
       {phase === 'done' && (
-        <div className="proto-actions">
-          <button onClick={() => setState(s => ({ ...s, phase: 'concealed', winTilePos: null }))} className="proto-btn">← Back to editing</button>
+        <div className="proto-finish">
+          {/* Step 1: Winning tile */}
+          <div className="proto-step">
+            <div className="proto-step-label">
+              {winTilePos ? '✓ Winning tile selected' : 'Tap the winning tile above'}
+            </div>
+          </div>
+
+          {/* Step 2: How did you win? */}
+          <div className="proto-step">
+            <div className="proto-step-label">How did you win?</div>
+            <div className="proto-step-row">
+              {(['self-pick', 'discard', 'stolen-kong'] as const).map(method => (
+                <button
+                  key={method}
+                  className={`proto-btn ${win.method === method ? 'proto-btn-primary' : ''}`}
+                  onClick={() => setWin(w => ({ ...w, method }))}
+                >
+                  {method}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Step 3: Players */}
+          <div className="proto-step">
+            <div className="proto-step-row">
+              <span className="proto-field-label">Winner</span>
+              {['A','B','C','D'].map(p => (
+                <button key={p} className={`proto-player ${win.winner === p ? 'proto-player-active' : ''}`}
+                  onClick={() => setWin(w => ({ ...w, winner: p }))}>{p}</button>
+              ))}
+            </div>
+            <div className="proto-step-row">
+              <span className="proto-field-label">Dealer</span>
+              {['A','B','C','D'].map(p => (
+                <button key={p} className={`proto-player ${win.dealer === p ? 'proto-player-active' : ''}`}
+                  onClick={() => setWin(w => ({ ...w, dealer: p }))}>{p}</button>
+              ))}
+            </div>
+            {win.method !== 'self-pick' && (
+              <div className="proto-step-row">
+                <span className="proto-field-label">From</span>
+                {['A','B','C','D'].map(p => (
+                  <button key={p} className={`proto-player ${win.from === p ? 'proto-player-active' : ''}`}
+                    onClick={() => setWin(w => ({ ...w, from: p }))}>{p}</button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Step 4: Extras (dealer rounds, special) */}
+          <div className="proto-step">
+            <div className="proto-step-row">
+              <span className="proto-field-label">Dealer round</span>
+              <div className="proto-stepper">
+                <button className="proto-stepper-btn"
+                  disabled={(win.dealerRounds ?? 1) <= 1}
+                  onClick={() => setWin(w => ({ ...w, dealerRounds: Math.max(1, (w.dealerRounds ?? 1) - 1) }))}>−</button>
+                <span className="proto-stepper-val">{win.dealerRounds ?? 1}</span>
+                <button className="proto-stepper-btn"
+                  onClick={() => setWin(w => ({ ...w, dealerRounds: (w.dealerRounds ?? 1) + 1 }))}>+</button>
+              </div>
+            </div>
+            <div className="proto-step-row" style={{ flexWrap: 'wrap' }}>
+              {(['fromButt', 'lastTile', 'firstTurn', 'prodigy'] as const).map(c => {
+                const labels = { fromButt: 'Replacement draw', lastTile: 'Last tile', firstTurn: '1st turn win', prodigy: 'Ready in 4' };
+                const active = (win.special ?? []).includes(c);
+                return (
+                  <button key={c}
+                    className={`proto-tag ${active ? 'proto-tag-active' : ''}`}
+                    onClick={() => setWin(w => {
+                      const cur = w.special ?? [];
+                      return { ...w, special: active ? cur.filter(x => x !== c) : [...cur, c] };
+                    })}
+                  >{labels[c]}</button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Score */}
+          {scoringResult && (
+            <div className="proto-score">
+              <div className="proto-score-header">
+                <span className="proto-score-value">{scoringResult.handValue}</span>
+                <span className="proto-score-label">points</span>
+              </div>
+              <div className="proto-score-rules">
+                {scoringResult.appliedRules.map(({ name, points }) => (
+                  <div key={name} className="proto-score-rule">
+                    <span>{RULE_LABELS[name] ?? name}</span>
+                    <span className="proto-score-pts">+{points}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="proto-score-payments">
+                {Object.entries(scoringResult.scores).map(([player, delta]) => (
+                  <div key={player} className="proto-score-pay">
+                    <span className="proto-score-pay-player">{player}</span>
+                    <span className={`proto-score-pay-val ${delta > 0 ? 'pos' : delta < 0 ? 'neg' : ''}`}>
+                      {delta > 0 ? '+' : ''}{delta}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="proto-actions">
+            <button onClick={() => setState(s => ({ ...s, phase: 'concealed', winTilePos: null }))} className="proto-btn">← Back to editing</button>
+            <button onClick={reset} className="proto-btn">New hand</button>
+          </div>
         </div>
       )}
     </div>
