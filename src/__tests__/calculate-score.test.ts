@@ -648,4 +648,36 @@ describe('calculateScore', () => {
     expect(result.handValue).toBe(19);
     expect(result.scores).toEqual({ A: 60, B: -20, C: -20, D: -20 });
   });
+
+  it('Hand 20 — all honors (13 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'pong', tiles: ['Nw', 'Nw', 'Nw'], concealed: false },
+        { type: 'pong', tiles: ['Rd', 'Rd', 'Rd'], concealed: false },
+        { type: 'pong', tiles: ['Wd', 'Wd', 'Wd'], concealed: true },
+        { type: 'pair', tiles: ['Sw', 'Sw'], concealed: true, winTile: 'Sw' },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'C',
+      method: 'discard',
+      from: 'D',
+      dealer: 'B',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'allHonors', points: 12 },
+    ]);
+    expect(result.handValue).toBe(13);
+    expect(result.scores).toEqual({ A: 0, B: 0, C: 13, D: -13 });
+  });
 });

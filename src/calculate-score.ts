@@ -50,6 +50,7 @@ const rules: Rule[] = [
   { name: 'noTerminalsNoHonors', score: noTerminalsNoHonors, absorbs: ['noFlowersNoHonors'] },
   { name: 'all1sOr9s', score: all1sOr9s, absorbs: ['terminalsAndHonors', 'noFlowersNoHonors'] },
   { name: 'threeSuitPongs', score: threeSuitPongs },
+  { name: 'allHonors', score: allHonors, absorbs: ['allPongs', 'windPong', 'dragonPong', 'terminalsAndHonors', 'noTerminalsWithHonors', 'only2Suits'] },
   { name: 'allGreens', score: allGreens, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
 ];
 
@@ -171,6 +172,11 @@ function threeSuitPongs(hand: Hand): number {
     const suits = new Set(melds.map(m => suit(m.tiles[0])));
     return suits.has('b') && suits.has('d') && suits.has('c');
   }) ? 4 : 0;
+}
+
+function allHonors(hand: Hand): number {
+  const tiles = hand.melds.flatMap(m => m.tiles);
+  return tiles.every(t => isDragon(t) || isWind(t)) ? 12 : 0;
 }
 
 function allGreens(hand: Hand): number {
