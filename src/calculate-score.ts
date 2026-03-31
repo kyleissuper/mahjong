@@ -24,6 +24,7 @@ const rules: Rule[] = [
   { name: 'selfPick', score: selfPick },
   { name: 'only2Suits', score: only2Suits },
   { name: 'noTerminalsWithHonors', score: noTerminalsWithHonors },
+  { name: 'splitKong', score: splitKong },
   { name: 'winFromButt', score: winFromButt },
   { name: 'hiddenKong', score: hiddenKong },
   { name: 'stolenKong', score: stolenKong },
@@ -104,6 +105,15 @@ function fourHiddenPongs(hand: Hand): number {
 function allGreens(hand: Hand): number {
   const tiles = hand.melds.flatMap(m => m.tiles);
   return tiles.every(t => suit(t) === 'b' || t === 'Gd') ? 14 : 0;
+}
+
+function splitKong(hand: Hand): number {
+  const nonKongTiles = hand.melds
+    .filter(m => m.type !== 'kong')
+    .flatMap(m => m.tiles);
+  const counts = new Map<Tile, number>();
+  for (const t of nonKongTiles) counts.set(t, (counts.get(t) ?? 0) + 1);
+  return [...counts.values()].filter(c => c >= 4).length;
 }
 
 function winFromButt(_hand: Hand, win: Win): number {

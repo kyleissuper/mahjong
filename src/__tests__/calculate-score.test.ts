@@ -300,4 +300,34 @@ describe('calculateScore', () => {
     // A(dealer)→B: 27+1=28, C→B: 27, D→B: 27
     expect(result).toEqual({ A: -28, B: 82, C: -27, D: -27 });
   });
+
+  it('Hand 11 — 1-9 chain, split kong, clean doorstep (7 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: true },
+        { type: 'chow', tiles: ['4b', '5b', '6b'], concealed: true },
+        { type: 'chow', tiles: ['7b', '8b', '9b'], concealed: true, winTile: '9b' },
+        { type: 'pong', tiles: ['5b', '5b', '5b'], concealed: true },
+        { type: 'pair', tiles: ['8d', '8d'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'D',
+      method: 'discard',
+      from: 'A',
+      dealer: 'C',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // 1-9 chain (+3), split kong (+1), clean doorstep (+1),
+    // 2/5/8 pair (+1), only 2 suits (+1), no flowers/no honors (+3) = 10 pts
+    // A pays D 10, dealer C not involved
+    expect(result).toEqual({ A: -10, B: 0, C: 0, D: 10 });
+  });
 });
