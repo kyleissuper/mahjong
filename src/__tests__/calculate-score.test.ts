@@ -451,4 +451,35 @@ describe('calculateScore', () => {
     // D (dealer) pays A: 11+1=12
     expect(result).toEqual({ A: 12, B: 0, C: 0, D: -12 });
   });
+
+  it('Hand 16 — all 1s/9s, three suit pongs, dealer extra round 4 (26 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: false },
+        { type: 'pong', tiles: ['9d', '9d', '9d'], concealed: false },
+        { type: 'pong', tiles: ['9c', '9c', '9c'], concealed: false },
+        { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: true },
+        { type: 'pair', tiles: ['1c', '1c'], concealed: true, winTile: '1c' },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'B',
+      method: 'self-pick',
+      dealer: 'A',
+      dealerRounds: 5,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // all 1s/9s (+16, absorbs terminalsAndHonors +4),
+    // three suit pongs (+4), all pongs (+4),
+    // self-pick (+1), can only win with one (+1) = 26 pts
+    // Dealer bonus: 1 + (4 × 2) = 9
+    // A(dealer)→B: 26+9=35, C→B: 26, D→B: 26
+    expect(result).toEqual({ A: -35, B: 87, C: -26, D: -26 });
+  });
 });
