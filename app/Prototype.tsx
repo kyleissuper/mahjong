@@ -393,10 +393,10 @@ export function Prototype() {
             <button onClick={commitAsPair} className="proto-btn">It's the pair</button>
           )}
           {phase === 'exposed' && (
-            <button onClick={switchToConcealed} className="proto-btn">Done with exposed</button>
+            <button onClick={switchToConcealed} className="proto-btn">Done with exposed →</button>
           )}
           {phase === 'concealed' && (
-            <button onClick={goToWinTile} className="proto-btn">Pick winning tile</button>
+            <button onClick={goToWinTile} className="proto-btn">Done with concealed →</button>
           )}
         </div>
       )}
