@@ -127,10 +127,9 @@ function allPongs(hand: Hand): number {
 
 function twoDoubleChows(hand: Hand): number {
   const chows = hand.melds.filter(m => m.type === 'chow');
-  const keys = chows.map(m => m.tiles.join(','));
-  const counts = Map.groupBy(keys, k => k);
-  const pairs = [...counts.values()].filter(g => g.length >= 2).length;
-  return pairs >= 2 ? 12 : 0;
+  const byTiles = Map.groupBy(chows, m => m.tiles.join(','));
+  const duplicatedChows = [...byTiles.values()].filter(g => g.length === 2);
+  return duplicatedChows.length === 2 ? 12 : 0;
 }
 
 function littleDragons(hand: Hand): number {
