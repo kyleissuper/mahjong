@@ -159,7 +159,7 @@
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-  margin-bottom: 10px;
+  padding: 8px 0;
 }
 
 .proto-btn {
@@ -189,12 +189,29 @@
   color: white;
 }
 
-/* Tile grid */
-.proto-grid {
+/* Bottom sheet */
+.proto-bottom-sheet {
+  position: sticky;
+  bottom: 0;
   background: white;
-  border-radius: 8px;
-  border: 1px solid #ebe4d6;
-  padding: 8px;
+  border-top: 1px solid #ebe4d6;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+  border-radius: 12px 12px 0 0;
+  padding: 8px 8px 12px;
+  margin: 0 -12px;
+}
+
+.proto-sheet-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px solid #ebe4d6;
+  margin-top: 8px;
+}
+
+.proto-grid {
+  padding: 0;
 }
 
 .proto-suit {
@@ -214,29 +231,6 @@
   display: flex;
   gap: 3px;
   flex-wrap: wrap;
-}
-
-.proto-undo {
-  width: 100%;
-  padding: 12px;
-  margin-top: 8px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: white;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-  color: #555;
-}
-
-.proto-undo:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.proto-undo:active:not(:disabled) {
-  background: #ebe4d6;
 }
 
 .tile-active {
