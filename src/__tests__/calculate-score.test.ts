@@ -713,4 +713,37 @@ describe('calculateScore', () => {
     expect(result.handValue).toBe(13);
     expect(result.scores).toEqual({ A: -13, B: 40, C: -13, D: -14 });
   });
+
+  it('Hand 22 — thirteen orphans, dealer self-pick (16 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        {
+          type: 'orphans',
+          tiles: ['1b', '9b', '1d', '9d', '1c', '9c', 'Ew', 'Sw', 'Ww', 'Nw', 'Rd', 'Gd', 'Wd', '1b'],
+          concealed: true,
+          winTile: '9c',
+        },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'self-pick',
+      dealer: 'A',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'selfPick', points: 1 },
+      { name: 'thirteenOrphans', points: 14 },
+    ]);
+    expect(result.handValue).toBe(16);
+    expect(result.scores).toEqual({ A: 51, B: -17, C: -17, D: -17 });
+  });
 });

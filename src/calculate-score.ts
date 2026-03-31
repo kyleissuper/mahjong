@@ -70,6 +70,10 @@ const rules: Rule[] = [
   { name: 'threeSuitPongs', score: threeSuitPongs },
   { name: 'allPairs', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258', 'canOnlyWinWithOne'] },
   { name: 'allHonors', score: allHonors, absorbs: ['allPongs', 'windPong', 'dragonPong', 'terminalsAndHonors', 'noTerminalsWithHonors', 'only2Suits'] },
+  { name: 'thirteenOrphans', score: thirteenOrphans, absorbs: [
+    'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'terminalsAndHonors',
+    'allPongs', 'windPong', 'dragonPong', 'noTerminalsWithHonors',
+  ] },
   { name: 'allGreens', score: allGreens, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
 ];
 
@@ -90,6 +94,10 @@ function canOnlyWinWithOne(hand: Hand): number {
   if (!meld?.winTile) return 0;
   if (meld.type === 'pair' || meld.type === 'pong' || meld.type === 'kong') return 1;
   if (meld.type === 'chow' && chowCanOnlyWinWithOne(meld)) return 1;
+  if (meld.type === 'orphans') {
+    const count = meld.tiles.filter(t => t === meld.winTile).length;
+    return count === 1 ? 1 : 0;
+  }
   return 0;
 }
 
@@ -187,6 +195,10 @@ function threeSuitPongs(hand: Hand): number {
 function allPairs(hand: Hand): number {
   const pairs = hand.melds.filter(m => m.type === 'pair');
   return pairs.length === 7 ? 12 : 0;
+}
+
+function thirteenOrphans(hand: Hand): number {
+  return hand.melds.some(m => m.type === 'orphans') ? 14 : 0;
 }
 
 function allHonors(hand: Hand): number {
