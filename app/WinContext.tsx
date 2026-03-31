@@ -10,10 +10,10 @@ const PLAYERS = ['A', 'B', 'C', 'D'];
 const METHODS = ['self-pick', 'discard', 'stolen-kong'] as const;
 
 const SPECIAL_LABELS: Record<WinCondition, string> = {
-  fromButt: 'From butt',
-  lastTile: 'Last tile',
-  firstTurn: 'First turn',
-  prodigy: 'Prodigy',
+  fromButt: 'Replacement draw',
+  lastTile: 'Last tile in wall',
+  firstTurn: 'Won on 1st turn',
+  prodigy: 'Ready within 4 discards',
 };
 
 function PlayerRow({ label, value, onChange }: {

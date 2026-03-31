@@ -74,7 +74,7 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
                 <span className="meld-tiles">
                   {meld.tiles.map((t, j) => (
                     <span key={j} className="tile-frame tile-sm">
-                      <TileImage tile={t} size={20} />
+                      <TileImage tile={t} size={meld.type === 'orphans' ? 14 : 20} />
                     </span>
                   ))}
                 </span>
