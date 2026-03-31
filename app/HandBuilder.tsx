@@ -45,12 +45,9 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className="meld-tiles">
-                    {[...new Set(meld.tiles)].map(t => (
-                      <TileImage key={t} tile={t} size={24} />
+                    {meld.tiles.map((t, j) => (
+                      <TileImage key={j} tile={t} size={24} />
                     ))}
-                    {meld.type !== 'flower' && meld.type !== 'orphans' && (
-                      <span className="meld-count">x{meld.tiles.length}</span>
-                    )}
                   </span>
                   <span className="meld-type">{meld.type}</span>
                 </div>

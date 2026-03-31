@@ -1,6 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400">
-  <!-- Tile background matching FluffyStuff style -->
   <rect width="300" height="400" rx="40" fill="#f5f0eb"/>
-  <!-- Flower character 花 -->
-  <text x="150" y="240" text-anchor="middle" dominant-baseline="central" font-family="serif" font-size="160" font-weight="bold" fill="#c43030">花</text>
+  <!-- Stem -->
+  <path d="M150 280 Q145 230 140 200 Q135 170 150 150" fill="none" stroke="#4a8c3f" stroke-width="6" stroke-linecap="round"/>
+  <!-- Leaf -->
+  <path d="M143 220 Q110 210 100 230 Q115 240 143 225" fill="#5a9c4f" opacity="0.8"/>
+  <!-- Petals -->
+  <circle cx="150" cy="130" r="22" fill="#e85d75" opacity="0.85"/>
+  <circle cx="128" cy="145" r="22" fill="#e85d75" opacity="0.75"/>
+  <circle cx="172" cy="145" r="22" fill="#e85d75" opacity="0.75"/>
+  <circle cx="135" cy="168" r="22" fill="#e85d75" opacity="0.65"/>
+  <circle cx="165" cy="168" r="22" fill="#e85d75" opacity="0.65"/>
+  <!-- Center -->
+  <circle cx="150" cy="150" r="12" fill="#f0c040"/>
+  <!-- Label -->
+  <text x="150" y="345" text-anchor="middle" font-family="serif" font-size="48" font-weight="bold" fill="#c43030">花</text>
 </svg>
