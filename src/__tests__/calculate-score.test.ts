@@ -35,9 +35,9 @@ describe('calculateScore', () => {
   it('Hand 2 — all chows, self-pick, only 2 suits, no 1s/9s/honors (8 pts)', () => {
     const hand: Hand = {
       melds: [
-        { type: 'chow', tiles: ['2b', '3b', '4b'], concealed: true },
+        { type: 'chow', tiles: ['2b', '3b', '4b'], concealed: false },
         { type: 'chow', tiles: ['5b', '6b', '7b'], concealed: true },
-        { type: 'chow', tiles: ['2d', '3d', '4d'], concealed: true },
+        { type: 'chow', tiles: ['2d', '3d', '4d'], concealed: false },
         { type: 'chow', tiles: ['5d', '6d', '7d'], concealed: true },
         { type: 'pair', tiles: ['8b', '8b'], concealed: true, winTile: '8b' },
       ],
@@ -93,10 +93,10 @@ describe('calculateScore', () => {
   it('Hand 4 — all greens, all pongs, dealer self-pick (20 pts)', () => {
     const hand: Hand = {
       melds: [
-        { type: 'pong', tiles: ['1b', '1b', '1b'], concealed: true },
-        { type: 'pong', tiles: ['5b', '5b', '5b'], concealed: true },
-        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: true },
-        { type: 'pong', tiles: ['Gd', 'Gd', 'Gd'], concealed: true },
+        { type: 'pong', tiles: ['1b', '1b', '1b'], concealed: false },
+        { type: 'pong', tiles: ['5b', '5b', '5b'], concealed: false },
+        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: false },
+        { type: 'pong', tiles: ['Gd', 'Gd', 'Gd'], concealed: false },
         { type: 'pair', tiles: ['3b', '3b'], concealed: true, winTile: '3b' },
       ],
     };
@@ -118,5 +118,34 @@ describe('calculateScore', () => {
     // Dealer self-pick: each loser pays 20+1=21
     // A gets 63, others pay 21 each
     expect(result).toEqual({ A: 63, B: -21, C: -21, D: -21 });
+  });
+
+  it('Hand 5 — clean doorstep, 1-9 chain, discard win (5 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['1d', '2d', '3d'], concealed: true },
+        { type: 'chow', tiles: ['4d', '5d', '6d'], concealed: true },
+        { type: 'chow', tiles: ['7d', '8d', '9d'], concealed: true, winTile: '7d' },
+        { type: 'pong', tiles: ['4b', '4b', '4b'], concealed: true },
+        { type: 'pair', tiles: ['Wd', 'Wd'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'C',
+      method: 'discard',
+      from: 'D',
+      dealer: 'B',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // clean doorstep (+1), 1-9 chain (+3), can only win with one (+1) = 5 pts
+    // D pays C 5, dealer B not involved
+    expect(result).toEqual({ A: 0, B: 0, C: 5, D: -5 });
   });
 });

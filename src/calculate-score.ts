@@ -24,6 +24,8 @@ const rules: Rule[] = [
   { name: 'only2Suits', score: only2Suits },
   { name: 'noTerminalsNoHonors', score: noTerminalsNoHonors },
   { name: 'noTerminalsWithHonors', score: noTerminalsWithHonors },
+  { name: 'cleanDoorstep', score: cleanDoorstep },
+  { name: 'oneToNineChain', score: oneToNineChain },
   { name: 'allGreens', score: allGreens, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits'] },
 ];
 
@@ -77,6 +79,21 @@ function allPongs(hand: Hand): number {
 function allGreens(hand: Hand): number {
   const tiles = hand.melds.flatMap(m => m.tiles);
   return tiles.every(t => suit(t) === 'b' || t === 'Gd') ? 14 : 0;
+}
+
+function cleanDoorstep(hand: Hand): number {
+  const sets = hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower');
+  return sets.every(m => m.concealed) ? 1 : 0;
+}
+
+function oneToNineChain(hand: Hand): number {
+  const chows = hand.melds.filter(m => m.type === 'chow');
+  const bySuit = Map.groupBy(chows, m => suit(m.tiles[0]));
+  for (const [, melds] of bySuit) {
+    const values = new Set(melds.flatMap(m => m.tiles.map(numValue)));
+    if ([1, 2, 3, 4, 5, 6, 7, 8, 9].every(v => values.has(v))) return 3;
+  }
+  return 0;
 }
 
 function noTerminalsNoHonors(hand: Hand): number {
