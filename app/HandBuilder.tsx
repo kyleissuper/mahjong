@@ -46,14 +46,16 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className="meld-tiles">
                     {meld.tiles.map((t, j) => (
-                      <TileImage key={j} tile={t} size={28} />
+                      <span key={j} className="tile-frame">
+                        <TileImage tile={t} />
+                      </span>
                     ))}
                   </span>
                   <span className="meld-type">{meld.type}</span>
                 </div>
                 <div className="meld-meta">
                   {meld.concealed && 'concealed'}
-                  {meld.winTile && <> · won with <TileImage tile={meld.winTile} size={16} /></>}
+                  {meld.winTile && <> · won with <span className="tile-frame"><TileImage tile={meld.winTile} size={16} /></span></>}
                 </div>
                 {error && <div className="meld-error">{error.message}</div>}
               </div>
@@ -228,7 +230,7 @@ function AddSetSheet({ onAdd, onCancel }: {
           {tiles.length > 0 && (
             <div>
               <div className="selected-tiles">
-                Selected: {tiles.map((t, i) => <TileImage key={i} tile={t} size={24} />)}
+                Selected: {tiles.map((t, i) => <span key={i} className="tile-frame"><TileImage tile={t} size={24} /></span>)}
               </div>
               <div className="form-row">
                 <span className="form-label">Winning tile in this set?</span>

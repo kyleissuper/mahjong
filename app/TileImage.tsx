@@ -6,15 +6,17 @@ interface Props {
   size?: number;
 }
 
-export function TileImage({ tile, size = 32 }: Props) {
+export function TileImage({ tile, size = 28 }: Props) {
   const src = tileImage(tile);
   if (!src) return <span>{tile}</span>;
 
-  const height = Math.round(size * 1.4);
-
   return (
-    <span className="tile-frame" style={{ width: size, height }}>
-      <img src={src} alt={tileName(tile)} width={size} height={height} draggable={false} />
-    </span>
+    <img
+      src={src}
+      alt={tileName(tile)}
+      width={size}
+      height={Math.round(size * 1.4)}
+      draggable={false}
+    />
   );
 }
