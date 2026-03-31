@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import type { Meld, MeldType, Tile } from '../src/types.js';
+import type { ValidationError } from '../src/validate-hand.js';
 import { TilePicker } from './TilePicker.tsx';
 
 interface Props {
   melds: Meld[];
+  errors: ValidationError[];
   onChange: (melds: Meld[]) => void;
 }
 
-export function HandBuilder({ melds, onChange }: Props) {
+export function HandBuilder({ melds, errors, onChange }: Props) {
   const [adding, setAdding] = useState(false);
 
   function addMeld(meld: Meld) {
@@ -26,14 +28,18 @@ export function HandBuilder({ melds, onChange }: Props) {
       {melds.length === 0 && <p>No sets yet. Add your first set to start scoring.</p>}
 
       <ul>
-        {melds.map((meld, i) => (
-          <li key={i}>
-            {meld.tiles.join(' ')} ({meld.type})
-            {meld.concealed && ' - concealed'}
-            {meld.winTile && ` - won with ${meld.winTile}`}
-            <button onClick={() => removeMeld(i)}> x</button>
-          </li>
-        ))}
+        {melds.map((meld, i) => {
+          const error = errors.find(e => e.meld === i);
+          return (
+            <li key={i}>
+              {meld.tiles.join(' ')} ({meld.type})
+              {meld.concealed && ' - concealed'}
+              {meld.winTile && ` - won with ${meld.winTile}`}
+              <button onClick={() => removeMeld(i)}> x</button>
+              {error && <span style={{ color: 'red' }}> {error.message}</span>}
+            </li>
+          );
+        })}
       </ul>
 
       {adding

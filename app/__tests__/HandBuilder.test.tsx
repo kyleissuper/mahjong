@@ -9,7 +9,7 @@ afterEach(cleanup);
 function setup(melds: Meld[] = []) {
   const onChange = vi.fn();
   const user = userEvent.setup();
-  render(<HandBuilder melds={melds} onChange={onChange} />);
+  render(<HandBuilder melds={melds} errors={[]} onChange={onChange} />);
   return { onChange, user };
 }
 
