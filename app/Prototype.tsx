@@ -466,10 +466,10 @@ export function Prototype() {
       {isEntering && (
         <div className="proto-actions">
           {currentSet.tiles.length >= 3 && detectMeldType(currentSet.tiles) !== 'invalid' && (
-            <button onClick={() => commitCurrentSet()} className="proto-btn proto-btn-primary">Next set →</button>
+            <button onClick={() => commitCurrentSet()} className="proto-btn proto-btn-primary">Save set</button>
           )}
           {currentSet.tiles.length === 2 && currentSet.tiles[0] === currentSet.tiles[1] && (
-            <button onClick={() => commitCurrentSet(true)} className="proto-btn proto-btn-primary">Next set →</button>
+            <button onClick={() => commitCurrentSet(true)} className="proto-btn proto-btn-primary">Save set</button>
           )}
           {currentSet.tiles.length > 0 && (
             <button onClick={() => setState(s => ({ ...s, [activeSetKey(s)]: { tiles: [] } }))} className="proto-btn proto-btn-danger">Delete set</button>
