@@ -5,7 +5,8 @@
     "module": "nodenext",
     "target": "esnext",
     "types": ["node"],
-    "lib": ["esnext"],
+    "lib": ["esnext", "dom"],
+    "jsx": "react-jsx",
     "sourceMap": true,
     "declaration": true,
     "strict": true,
@@ -14,5 +15,5 @@
     "skipLibCheck": true,
     "moduleDetection": "force"
   },
-  "include": ["src"]
+  "include": ["src", "app"]
 }
