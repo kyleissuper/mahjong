@@ -29,54 +29,35 @@ interface Props {
 }
 
 export function HandBuilder({ melds, errors, onChange }: Props) {
-  type SheetState = { mode: 'idle' } | { mode: 'editing'; index: number } | { mode: 'adding' };
-  const [sheet, setSheet] = useState<SheetState>({ mode: 'idle' });
+  const [open, setOpen] = useState<number | null>(null);
 
   function saveMeld(meld: Meld) {
-    if (sheet.mode === 'editing') {
-      onChange(melds.map((m, i) => i === sheet.index ? meld : m));
+    if (open !== null && open < melds.length) {
+      onChange(melds.map((m, i) => i === open ? meld : m));
     } else {
       onChange([...melds, meld]);
     }
-    setSheet({ mode: 'idle' });
+    setOpen(null);
   }
 
   function removeMeld(index: number) {
     onChange(melds.filter((_, i) => i !== index));
-    if (sheet.mode === 'editing' && sheet.index === index) setSheet({ mode: 'idle' });
+    if (open === index) setOpen(null);
   }
 
-  function toggleEdit(index: number) {
-    setSheet(sheet.mode === 'editing' && sheet.index === index
-      ? { mode: 'idle' }
-      : { mode: 'editing', index });
-  }
-
-  const isBusy = sheet.mode !== 'idle';
+  const addIndex = melds.length;
 
   return (
     <section className="hand-section">
-      <div className="hand-header">
-        <h2 className="hand-title">Your hand</h2>
-        {melds.length > 0 && !isBusy && (
-          <button className="add-btn" aria-label="Add set" onClick={() => setSheet({ mode: 'adding' })}>+</button>
-        )}
-      </div>
-
-      {melds.length === 0 && !isBusy && (
-        <button className="empty-hand-btn" onClick={() => setSheet({ mode: 'adding' })}>
-          Tap to add your first set
-        </button>
-      )}
-
       <div className="meld-row-list">
         {melds.map((meld, i) => {
           const error = errors.find(e => e.meld === i);
+          const isOpen = open === i;
           return (
             <div key={i}>
               <div
-                className={`meld-row ${sheet.mode === 'editing' && sheet.index === i ? 'meld-row-active' : ''}`}
-                onClick={() => toggleEdit(i)}
+                className={`meld-row ${isOpen ? 'meld-row-active' : ''}`}
+                onClick={() => setOpen(isOpen ? null : i)}
               >
                 <div className="meld-content">
                   <span className="meld-tiles">
@@ -95,17 +76,25 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
                 <button className="meld-x" onClick={e => { e.stopPropagation(); removeMeld(i); }}>×</button>
               </div>
               {error && <div className="meld-error">{error.message}</div>}
-              {sheet.mode === 'editing' && sheet.index === i && (
-                <SetSheet initial={meld} onSave={saveMeld} onCancel={() => setSheet({ mode: 'idle' })} />
+              {isOpen && (
+                <SetSheet initial={meld} onSave={saveMeld} onCancel={() => setOpen(null)} />
               )}
             </div>
           );
         })}
-      </div>
 
-      {sheet.mode === 'adding' && (
-        <SetSheet onSave={saveMeld} onCancel={() => setSheet({ mode: 'idle' })} />
-      )}
+        {/* The "add new" slot — always last in the list */}
+        {open === addIndex
+          ? <SetSheet onSave={saveMeld} onCancel={() => setOpen(null)} />
+          : <button
+              className={melds.length === 0 ? 'empty-hand-btn' : 'add-set-btn'}
+              aria-label="Add set"
+              onClick={() => setOpen(addIndex)}
+            >
+              {melds.length === 0 ? 'Tap to add your first set' : '+ Add set'}
+            </button>
+        }
+      </div>
     </section>
   );
 }

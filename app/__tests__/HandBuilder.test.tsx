@@ -30,9 +30,10 @@ describe('HandBuilder', () => {
       expect(screen.getByText(/tap to add/i)).toBeInTheDocument();
     });
 
-    it('does not show the + button when empty', () => {
+    it('shows "tap to add" as the add button when empty', () => {
       renderHand();
-      expect(screen.queryByRole('button', { name: 'Add set' })).not.toBeInTheDocument();
+      expect(screen.getByText(/tap to add/i)).toBeInTheDocument();
+      expect(screen.queryByText('+ Add set')).not.toBeInTheDocument();
     });
   });
 
