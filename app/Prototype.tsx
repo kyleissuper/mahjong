@@ -320,18 +320,22 @@ export function Prototype() {
   }
 
   function renderCurrentSet() {
-    if (currentSet.tiles.length === 0) return null;
+    const tiles = currentSet.tiles;
+    const placeholders = Math.max(0, 3 - tiles.length);
     return (
       <div className="proto-set proto-set-active">
         <div className="proto-set-tiles">
-          {currentSet.tiles.map((t, j) => (
+          {tiles.map((t, j) => (
             <span key={j} className="tile-frame tile-sm">
               <TileImage tile={t} size={18} />
             </span>
           ))}
+          {Array.from({ length: placeholders }, (_, j) => (
+            <span key={`p${j}`} className="tile-frame tile-sm tile-empty" />
+          ))}
         </div>
         <span className={`proto-set-label ${currentStatus.includes('✓') ? 'valid' : currentStatus.includes('✗') ? 'invalid' : ''}`}>
-          {currentStatus}
+          {tiles.length === 0 ? 'next set' : currentStatus}
         </span>
       </div>
     );
