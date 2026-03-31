@@ -21,9 +21,7 @@ describe('calculateScore', () => {
       from: 'D',
       dealer: 'B',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -54,9 +52,7 @@ describe('calculateScore', () => {
       method: 'self-pick',
       dealer: 'B',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -91,9 +87,7 @@ describe('calculateScore', () => {
       from: 'C',
       dealer: 'B',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -124,9 +118,7 @@ describe('calculateScore', () => {
       method: 'self-pick',
       dealer: 'A',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -159,9 +151,7 @@ describe('calculateScore', () => {
       from: 'D',
       dealer: 'B',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -192,9 +182,7 @@ describe('calculateScore', () => {
       method: 'self-pick',
       dealer: 'C',
       dealerRounds: 2,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -228,9 +216,7 @@ describe('calculateScore', () => {
       from: 'A',
       dealer: 'A',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -265,9 +251,7 @@ describe('calculateScore', () => {
       from: 'B',
       dealer: 'B',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -299,9 +283,7 @@ describe('calculateScore', () => {
       method: 'self-pick',
       dealer: 'D',
       dealerRounds: 1,
-      fromButt: true,
-      lastTile: false,
-      firstTurn: false,
+      special: ['fromButt'],
     };
 
     const result = calculateScore(hand, win);
@@ -334,9 +316,7 @@ describe('calculateScore', () => {
       method: 'self-pick',
       dealer: 'A',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -370,9 +350,7 @@ describe('calculateScore', () => {
       from: 'A',
       dealer: 'C',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -407,9 +385,7 @@ describe('calculateScore', () => {
       from: 'D',
       dealer: 'A',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -444,9 +420,7 @@ describe('calculateScore', () => {
       from: 'C',
       dealer: 'B',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -479,9 +453,7 @@ describe('calculateScore', () => {
       from: 'B',
       dealer: 'C',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -511,9 +483,7 @@ describe('calculateScore', () => {
       from: 'D',
       dealer: 'D',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -547,9 +517,7 @@ describe('calculateScore', () => {
       method: 'self-pick',
       dealer: 'A',
       dealerRounds: 5,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -583,9 +551,7 @@ describe('calculateScore', () => {
       from: 'A',
       dealer: 'B',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -618,9 +584,7 @@ describe('calculateScore', () => {
       from: 'B',
       dealer: 'C',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -650,9 +614,7 @@ describe('calculateScore', () => {
       method: 'self-pick',
       dealer: 'A',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -686,9 +648,7 @@ describe('calculateScore', () => {
       from: 'D',
       dealer: 'B',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -720,9 +680,7 @@ describe('calculateScore', () => {
       method: 'self-pick',
       dealer: 'D',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -753,9 +711,7 @@ describe('calculateScore', () => {
       method: 'self-pick',
       dealer: 'A',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -790,9 +746,7 @@ describe('calculateScore', () => {
       from: 'B',
       dealer: 'C',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -818,9 +772,7 @@ describe('calculateScore', () => {
       from: 'B',
       dealer: 'C',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -853,9 +805,7 @@ describe('calculateScore', () => {
       from: 'C',
       dealer: 'B',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -889,9 +839,7 @@ describe('calculateScore', () => {
       method: 'self-pick',
       dealer: 'D',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -922,9 +870,7 @@ describe('calculateScore', () => {
       method: 'self-pick',
       dealer: 'B',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -951,9 +897,7 @@ describe('calculateScore', () => {
       method: 'self-pick',
       dealer: 'A',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: true,
+      special: ['firstTurn'],
     };
 
     const result = calculateScore(hand, win);
@@ -984,9 +928,7 @@ describe('calculateScore', () => {
       from: 'A',
       dealer: 'A',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: true,
+      special: ['firstTurn'],
     };
 
     const result = calculateScore(hand, win);
@@ -1018,9 +960,7 @@ describe('calculateScore', () => {
       from: 'A',
       dealer: 'C',
       dealerRounds: 1,
-      fromButt: false,
-      lastTile: false,
-      firstTurn: false,
+      special: [],
     };
 
     const result = calculateScore(hand, win);
@@ -1050,9 +990,7 @@ describe('calculateScore', () => {
       method: 'self-pick',
       dealer: 'A',
       dealerRounds: 1,
-      fromButt: true,
-      lastTile: false,
-      firstTurn: false,
+      special: ['fromButt'],
     };
 
     const result = calculateScore(hand, win);

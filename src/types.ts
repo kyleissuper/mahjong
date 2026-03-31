@@ -27,10 +27,10 @@ export interface Win {
   from?: Player;
   dealer: Player;
   dealerRounds: number;
-  fromButt: boolean;
-  lastTile: boolean;
-  firstTurn: boolean;
+  special: WinCondition[];
 }
+
+export type WinCondition = 'fromButt' | 'lastTile' | 'firstTurn';
 
 export interface AppliedRule {
   name: string;

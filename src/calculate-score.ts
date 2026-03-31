@@ -231,11 +231,11 @@ function allPairs(hand: Hand): number {
 }
 
 function heavenlyHand(_hand: Hand, win: Win): number {
-  return win.method === 'self-pick' && win.winner === win.dealer && win.firstTurn ? 20 : 0;
+  return win.method === 'self-pick' && win.winner === win.dealer && win.special.includes('firstTurn') ? 20 : 0;
 }
 
 function earthlyHand(_hand: Hand, win: Win): number {
-  return win.method === 'discard' && win.winner !== win.dealer && win.firstTurn ? 16 : 0;
+  return win.method === 'discard' && win.winner !== win.dealer && win.special.includes('firstTurn') ? 16 : 0;
 }
 
 function heavenlyGates(hand: Hand): number {
@@ -272,7 +272,7 @@ function splitKong(hand: Hand): number {
 }
 
 function winFromButt(_hand: Hand, win: Win): number {
-  return win.fromButt ? 1 : 0;
+  return win.special.includes('fromButt') ? 1 : 0;
 }
 
 function hiddenKong(hand: Hand): number {
