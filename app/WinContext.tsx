@@ -16,6 +16,59 @@ const SPECIAL_LABELS: Record<WinCondition, string> = {
   prodigy: 'Prodigy',
 };
 
+function PlayerPicker({ label, value, onChange }: {
+  label: string;
+  value: string | undefined;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="win-field">
+      <div className="form-label">{label}</div>
+      <div className="player-picker">
+        {PLAYERS.map(p => (
+          <button
+            key={p}
+            className="player-btn"
+            aria-pressed={value === p}
+            onClick={() => onChange(p)}
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Stepper({ label, value, onChange, min = 1 }: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  min?: number;
+}) {
+  return (
+    <div className="win-field">
+      <div className="form-label">{label}</div>
+      <div className="stepper">
+        <button
+          className="stepper-btn"
+          onClick={() => onChange(Math.max(min, value - 1))}
+          disabled={value <= min}
+        >
+          -
+        </button>
+        <span className="stepper-value">{value}</span>
+        <button
+          className="stepper-btn"
+          onClick={() => onChange(value + 1)}
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function WinContext({ win, onChange }: Props) {
   function update(patch: Partial<Win>) {
     onChange({ ...win, ...patch });
@@ -47,74 +100,28 @@ export function WinContext({ win, onChange }: Props) {
       </div>
 
       <div className="win-fields">
+        <PlayerPicker label="Winner" value={win.winner} onChange={v => update({ winner: v })} />
+        <PlayerPicker label="Dealer" value={win.dealer} onChange={v => update({ dealer: v })} />
         {win.method !== 'self-pick' && (
-          <div className="win-field">
-            <label className="form-label" htmlFor="win-from">From:</label>
-            <select
-              id="win-from"
-              className="select-input"
-              value={win.from ?? ''}
-              onChange={e => update({ from: e.target.value })}
-            >
-              <option value="">Select player</option>
-              {PLAYERS.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-          </div>
+          <PlayerPicker label="From" value={win.from} onChange={v => update({ from: v })} />
         )}
-
-        <div className="win-field">
-          <label className="form-label" htmlFor="win-winner">Winner:</label>
-          <select
-            id="win-winner"
-            className="select-input"
-            value={win.winner ?? ''}
-            onChange={e => update({ winner: e.target.value })}
-          >
-            <option value="">Select player</option>
-            {PLAYERS.map(p => <option key={p} value={p}>{p}</option>)}
-          </select>
-        </div>
-
-        <div className="win-field">
-          <label className="form-label" htmlFor="win-dealer">Dealer:</label>
-          <select
-            id="win-dealer"
-            className="select-input"
-            value={win.dealer ?? ''}
-            onChange={e => update({ dealer: e.target.value })}
-          >
-            <option value="">Select player</option>
-            {PLAYERS.map(p => <option key={p} value={p}>{p}</option>)}
-          </select>
-        </div>
-
-        <div className="win-field">
-          <label className="form-label" htmlFor="win-rounds">Dealer rounds:</label>
-          <input
-            id="win-rounds"
-            className="number-input"
-            type="number"
-            min={1}
-            value={win.dealerRounds ?? 1}
-            onChange={e => update({ dealerRounds: parseInt(e.target.value) || 1 })}
-          />
-        </div>
+        <Stepper
+          label="Dealer rounds"
+          value={win.dealerRounds ?? 1}
+          onChange={v => update({ dealerRounds: v })}
+        />
       </div>
 
       <div className="special-conditions">
         {(Object.keys(SPECIAL_LABELS) as WinCondition[]).map(c => (
-          <label
+          <button
             key={c}
             className="special-tag"
             aria-pressed={(win.special ?? []).includes(c)}
+            onClick={() => toggleSpecial(c)}
           >
-            <input
-              type="checkbox"
-              checked={(win.special ?? []).includes(c)}
-              onChange={() => toggleSpecial(c)}
-            />
             {SPECIAL_LABELS[c]}
-          </label>
+          </button>
         ))}
       </div>
     </section>

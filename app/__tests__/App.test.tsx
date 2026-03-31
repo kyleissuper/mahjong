@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App } from '../App.tsx';
 
@@ -9,9 +9,16 @@ async function addChow(user: ReturnType<typeof userEvent.setup>, tiles: [string,
   await user.click(screen.getByText('+ Add set'));
   for (const tile of tiles) await user.click(screen.getByRole('button', { name: tile }));
   if (winTile) {
-    const selects = screen.getAllByRole('combobox');
-    const winSelect = selects.find(s => s.previousElementSibling?.textContent?.includes('Winning'));
-    if (winSelect) await user.selectOptions(winSelect, winTile);
+    // Winning tile buttons use img alt as accessible name
+    const altNames: Record<string, string> = {
+      '1b': '1 Bamboo', '2b': '2 Bamboo', '3b': '3 Bamboo', '4b': '4 Bamboo',
+      '5b': '5 Bamboo', '6b': '6 Bamboo', '7b': '7 Bamboo', '8b': '8 Bamboo', '9b': '9 Bamboo',
+      '1d': '1 Dots', '2d': '2 Dots', '3d': '3 Dots', '4d': '4 Dots',
+      '5d': '5 Dots', '6d': '6 Dots', '7d': '7 Dots', '8d': '8 Dots', '9d': '9 Dots',
+      '1c': '1 Char', '2c': '2 Char', '3c': '3 Char', '4c': '4 Char',
+      '5c': '5 Char', '6c': '6 Char', '7c': '7 Char', '8c': '8 Char', '9c': '9 Char',
+    };
+    await user.click(screen.getByRole('button', { name: altNames[winTile] ?? winTile }));
   }
   await user.click(screen.getByText('Add to hand'));
 }
@@ -19,7 +26,7 @@ async function addChow(user: ReturnType<typeof userEvent.setup>, tiles: [string,
 async function addPong(user: ReturnType<typeof userEvent.setup>, tile: string, concealed = false) {
   await user.click(screen.getByText('+ Add set'));
   await user.click(screen.getByText('Pong'));
-  if (!concealed) await user.click(screen.getByLabelText('Concealed'));
+  if (!concealed) await user.click(screen.getByText('Exposed'));
   await user.click(screen.getByRole('button', { name: tile }));
   await user.click(screen.getByText('Add to hand'));
 }
@@ -38,9 +45,15 @@ async function setWinContext(user: ReturnType<typeof userEvent.setup>, opts: {
   from?: string;
 }) {
   if (opts.method) await user.click(screen.getByRole('button', { name: opts.method }));
-  await user.selectOptions(screen.getByLabelText('Winner:'), opts.winner);
-  await user.selectOptions(screen.getByLabelText('Dealer:'), opts.dealer);
-  if (opts.from) await user.selectOptions(screen.getByLabelText('From:'), opts.from);
+  // Player pickers: find by label text then click the right player button within
+  const winnerField = screen.getByText('Winner').closest('.win-field')!;
+  await user.click(within(winnerField).getByText(opts.winner));
+  const dealerField = screen.getByText('Dealer').closest('.win-field')!;
+  await user.click(within(dealerField).getByText(opts.dealer));
+  if (opts.from) {
+    const fromField = screen.getByText('From').closest('.win-field')!;
+    await user.click(within(fromField).getByText(opts.from));
+  }
 }
 
 describe('App integration', () => {

@@ -228,16 +228,13 @@ function SetSheet({ initial, onSave, onCancel }: {
       </div>
 
       {type === 'flower' && (
-        <div className="form-row">
-          <span className="form-label">How many flowers?</span>
-          <input
-            className="number-input"
-            type="number"
-            min={1}
-            max={8}
-            value={flowerCount}
-            onChange={e => setFlowerCount(parseInt(e.target.value) || 1)}
-          />
+        <div>
+          <div className="form-label" style={{ marginBottom: 6 }}>How many flowers?</div>
+          <div className="stepper">
+            <button className="stepper-btn" onClick={() => setFlowerCount(Math.max(1, flowerCount - 1))} disabled={flowerCount <= 1}>-</button>
+            <span className="stepper-value">{flowerCount}</span>
+            <button className="stepper-btn" onClick={() => setFlowerCount(Math.min(8, flowerCount + 1))} disabled={flowerCount >= 8}>+</button>
+          </div>
         </div>
       )}
 
@@ -263,14 +260,22 @@ function SetSheet({ initial, onSave, onCancel }: {
 
       {type !== 'flower' && type !== 'orphans' && (
         <>
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={concealed}
-              onChange={e => setConcealed(e.target.checked)}
-            />
-            Concealed
-          </label>
+          <div className="toggle-row">
+            <button
+              className="type-btn"
+              aria-pressed={concealed}
+              onClick={() => setConcealed(true)}
+            >
+              Concealed
+            </button>
+            <button
+              className="type-btn"
+              aria-pressed={!concealed}
+              onClick={() => setConcealed(false)}
+            >
+              Exposed
+            </button>
+          </div>
 
           <TilePicker
             selected={tiles}
@@ -283,18 +288,27 @@ function SetSheet({ initial, onSave, onCancel }: {
               <div className="selected-tiles">
                 Selected: {tiles.map((t, i) => <span key={i} className="tile-frame"><TileImage tile={t} size={24} /></span>)}
               </div>
-              <div className="form-row">
-                <span className="form-label">Winning tile in this set?</span>
-                <select
-                  className="select-input"
-                  value={winTile ?? ''}
-                  onChange={e => setWinTile(e.target.value || null)}
-                >
-                  <option value="">No</option>
+              <div>
+                <div className="form-label" style={{ marginBottom: 6 }}>Winning tile in this set?</div>
+                <div className="tile-row">
+                  <button
+                    className="type-btn"
+                    aria-pressed={winTile === null}
+                    onClick={() => setWinTile(null)}
+                  >
+                    None
+                  </button>
                   {[...new Set(tiles)].map(t => (
-                    <option key={t} value={t}>{tileName(t)}</option>
+                    <button
+                      key={t}
+                      className="tile-frame tile-btn"
+                      aria-pressed={winTile === t}
+                      onClick={() => setWinTile(winTile === t ? null : t)}
+                    >
+                      <TileImage tile={t} size={22} />
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
             </div>
           )}

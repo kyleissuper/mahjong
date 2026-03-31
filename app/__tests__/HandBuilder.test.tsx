@@ -158,7 +158,8 @@ describe('HandBuilder', () => {
     await user.click(screen.getByRole('button', { name: '2b' }));
     await user.click(screen.getByRole('button', { name: '3b' }));
 
-    await user.selectOptions(screen.getByRole('combobox'), '2b');
+    // Click 2b in the winning tile section (accessible name from img alt)
+    await user.click(screen.getByRole('button', { name: '2 Bamboo' }));
     await user.click(screen.getByText('Add to hand'));
 
     expect(onChange).toHaveBeenCalledWith([
