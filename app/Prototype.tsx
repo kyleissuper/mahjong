@@ -515,7 +515,6 @@ export function Prototype() {
       {phase === 'done' && (
         <div className="proto-actions">
           <button onClick={() => setState(s => ({ ...s, phase: 'concealed', winTilePos: null }))} className="proto-btn">← Back to editing</button>
-          <button onClick={reset} className="proto-btn">New hand</button>
         </div>
       )}
     </div>
