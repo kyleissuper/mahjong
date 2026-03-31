@@ -38,13 +38,15 @@ const rules: Rule[] = [
   { name: 'noFlowersNoHonors', score: noFlowersNoHonors },
   { name: 'oneToNineChain', score: oneToNineChain },
   { name: 'littleDragons', score: littleDragons, absorbs: ['dragonPong'] },
+  { name: 'semiPure', score: semiPure, absorbs: ['only2Suits'] },
+  { name: 'fourConsecutivePongs', score: fourConsecutivePongs, absorbs: ['allPongs', 'threeConsecutivePongs'] },
   { name: 'terminalsAndHonors', score: terminalsAndHonors },
   { name: 'pure', score: pure },
   { name: 'fourHiddenPongs', score: fourHiddenPongs, absorbs: ['allPongs', 'threeHiddenPongs'] },
   { name: 'noTerminalsNoHonors', score: noTerminalsNoHonors, absorbs: ['noFlowersNoHonors'] },
   { name: 'all1sOr9s', score: all1sOr9s, absorbs: ['terminalsAndHonors', 'noFlowersNoHonors'] },
   { name: 'threeSuitPongs', score: threeSuitPongs },
-  { name: 'allGreens', score: allGreens, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits'] },
+  { name: 'allGreens', score: allGreens, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
 ];
 
 function calculateHandValue(hand: Hand, win: Win): number {
@@ -103,6 +105,23 @@ function littleDragons(hand: Hand): number {
   const dragonPongs = hand.melds.filter(m => m.type === 'pong' && isDragon(m.tiles[0]));
   const dragonPair = hand.melds.find(m => m.type === 'pair' && isDragon(m.tiles[0]));
   return dragonPongs.length === 2 && dragonPair ? 8 : 0;
+}
+
+function semiPure(hand: Hand): number {
+  const suits = new Set(hand.melds.flatMap(m => m.tiles.map(suit)));
+  const numberSuits = [...suits].filter(s => s === 'b' || s === 'd' || s === 'c');
+  const hasHonors = suits.has('dragon') || suits.has('wind');
+  return numberSuits.length === 1 && hasHonors ? 4 : 0;
+}
+
+function fourConsecutivePongs(hand: Hand): number {
+  const pongs = hand.melds
+    .filter(m => (m.type === 'pong' || m.type === 'kong') && isNumberTile(m.tiles[0]));
+  const bySuit = Map.groupBy(pongs, m => suit(m.tiles[0]));
+  return [...bySuit.values()].some(melds => {
+    const values = new Set(melds.map(m => numValue(m.tiles[0])));
+    return [...values].some(v => values.has(v + 1) && values.has(v + 2) && values.has(v + 3));
+  }) ? 8 : 0;
 }
 
 function terminalsAndHonors(hand: Hand): number {

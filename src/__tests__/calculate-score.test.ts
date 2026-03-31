@@ -482,4 +482,35 @@ describe('calculateScore', () => {
     // A(dealer)→B: 26+9=35, C→B: 26, D→B: 26
     expect(result).toEqual({ A: -35, B: 87, C: -26, D: -26 });
   });
+
+  it('Hand 17 — four consecutive pongs, semi-pure (14 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['4d', '4d', '4d'], concealed: true },
+        { type: 'pong', tiles: ['5d', '5d', '5d'], concealed: false },
+        { type: 'pong', tiles: ['6d', '6d', '6d'], concealed: false },
+        { type: 'pong', tiles: ['7d', '7d', '7d'], concealed: false },
+        { type: 'pair', tiles: ['Ww', 'Ww'], concealed: true, winTile: 'Ww' },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'C',
+      method: 'discard',
+      from: 'A',
+      dealer: 'B',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // four consecutive pongs (+8, absorbs allPongs +4 and threeConsecutivePongs +4),
+    // semi-pure (+4), no 1s/9s with honors (+1),
+    // can only win with one (+1) = 14 pts
+    // A pays C 14, dealer B not involved
+    expect(result).toEqual({ A: -14, B: 0, C: 14, D: 0 });
+  });
 });
