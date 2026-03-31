@@ -62,6 +62,7 @@ const rules: Rule[] = [
   { name: 'littleDragons', score: littleDragons, absorbs: ['dragonPong'] },
   { name: 'littleWinds', score: littleWinds, absorbs: ['windPong'] },
   { name: 'bigDragons', score: bigDragons, absorbs: ['littleDragons', 'dragonPong'] },
+  { name: 'bigWinds', score: bigWinds, absorbs: ['littleWinds', 'windPong', 'allPongs', 'noTerminalsWithHonors', 'semiPure', 'only2Suits', 'terminalsAndHonors'] },
   { name: 'semiPure', score: semiPure, absorbs: ['only2Suits'] },
   { name: 'fourConsecutivePongs', score: fourConsecutivePongs, absorbs: ['allPongs', 'threeConsecutivePongs'] },
   { name: 'terminalsAndHonors', score: terminalsAndHonors },
@@ -153,6 +154,11 @@ function littleDragons(hand: Hand): number {
   const dragonPongs = hand.melds.filter(m => m.type === 'pong' && isDragon(m.tiles[0]));
   const dragonPair = hand.melds.find(m => m.type === 'pair' && isDragon(m.tiles[0]));
   return dragonPongs.length === 2 && dragonPair ? 8 : 0;
+}
+
+function bigWinds(hand: Hand): number {
+  const windPongs = hand.melds.filter(m => m.type === 'pong' && isWind(m.tiles[0]));
+  return windPongs.length === 4 ? 18 : 0;
 }
 
 function semiPure(hand: Hand): number {

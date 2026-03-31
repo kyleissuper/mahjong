@@ -999,4 +999,37 @@ describe('calculateScore', () => {
     expect(result.handValue).toBe(18);
     expect(result.scores).toEqual({ A: -19, B: 19, C: 0, D: 0 });
   });
+
+  it('Hand 28 — big winds (19 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'pong', tiles: ['Sw', 'Sw', 'Sw'], concealed: false },
+        { type: 'pong', tiles: ['Ww', 'Ww', 'Ww'], concealed: false },
+        { type: 'pong', tiles: ['Nw', 'Nw', 'Nw'], concealed: true },
+        { type: 'pair', tiles: ['3b', '3b'], concealed: true, winTile: '3b' },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'D',
+      method: 'discard',
+      from: 'A',
+      dealer: 'C',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+      firstTurn: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'bigWinds', points: 18 },
+    ]);
+    expect(result.handValue).toBe(19);
+    expect(result.scores).toEqual({ A: -19, B: 0, C: 0, D: 19 });
+  });
 });
