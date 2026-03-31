@@ -48,58 +48,55 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
   const isEditing = editing !== null;
 
   return (
-    <section className="section">
-      <h2 className="section-title">Your hand</h2>
+    <section className="hand-section">
+      <div className="hand-header">
+        <h2 className="hand-title">Your hand</h2>
+        {melds.length > 0 && !isEditing && (
+          <button className="add-btn" onClick={() => setEditing(melds.length)}>+</button>
+        )}
+      </div>
 
       {melds.length === 0 && !isEditing && (
-        <p className="empty-hand">No sets yet. Add your first set to start scoring.</p>
+        <button className="empty-hand-btn" onClick={() => setEditing(0)}>
+          Tap to add your first set
+        </button>
       )}
 
-      <ul className="meld-list">
+      <div className="meld-row-list">
         {melds.map((meld, i) => {
           const error = errors.find(e => e.meld === i);
-          const isThis = editing === i;
           return (
-            <li key={i}>
-              <div className={`meld-item ${isThis ? 'meld-item-editing' : ''}`}>
-                <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setEditing(isThis ? null : i)}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span className="meld-tiles">
-                      {meld.tiles.map((t, j) => (
-                        <span key={j} className="tile-frame">
-                          <TileImage tile={t} />
-                        </span>
-                      ))}
+            <div key={i}>
+              <div
+                className={`meld-row ${editing === i ? 'meld-row-active' : ''}`}
+                onClick={() => setEditing(editing === i ? null : i)}
+              >
+                <span className="meld-tiles">
+                  {meld.tiles.map((t, j) => (
+                    <span key={j} className="tile-frame tile-sm">
+                      <TileImage tile={t} size={20} />
                     </span>
-                    <span className="meld-type">{TYPE_LABELS[meld.type]}</span>
-                  </div>
-                  <div className="meld-meta">
-                    {meld.concealed && 'concealed'}
-                    {meld.winTile && <> · won with <span className="tile-frame"><TileImage tile={meld.winTile} size={16} /></span></>}
-                  </div>
-                  {error && <div className="meld-error">{error.message}</div>}
-                </div>
-                <button className="meld-remove" onClick={() => removeMeld(i)}>x</button>
+                  ))}
+                </span>
+                <span className="meld-info">
+                  <span className="meld-type">{TYPE_LABELS[meld.type]}</span>
+                  {meld.concealed && <span className="meld-tag">hidden</span>}
+                  {meld.winTile && <span className="meld-tag">win</span>}
+                </span>
+                <button className="meld-x" onClick={e => { e.stopPropagation(); removeMeld(i); }}>×</button>
+                {error && <span className="meld-error-dot" title={error.message}>!</span>}
               </div>
-              {isThis && (
-                <SetSheet
-                  initial={meld}
-                  onSave={saveMeld}
-                  onCancel={() => setEditing(null)}
-                />
+              {editing === i && (
+                <SetSheet initial={meld} onSave={saveMeld} onCancel={() => setEditing(null)} />
               )}
-            </li>
+            </div>
           );
         })}
-      </ul>
+      </div>
 
-      {editing === melds.length
-        ? <SetSheet
-            onSave={saveMeld}
-            onCancel={() => setEditing(null)}
-          />
-        : !isEditing && <button className="add-set-btn" onClick={() => setEditing(melds.length)}>+ Add set</button>
-      }
+      {editing === melds.length && (
+        <SetSheet onSave={saveMeld} onCancel={() => setEditing(null)} />
+      )}
     </section>
   );
 }
@@ -116,12 +113,12 @@ function OrphanTilePicker({ selected, onSelect, label }: {
         {ORPHAN_TILES.map(tile => (
           <button
             key={tile}
-            className="tile-frame tile-btn"
+            className="tile-frame tile-btn tile-sm"
             aria-pressed={selected === tile}
             aria-label={tile}
             onClick={() => onSelect(selected === tile ? null : tile)}
           >
-            <TileImage tile={tile} size={22} />
+            <TileImage tile={tile} size={18} />
           </button>
         ))}
       </div>
@@ -208,118 +205,80 @@ function SetSheet({ initial, onSave, onCancel }: {
     type === 'pair' ? tiles.length === 2 :
     tiles.length === 3;
 
-  const isNew = !initial;
-
   return (
-    <div className="sheet">
-      <h3 className="sheet-title">{isNew ? 'Add a set' : 'Edit set'}</h3>
-
-      <div className="type-selector">
-        {MELD_TYPES.map(t => (
-          <button
-            key={t}
-            className="type-btn"
-            aria-pressed={type === t}
-            onClick={() => changeType(t)}
-          >
-            {TYPE_LABELS[t]}
-          </button>
-        ))}
-      </div>
-
-      {type === 'flower' && (
-        <div>
-          <div className="form-label" style={{ marginBottom: 6 }}>How many flowers?</div>
-          <div className="stepper">
-            <button className="stepper-btn" onClick={() => setFlowerCount(Math.max(1, flowerCount - 1))} disabled={flowerCount <= 1}>-</button>
-            <span className="stepper-value">{flowerCount}</span>
-            <button className="stepper-btn" onClick={() => setFlowerCount(Math.min(8, flowerCount + 1))} disabled={flowerCount >= 8}>+</button>
+    <div className="sheet-overlay">
+      <div className="sheet">
+        <div className="sheet-header">
+          <div className="type-selector">
+            {MELD_TYPES.map(t => (
+              <button
+                key={t}
+                className="type-btn"
+                aria-pressed={type === t}
+                onClick={() => changeType(t)}
+              >
+                {TYPE_LABELS[t]}
+              </button>
+            ))}
           </div>
         </div>
-      )}
 
-      {type === 'orphans' && (
-        <div>
-          <p className="orphans-info">
-            One of each terminal and honor tile + one duplicate.
-          </p>
-          <div className="orphans-fields">
-            <OrphanTilePicker
-              selected={orphanPair}
-              onSelect={setOrphanPair}
-              label="Which tile is the pair?"
-            />
-            <OrphanTilePicker
-              selected={winTile}
-              onSelect={setWinTile}
-              label="Which tile completed the hand?"
-            />
-          </div>
-        </div>
-      )}
-
-      {type !== 'flower' && type !== 'orphans' && (
-        <>
-          <div className="toggle-row">
-            <button
-              className="type-btn"
-              aria-pressed={concealed}
-              onClick={() => setConcealed(true)}
-            >
-              Concealed
-            </button>
-            <button
-              className="type-btn"
-              aria-pressed={!concealed}
-              onClick={() => setConcealed(false)}
-            >
-              Exposed
-            </button>
-          </div>
-
-          <TilePicker
-            selected={tiles}
-            onToggle={selectTile}
-            meldType={type}
-          />
-
-          {tiles.length > 0 && (
+        <div className="sheet-body">
+          {type === 'flower' && (
             <div>
-              <div className="selected-tiles">
-                Selected: {tiles.map((t, i) => <span key={i} className="tile-frame"><TileImage tile={t} size={24} /></span>)}
-              </div>
-              <div>
-                <div className="form-label" style={{ marginBottom: 6 }}>Winning tile in this set?</div>
-                <div className="tile-row">
-                  <button
-                    className="type-btn"
-                    aria-pressed={winTile === null}
-                    onClick={() => setWinTile(null)}
-                  >
-                    None
-                  </button>
-                  {[...new Set(tiles)].map(t => (
-                    <button
-                      key={t}
-                      className="tile-frame tile-btn"
-                      aria-pressed={winTile === t}
-                      onClick={() => setWinTile(winTile === t ? null : t)}
-                    >
-                      <TileImage tile={t} size={22} />
-                    </button>
-                  ))}
-                </div>
+              <div className="form-label" style={{ marginBottom: 6 }}>How many?</div>
+              <div className="stepper">
+                <button className="stepper-btn" onClick={() => setFlowerCount(Math.max(1, flowerCount - 1))} disabled={flowerCount <= 1}>-</button>
+                <span className="stepper-value">{flowerCount}</span>
+                <button className="stepper-btn" onClick={() => setFlowerCount(Math.min(8, flowerCount + 1))} disabled={flowerCount >= 8}>+</button>
               </div>
             </div>
           )}
-        </>
-      )}
 
-      <div className="sheet-actions">
-        <button className="btn-primary" onClick={handleSave} disabled={!canSave}>
-          {isNew ? 'Add to hand' : 'Save'}
-        </button>
-        <button className="btn-secondary" onClick={onCancel}>Cancel</button>
+          {type === 'orphans' && (
+            <div className="orphans-fields">
+              <OrphanTilePicker selected={orphanPair} onSelect={setOrphanPair} label="Pair tile" />
+              <OrphanTilePicker selected={winTile} onSelect={setWinTile} label="Winning tile" />
+            </div>
+          )}
+
+          {type !== 'flower' && type !== 'orphans' && (
+            <>
+              <div className="toggle-row">
+                <button className="type-btn" aria-pressed={concealed} onClick={() => setConcealed(true)}>Concealed</button>
+                <button className="type-btn" aria-pressed={!concealed} onClick={() => setConcealed(false)}>Exposed</button>
+              </div>
+
+              <TilePicker selected={tiles} onToggle={selectTile} meldType={type} />
+
+              {tiles.length > 0 && (
+                <div>
+                  <div className="form-label" style={{ marginBottom: 6 }}>Winning tile?</div>
+                  <div className="tile-row">
+                    <button className="type-btn" aria-pressed={winTile === null} onClick={() => setWinTile(null)}>None</button>
+                    {[...new Set(tiles)].map(t => (
+                      <button
+                        key={t}
+                        className="tile-frame tile-btn tile-sm"
+                        aria-pressed={winTile === t}
+                        onClick={() => setWinTile(winTile === t ? null : t)}
+                      >
+                        <TileImage tile={t} size={20} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="sheet-actions">
+          <button className="btn-primary" onClick={handleSave} disabled={!canSave}>
+            {initial ? 'Save' : 'Add'}
+          </button>
+          <button className="btn-secondary" onClick={onCancel}>Cancel</button>
+        </div>
       </div>
     </div>
   );

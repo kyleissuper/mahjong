@@ -46,21 +46,22 @@ export function App() {
     }
   }, [melds, errors, fullWin]);
 
+  function resetHand() {
+    setMelds([]);
+  }
+
   return (
     <div className="app">
-      <header className="app-header">
-        <h1 className="app-title">Mahjong Scorer</h1>
-        <div className="app-subtitle">Score Calculator</div>
-      </header>
-
       <HandBuilder melds={melds} errors={errors} onChange={setMelds} />
 
-      <WinContext win={win} onChange={setWin} />
-
-      {result && <ScoreBreakdown result={result} />}
-
-      {!result && melds.length > 0 && errors.length === 0 && !fullWin && (
-        <p className="hint">Fill in the win details to see your score.</p>
+      {melds.length > 0 && (
+        <>
+          <WinContext win={win} onChange={setWin} />
+          {result && <ScoreBreakdown result={result} onReset={resetHand} />}
+          {!result && !fullWin && (
+            <p className="hint">Select winner and dealer above.</p>
+          )}
+        </>
       )}
     </div>
   );
