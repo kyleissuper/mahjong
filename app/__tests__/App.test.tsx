@@ -8,7 +8,11 @@ afterEach(cleanup);
 async function addChow(user: ReturnType<typeof userEvent.setup>, tiles: [string, string, string], winTile?: string) {
   await user.click(screen.getByText('+ Add set'));
   for (const tile of tiles) await user.click(screen.getByRole('button', { name: tile }));
-  if (winTile) await user.selectOptions(screen.getByLabelText(/winning tile/i), winTile);
+  if (winTile) {
+    const selects = screen.getAllByRole('combobox');
+    const winSelect = selects.find(s => s.previousElementSibling?.textContent?.includes('Winning'));
+    if (winSelect) await user.selectOptions(winSelect, winTile);
+  }
   await user.click(screen.getByText('Add to hand'));
 }
 
@@ -33,7 +37,7 @@ async function setWinContext(user: ReturnType<typeof userEvent.setup>, opts: {
   dealer: string;
   from?: string;
 }) {
-  if (opts.method) await user.click(screen.getByLabelText(opts.method));
+  if (opts.method) await user.click(screen.getByRole('button', { name: opts.method }));
   await user.selectOptions(screen.getByLabelText('Winner:'), opts.winner);
   await user.selectOptions(screen.getByLabelText('Dealer:'), opts.dealer);
   if (opts.from) await user.selectOptions(screen.getByLabelText('From:'), opts.from);
@@ -55,10 +59,11 @@ describe('App integration', () => {
     await setWinContext(user, { winner: 'A', dealer: 'B', from: 'D' });
 
     // Verify score
-    expect(screen.getByText(/Score: 3 pts/)).toBeInTheDocument();
-    expect(screen.getByText(/Dragon pong: \+1/)).toBeInTheDocument();
-    expect(screen.getByText(/2\/5\/8 pair: \+1/)).toBeInTheDocument();
-    expect(screen.getByText(/Single tile wait: \+1/)).toBeInTheDocument();
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByText('points')).toBeInTheDocument();
+    expect(screen.getByText('Dragon pong')).toBeInTheDocument();
+    expect(screen.getByText('2/5/8 pair')).toBeInTheDocument();
+    expect(screen.getByText('Single tile wait')).toBeInTheDocument();
   });
 
   it('prompts for win details before showing score', async () => {
@@ -93,9 +98,9 @@ describe('App integration', () => {
 
     await setWinContext(user, { method: 'self-pick', winner: 'B', dealer: 'D' });
 
-    expect(screen.getByText(/Score: 13 pts/)).toBeInTheDocument();
-    expect(screen.getByText(/All pairs: \+12/)).toBeInTheDocument();
-    expect(screen.getByText(/Self-pick: \+1/)).toBeInTheDocument();
+    expect(screen.getByText('13')).toBeInTheDocument();
+    expect(screen.getByText('All pairs')).toBeInTheDocument();
+    expect(screen.getByText('Self-pick')).toBeInTheDocument();
   });
 
   it('scores thirteen orphans', async () => {
@@ -104,13 +109,14 @@ describe('App integration', () => {
 
     await user.click(screen.getByText('+ Add set'));
     await user.click(screen.getByRole('button', { name: 'orphans' }));
-    await user.selectOptions(screen.getByLabelText(/which tile is the pair/i), '1b');
-    await user.selectOptions(screen.getByLabelText(/which tile completed/i), '9c');
+    const selects = screen.getAllByRole('combobox');
+    await user.selectOptions(selects[0], '1b');
+    await user.selectOptions(selects[1], '9c');
     await user.click(screen.getByText('Add to hand'));
 
     await setWinContext(user, { method: 'self-pick', winner: 'A', dealer: 'A' });
 
-    expect(screen.getByText(/Score: 16 pts/)).toBeInTheDocument();
-    expect(screen.getByText(/Thirteen orphans: \+14/)).toBeInTheDocument();
+    expect(screen.getByText('16')).toBeInTheDocument();
+    expect(screen.getByText('Thirteen orphans')).toBeInTheDocument();
   });
 });

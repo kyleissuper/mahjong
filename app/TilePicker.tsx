@@ -18,25 +18,22 @@ export function TilePicker({ selected, onToggle, meldType }: Props) {
   const honorsDisabled = meldType === 'chow';
 
   return (
-    <div>
+    <div className="tile-grid">
       {SUITS.map(({ name, tiles }) => {
         const isHonorRow = name === 'Winds' || name === 'Dragons';
         const disabled = isHonorRow && honorsDisabled;
 
         return (
-          <div key={name}>
-            <strong>{name}</strong>
-            <div>
+          <div key={name} className="tile-suit">
+            <div className="tile-suit-name">{name}</div>
+            <div className="tile-row">
               {tiles.map(tile => (
                 <button
                   key={tile}
+                  className="tile-btn"
                   onClick={() => onToggle(tile)}
                   disabled={disabled}
-                  style={{
-                    opacity: disabled ? 0.3 : 1,
-                    fontWeight: selected.includes(tile) ? 'bold' : 'normal',
-                    background: selected.includes(tile) ? '#ddd' : 'transparent',
-                  }}
+                  aria-pressed={selected.includes(tile)}
                 >
                   {tile}
                 </button>

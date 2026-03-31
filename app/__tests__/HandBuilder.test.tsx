@@ -214,8 +214,9 @@ describe('HandBuilder', () => {
 
     expect(screen.getByText(/thirteen orphans/i)).toBeTruthy();
 
-    await user.selectOptions(screen.getByLabelText(/which tile is the pair/i), '1b');
-    await user.selectOptions(screen.getByLabelText(/which tile completed/i), '9c');
+    const selects = screen.getAllByRole('combobox');
+    await user.selectOptions(selects[0], '1b');
+    await user.selectOptions(selects[1], '9c');
     await user.click(screen.getByText('Add to hand'));
 
     expect(onChange).toHaveBeenCalledWith([

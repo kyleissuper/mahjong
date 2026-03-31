@@ -28,21 +28,30 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
   }
 
   return (
-    <section>
-      <h2>Your hand</h2>
+    <section className="section">
+      <h2 className="section-title">Your hand</h2>
 
-      {melds.length === 0 && <p>No sets yet. Add your first set to start scoring.</p>}
+      {melds.length === 0 && (
+        <p className="empty-hand">No sets yet. Add your first set to start scoring.</p>
+      )}
 
-      <ul>
+      <ul className="meld-list">
         {melds.map((meld, i) => {
           const error = errors.find(e => e.meld === i);
           return (
-            <li key={i}>
-              {meld.tiles.join(' ')} ({meld.type})
-              {meld.concealed && ' - concealed'}
-              {meld.winTile && ` - won with ${meld.winTile}`}
-              <button onClick={() => removeMeld(i)}> x</button>
-              {error && <span style={{ color: 'red' }}> {error.message}</span>}
+            <li key={i} className="meld-item">
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span className="meld-tiles">{meld.tiles.join(' ')}</span>
+                  <span className="meld-type">{meld.type}</span>
+                </div>
+                <div className="meld-meta">
+                  {meld.concealed && 'concealed'}
+                  {meld.winTile && ` · won with ${meld.winTile}`}
+                </div>
+                {error && <div className="meld-error">{error.message}</div>}
+              </div>
+              <button className="meld-remove" onClick={() => removeMeld(i)}>x</button>
             </li>
           );
         })}
@@ -50,7 +59,7 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
 
       {adding
         ? <AddSetSheet onAdd={addMeld} onCancel={() => setAdding(false)} />
-        : <button onClick={() => setAdding(true)}>+ Add set</button>
+        : <button className="add-set-btn" onClick={() => setAdding(true)}>+ Add set</button>
       }
     </section>
   );
@@ -127,15 +136,16 @@ function AddSetSheet({ onAdd, onCancel }: {
     tiles.length === 3;
 
   return (
-    <div>
-      <h3>What kind of set?</h3>
+    <div className="sheet">
+      <h3 className="sheet-title">What kind of set?</h3>
 
-      <div>
+      <div className="type-selector">
         {MELD_TYPES.map(t => (
           <button
             key={t}
+            className="type-btn"
+            aria-pressed={type === t}
             onClick={() => changeType(t)}
-            style={{ fontWeight: type === t ? 'bold' : 'normal' }}
           >
             {t}
           </button>
@@ -143,51 +153,58 @@ function AddSetSheet({ onAdd, onCancel }: {
       </div>
 
       {type === 'flower' && (
-        <label>
-          How many flowers?{' '}
+        <div className="form-row">
+          <span className="form-label">How many flowers?</span>
           <input
+            className="number-input"
             type="number"
             min={1}
             max={8}
             value={flowerCount}
             onChange={e => setFlowerCount(parseInt(e.target.value) || 1)}
           />
-        </label>
+        </div>
       )}
 
       {type === 'orphans' && (
         <div>
-          <p>Thirteen orphans: one of each terminal and honor tile + one duplicate.</p>
-          <label>
-            Which tile is the pair?{' '}
-            <select
-              value={orphanPair ?? ''}
-              onChange={e => setOrphanPair(e.target.value || null)}
-            >
-              <option value="">Select tile</option>
-              {ORPHAN_TILES.map(t => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Which tile completed the hand?{' '}
-            <select
-              value={winTile ?? ''}
-              onChange={e => setWinTile(e.target.value || null)}
-            >
-              <option value="">Select tile</option>
-              {ORPHAN_TILES.map(t => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </label>
+          <p className="orphans-info">
+            Thirteen orphans: one of each terminal and honor tile + one duplicate.
+          </p>
+          <div className="orphans-fields">
+            <div className="form-row">
+              <span className="form-label">Which tile is the pair?</span>
+              <select
+                className="select-input"
+                value={orphanPair ?? ''}
+                onChange={e => setOrphanPair(e.target.value || null)}
+              >
+                <option value="">Select tile</option>
+                {ORPHAN_TILES.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-row">
+              <span className="form-label">Which tile completed the hand?</span>
+              <select
+                className="select-input"
+                value={winTile ?? ''}
+                onChange={e => setWinTile(e.target.value || null)}
+              >
+                <option value="">Select tile</option>
+                {ORPHAN_TILES.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       )}
 
       {type !== 'flower' && type !== 'orphans' && (
         <>
-          <label>
+          <label className="checkbox-label">
             <input
               type="checkbox"
               checked={concealed}
@@ -204,10 +221,11 @@ function AddSetSheet({ onAdd, onCancel }: {
 
           {tiles.length > 0 && (
             <div>
-              <p>Selected: {tiles.join(' ')}</p>
-              <label>
-                Winning tile in this set?{' '}
+              <div className="selected-tiles">Selected: {tiles.join(' ')}</div>
+              <div className="form-row">
+                <span className="form-label">Winning tile in this set?</span>
                 <select
+                  className="select-input"
                   value={winTile ?? ''}
                   onChange={e => setWinTile(e.target.value || null)}
                 >
@@ -216,15 +234,17 @@ function AddSetSheet({ onAdd, onCancel }: {
                     <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
-              </label>
+              </div>
             </div>
           )}
         </>
       )}
 
-      <div>
-        <button onClick={handleAdd} disabled={!canAdd}>Add to hand</button>
-        <button onClick={onCancel}>Cancel</button>
+      <div className="sheet-actions">
+        <button className="btn-primary" onClick={handleAdd} disabled={!canAdd}>
+          Add to hand
+        </button>
+        <button className="btn-secondary" onClick={onCancel}>Cancel</button>
       </div>
     </div>
   );

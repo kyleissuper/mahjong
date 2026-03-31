@@ -5,6 +5,7 @@ import { validateHand } from '../src/validate-hand.js';
 import { HandBuilder } from './HandBuilder.tsx';
 import { WinContext } from './WinContext.tsx';
 import { ScoreBreakdown } from './ScoreBreakdown.tsx';
+import './styles.css';
 
 const PLAYERS = ['A', 'B', 'C', 'D'] as const;
 
@@ -46,28 +47,20 @@ export function App() {
   }, [melds, errors, fullWin]);
 
   return (
-    <div>
-      <h1>Mahjong Scorer</h1>
+    <div className="app">
+      <header className="app-header">
+        <h1 className="app-title">Mahjong Scorer</h1>
+        <div className="app-subtitle">Score Calculator</div>
+      </header>
 
       <HandBuilder melds={melds} errors={errors} onChange={setMelds} />
 
       <WinContext win={win} onChange={setWin} />
 
-      {errors.length > 0 && (
-        <section>
-          <h2>Issues</h2>
-          <ul>
-            {errors.map((e, i) => (
-              <li key={i}>Set {e.meld + 1}: {e.message}</li>
-            ))}
-          </ul>
-        </section>
-      )}
-
       {result && <ScoreBreakdown result={result} />}
 
       {!result && melds.length > 0 && errors.length === 0 && !fullWin && (
-        <p>Fill in the win details to see your score.</p>
+        <p className="hint">Fill in the win details to see your score.</p>
       )}
     </div>
   );

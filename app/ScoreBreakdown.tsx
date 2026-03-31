@@ -60,25 +60,34 @@ export function ScoreBreakdown({ result }: Props) {
   const { handValue, appliedRules, scores } = result;
 
   return (
-    <section>
-      <h2>Score: {handValue} pts</h2>
+    <section className="section">
+      <div className="score-section">
+        <div className="score-header">
+          <div className="score-value">{handValue}</div>
+          <div className="score-label">points</div>
+        </div>
 
-      <ul>
-        {appliedRules.map(({ name, points }) => (
-          <li key={name}>
-            {RULE_LABELS[name] ?? name}: +{points}
-          </li>
-        ))}
-      </ul>
+        <ul className="rules-list">
+          {appliedRules.map(({ name, points }) => (
+            <li key={name} className="rule-item">
+              <span className="rule-name">{RULE_LABELS[name] ?? name}</span>
+              <span className="rule-points">+{points}</span>
+            </li>
+          ))}
+        </ul>
 
-      <h3>Payments</h3>
-      <ul>
-        {Object.entries(scores).map(([player, delta]) => (
-          <li key={player} style={{ color: delta > 0 ? 'green' : delta < 0 ? 'red' : undefined }}>
-            {player}: {delta > 0 ? '+' : ''}{delta}
-          </li>
-        ))}
-      </ul>
+        <div className="payments-title">Payments</div>
+        <ul className="payments-list">
+          {Object.entries(scores).map(([player, delta]) => (
+            <li key={player} className="payment-item">
+              <div className="payment-player">{player}</div>
+              <div className={`payment-delta ${delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'zero'}`}>
+                {delta > 0 ? '+' : ''}{delta}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }
