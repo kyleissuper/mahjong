@@ -121,7 +121,7 @@ function windPong(hand: Hand): number {
 
 function allChows(hand: Hand): number {
   const sets = hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower');
-  return sets.every(m => m.type === 'chow') ? 1 : 0;
+  return sets.length && sets.every(m => m.type === 'chow') ? 1 : 0;
 }
 
 function selfPick(_hand: Hand, win: Win): number {
@@ -135,7 +135,7 @@ function only2Suits(hand: Hand): number {
 
 function allPongs(hand: Hand): number {
   const sets = hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower');
-  return sets.every(m => m.type === 'pong' || m.type === 'kong') ? 4 : 0;
+  return sets.length && sets.every(m => m.type === 'pong' || m.type === 'kong') ? 4 : 0;
 }
 
 function twoKongMahjong(hand: Hand): number {
