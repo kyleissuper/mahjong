@@ -84,8 +84,8 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
                   {meld.winTile && <span className="meld-tag">win</span>}
                 </span>
                 <button className="meld-x" onClick={e => { e.stopPropagation(); removeMeld(i); }}>×</button>
-                {error && <span className="meld-error-dot" title={error.message}>!</span>}
               </div>
+              {error && <div className="meld-error">{error.message}</div>}
               {editing === i && (
                 <SetSheet initial={meld} onSave={saveMeld} onCancel={() => setEditing(null)} />
               )}
