@@ -6,8 +6,9 @@ import { App } from '../App.tsx';
 afterEach(cleanup);
 
 async function openAddSheet(user: ReturnType<typeof userEvent.setup>) {
-  const addBtn = screen.queryByText('+') ?? screen.getByText(/tap to add/i);
-  await user.click(addBtn);
+  const tapBtn = screen.queryByText(/tap to add/i);
+  if (tapBtn) { await user.click(tapBtn); return; }
+  await user.click(screen.getByRole('button', { name: 'Add set' }));
 }
 
 async function addChow(user: ReturnType<typeof userEvent.setup>, tiles: [string, string, string], winTile?: string) {

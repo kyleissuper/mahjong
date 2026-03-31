@@ -52,7 +52,7 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
       <div className="hand-header">
         <h2 className="hand-title">Your hand</h2>
         {melds.length > 0 && !isEditing && (
-          <button className="add-btn" onClick={() => setEditing(melds.length)}>+</button>
+          <button className="add-btn" aria-label="Add set" onClick={() => setEditing(melds.length)}>+</button>
         )}
       </div>
 

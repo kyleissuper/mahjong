@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { Win, WinCondition } from '../src/types.js';
 
 interface Props {
@@ -35,8 +34,6 @@ function PlayerRow({ label, value, onChange }: {
 }
 
 export function WinContext({ win, onChange }: Props) {
-  const [expanded, setExpanded] = useState(false);
-
   function update(patch: Partial<Win>) {
     onChange({ ...win, ...patch });
   }
@@ -48,8 +45,6 @@ export function WinContext({ win, onChange }: Props) {
       : [...current, condition];
     update({ special: next });
   }
-
-  const hasSpecial = (win.special ?? []).length > 0 || (win.dealerRounds ?? 1) > 1;
 
   return (
     <section className="win-section">
@@ -72,35 +67,29 @@ export function WinContext({ win, onChange }: Props) {
         <PlayerRow label="From" value={win.from} onChange={v => update({ from: v })} />
       )}
 
-      <button className="more-btn" onClick={() => setExpanded(!expanded)}>
-        {expanded ? '▾ less' : '▸ more'}
-        {!expanded && hasSpecial && <span className="more-dot" />}
-      </button>
+      <div className="win-divider" />
 
-      {expanded && (
-        <div className="win-extra">
-          <div className="win-row">
-            <span className="win-label">Dealer rnd</span>
-            <div className="stepper stepper-sm">
-              <button className="stepper-btn" onClick={() => update({ dealerRounds: Math.max(1, (win.dealerRounds ?? 1) - 1) })} disabled={(win.dealerRounds ?? 1) <= 1}>-</button>
-              <span className="stepper-value">{win.dealerRounds ?? 1}</span>
-              <button className="stepper-btn" onClick={() => update({ dealerRounds: (win.dealerRounds ?? 1) + 1 })}>+</button>
-            </div>
-          </div>
-          <div className="special-conditions">
-            {(Object.keys(SPECIAL_LABELS) as WinCondition[]).map(c => (
-              <button
-                key={c}
-                className="special-tag"
-                aria-pressed={(win.special ?? []).includes(c)}
-                onClick={() => toggleSpecial(c)}
-              >
-                {SPECIAL_LABELS[c]}
-              </button>
-            ))}
-          </div>
+      <div className="win-row">
+        <span className="win-label">Dealer rnd</span>
+        <div className="stepper stepper-sm">
+          <button className="stepper-btn" onClick={() => update({ dealerRounds: Math.max(1, (win.dealerRounds ?? 1) - 1) })} disabled={(win.dealerRounds ?? 1) <= 1}>-</button>
+          <span className="stepper-value">{win.dealerRounds ?? 1}</span>
+          <button className="stepper-btn" onClick={() => update({ dealerRounds: (win.dealerRounds ?? 1) + 1 })}>+</button>
         </div>
-      )}
+      </div>
+
+      <div className="special-conditions">
+        {(Object.keys(SPECIAL_LABELS) as WinCondition[]).map(c => (
+          <button
+            key={c}
+            className="special-tag"
+            aria-pressed={(win.special ?? []).includes(c)}
+            onClick={() => toggleSpecial(c)}
+          >
+            {SPECIAL_LABELS[c]}
+          </button>
+        ))}
+      </div>
     </section>
   );
 }
