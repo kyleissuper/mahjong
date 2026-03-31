@@ -20,7 +20,8 @@ interface WinTilePos {
 interface HandState {
   exposed: Meld[];
   concealed: Meld[];
-  currentSet: SetInProgress;
+  currentExposed: SetInProgress;
+  currentConcealed: SetInProgress;
   phase: Phase;
   winTilePos: WinTilePos | null;
   flowers: number;
@@ -130,18 +131,29 @@ export function Prototype() {
   const [state, setState] = useState<HandState>({
     exposed: [],
     concealed: [],
-    currentSet: { tiles: [] },
+    currentExposed: { tiles: [] },
+    currentConcealed: { tiles: [] },
     phase: 'exposed',
     winTilePos: null,
     flowers: 0,
   });
 
-  const { exposed, concealed, currentSet, phase, winTilePos, flowers } = state;
+  const { exposed, concealed, currentExposed, currentConcealed, phase, winTilePos, flowers } = state;
+  const currentSet = phase === 'exposed' ? currentExposed : currentConcealed;
+  const currentSetKey = phase === 'exposed' ? 'currentExposed' : 'currentConcealed';
 
   const allMelds = [...exposed, ...concealed];
   const regularSets = allMelds.filter(m => m.type !== 'flower' && m.type !== 'pair').length;
   const hasPair = allMelds.some(m => m.type === 'pair');
   const needsPair = regularSets >= 4 && !hasPair;
+
+  function activeSetKey(s: HandState) {
+    return s.phase === 'exposed' ? 'currentExposed' as const : 'currentConcealed' as const;
+  }
+
+  function activeSet(s: HandState) {
+    return s[activeSetKey(s)];
+  }
 
   function commitCurrentSet(asPair = false) {
     const tiles = currentSet.tiles;
@@ -161,7 +173,7 @@ export function Prototype() {
       ...s,
       [s.phase === 'exposed' ? 'exposed' : 'concealed']:
         [...(s.phase === 'exposed' ? s.exposed : s.concealed), meld],
-      currentSet: { tiles: [] },
+      [s.phase === 'exposed' ? 'currentExposed' : 'currentConcealed']: { tiles: [] },
     }));
   }
 
@@ -199,7 +211,7 @@ export function Prototype() {
 
     // If current set is a complete pong and new tile is the same → extend to kong
     if (current.length === 3 && current[0] === tile && detectMeldType(current) === 'pong') {
-      setState(s => ({ ...s, currentSet: { tiles: [...current, tile] } }));
+      setState(s => ({ ...s, [activeSetKey(s)]: { tiles: [...current, tile] } }));
       return;
     }
 
@@ -207,13 +219,13 @@ export function Prototype() {
     const status = isSetComplete(current);
     if (status === 'complete') {
       commitCurrentSet();
-      setState(s => ({ ...s, currentSet: { tiles: [tile] } }));
+      setState(s => ({ ...s, [activeSetKey(s)]: { tiles: [tile] } }));
       return;
     }
     if (status === 'pong-or-kong' && current[0] !== tile) {
       // Different tile → commit pong, start new set
       commitCurrentSet();
-      setState(s => ({ ...s, currentSet: { tiles: [tile] } }));
+      setState(s => ({ ...s, [activeSetKey(s)]: { tiles: [tile] } }));
       return;
     }
 
@@ -229,22 +241,22 @@ export function Prototype() {
           return {
             ...s,
             [s.phase]: [...s[s.phase], meld],
-            currentSet: { tiles: [] },
+            [activeSetKey(s)]: { tiles: [] },
           };
         }
-        return { ...s, currentSet: { tiles: newTiles } };
+        return { ...s, [activeSetKey(s)]: { tiles: newTiles } };
       });
     } else {
       // Doesn't fit → commit current if valid, start new
       const detected = detectMeldType(current);
       if (detected !== 'incomplete' && detected !== 'invalid') {
         commitCurrentSet();
-        setState(s => ({ ...s, currentSet: { tiles: [tile] } }));
+        setState(s => ({ ...s, [activeSetKey(s)]: { tiles: [tile] } }));
       }
       // If current set is invalid/incomplete, just replace? Or reject?
       // For now: start fresh
       else {
-        setState(s => ({ ...s, currentSet: { tiles: [tile] } }));
+        setState(s => ({ ...s, [activeSetKey(s)]: { tiles: [tile] } }));
       }
     }
   }
@@ -256,8 +268,10 @@ export function Prototype() {
 
   function undo() {
     setState(s => {
-      if (s.currentSet.tiles.length > 0) {
-        return { ...s, currentSet: { tiles: s.currentSet.tiles.slice(0, -1) } };
+      const key = activeSetKey(s);
+      const active = s[key];
+      if (active.tiles.length > 0) {
+        return { ...s, [key]: { tiles: active.tiles.slice(0, -1) } };
       }
       // Check if last action was a flower (shrink or remove the flower group)
       const flowerIdx = s.exposed.findIndex(m => m.type === 'flower');
@@ -284,7 +298,7 @@ export function Prototype() {
         return {
           ...s,
           [key]: sets.slice(0, -1),
-          currentSet: { tiles: last.tiles },
+          [activeSetKey(s)]: { tiles: last.tiles },
         };
       }
       return s;
@@ -293,25 +307,23 @@ export function Prototype() {
 
   function reset() {
     setState({
-      exposed: [], concealed: [], currentSet: { tiles: [] },
+      exposed: [], concealed: [],
+      currentExposed: { tiles: [] }, currentConcealed: { tiles: [] },
       phase: 'exposed', winTilePos: null, flowers: 0,
     });
   }
 
   function editSet(row: 'exposed' | 'concealed', index: number) {
-    if (phase !== row && phase !== 'exposed' && phase !== 'concealed') return;
-    // Commit current set first if it has tiles
-    if (currentSet.tiles.length > 0) {
-      commitCurrentSet();
-    }
+    if (phase !== 'exposed' && phase !== 'concealed') return;
     const sets = row === 'exposed' ? exposed : concealed;
     const meld = sets[index];
     if (!meld || meld.type === 'flower') return;
+    const targetKey = row === 'exposed' ? 'currentExposed' as const : 'currentConcealed' as const;
     setState(s => ({
       ...s,
       phase: row,
       [row]: sets.filter((_, i) => i !== index),
-      currentSet: { tiles: meld.tiles },
+      [targetKey]: { tiles: meld.tiles },
     }));
   }
 
@@ -384,15 +396,21 @@ export function Prototype() {
             {isEntering && (phase === 'exposed'
               ? renderCurrentSet()
               : <div className="proto-set proto-set-placeholder" onClick={() => {
-                  if (currentSet.tiles.length > 0) commitCurrentSet();
                   setState(s => ({ ...s, phase: 'exposed' }));
                 }}>
                   <div className="proto-set-tiles">
-                    <span className="tile-frame tile-sm tile-empty" />
-                    <span className="tile-frame tile-sm tile-empty" />
-                    <span className="tile-frame tile-sm tile-empty" />
+                    {currentExposed.tiles.length > 0
+                      ? currentExposed.tiles.map((t, j) => (
+                          <span key={j} className="tile-frame tile-sm"><TileImage tile={t} size={18} /></span>
+                        ))
+                      : <>
+                          <span className="tile-frame tile-sm tile-empty" />
+                          <span className="tile-frame tile-sm tile-empty" />
+                          <span className="tile-frame tile-sm tile-empty" />
+                        </>
+                    }
                   </div>
-                  <span className="proto-set-label">tap to add</span>
+                  <span className="proto-set-label">{currentExposed.tiles.length > 0 ? setStatusLabel(currentExposed.tiles) : 'tap to add'}</span>
                 </div>
             )}
           </div>
@@ -405,12 +423,21 @@ export function Prototype() {
             {isEntering && (phase === 'concealed'
               ? renderCurrentSet()
               : <div className="proto-set proto-set-placeholder" onClick={() => {
-                  if (currentSet.tiles.length > 0) commitCurrentSet();
                   setState(s => ({ ...s, phase: 'concealed' }));
                 }}>
                   <div className="proto-set-tiles">
-                    <span className="tile-frame tile-sm tile-empty" />
-                    <span className="tile-frame tile-sm tile-empty" />
+                    {currentConcealed.tiles.length > 0
+                      ? currentConcealed.tiles.map((t, j) => (
+                          <span key={j} className="tile-frame tile-sm"><TileImage tile={t} size={18} /></span>
+                        ))
+                      : <>
+                          <span className="tile-frame tile-sm tile-empty" />
+                          <span className="tile-frame tile-sm tile-empty" />
+                          <span className="tile-frame tile-sm tile-empty" />
+                        </>
+                    }
+                  </div>
+                  <span className="proto-set-label">{currentConcealed.tiles.length > 0 ? setStatusLabel(currentConcealed.tiles) : 'tap to add'}</span>
                     <span className="tile-frame tile-sm tile-empty" />
                   </div>
                   <span className="proto-set-label">tap to add</span>
@@ -448,7 +475,7 @@ export function Prototype() {
             <button onClick={() => commitCurrentSet(true)} className="proto-btn proto-btn-primary">Next set →</button>
           )}
           {currentSet.tiles.length > 0 && (
-            <button onClick={() => setState(s => ({ ...s, currentSet: { tiles: [] } }))} className="proto-btn proto-btn-danger">Delete set</button>
+            <button onClick={() => setState(s => ({ ...s, [activeSetKey(s)]: { tiles: [] } }))} className="proto-btn proto-btn-danger">Delete set</button>
           )}
           <button onClick={goToWinTile} className="proto-btn">Done → pick winning tile</button>
         </div>
