@@ -58,38 +58,47 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
       <ul className="meld-list">
         {melds.map((meld, i) => {
           const error = errors.find(e => e.meld === i);
+          const isThis = editing === i;
           return (
-            <li key={i} className={`meld-item ${editing === i ? 'meld-item-editing' : ''}`}>
-              <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setEditing(i)}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span className="meld-tiles">
-                    {meld.tiles.map((t, j) => (
-                      <span key={j} className="tile-frame">
-                        <TileImage tile={t} />
-                      </span>
-                    ))}
-                  </span>
-                  <span className="meld-type">{TYPE_LABELS[meld.type]}</span>
+            <li key={i}>
+              <div className={`meld-item ${isThis ? 'meld-item-editing' : ''}`}>
+                <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setEditing(isThis ? null : i)}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span className="meld-tiles">
+                      {meld.tiles.map((t, j) => (
+                        <span key={j} className="tile-frame">
+                          <TileImage tile={t} />
+                        </span>
+                      ))}
+                    </span>
+                    <span className="meld-type">{TYPE_LABELS[meld.type]}</span>
+                  </div>
+                  <div className="meld-meta">
+                    {meld.concealed && 'concealed'}
+                    {meld.winTile && <> · won with <span className="tile-frame"><TileImage tile={meld.winTile} size={16} /></span></>}
+                  </div>
+                  {error && <div className="meld-error">{error.message}</div>}
                 </div>
-                <div className="meld-meta">
-                  {meld.concealed && 'concealed'}
-                  {meld.winTile && <> · won with <span className="tile-frame"><TileImage tile={meld.winTile} size={16} /></span></>}
-                </div>
-                {error && <div className="meld-error">{error.message}</div>}
+                <button className="meld-remove" onClick={() => removeMeld(i)}>x</button>
               </div>
-              <button className="meld-remove" onClick={() => removeMeld(i)}>x</button>
+              {isThis && (
+                <SetSheet
+                  initial={meld}
+                  onSave={saveMeld}
+                  onCancel={() => setEditing(null)}
+                />
+              )}
             </li>
           );
         })}
       </ul>
 
-      {isEditing
+      {editing === melds.length
         ? <SetSheet
-            initial={editing < melds.length ? melds[editing] : undefined}
             onSave={saveMeld}
             onCancel={() => setEditing(null)}
           />
-        : <button className="add-set-btn" onClick={() => setEditing(melds.length)}>+ Add set</button>
+        : !isEditing && <button className="add-set-btn" onClick={() => setEditing(melds.length)}>+ Add set</button>
       }
     </section>
   );
