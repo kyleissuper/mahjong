@@ -92,155 +92,143 @@ const rules: Rule[] = [
   { name: 'allGreens', score: allGreens, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
 ];
 
-function flower(hand: Hand): number {
-  return hand.melds.filter(m => m.type === 'flower').reduce((sum, m) => sum + m.tiles.length, 0);
+function flower({ melds }: Hand): number {
+  return melds.filter(({ type }) => type === 'flower').reduce((sum, { tiles }) => sum + tiles.length, 0);
 }
 
-function dragonPong(hand: Hand): number {
-  return hand.melds.filter(m => m.type === 'pong' && isDragon(m.tiles[0])).length;
+function dragonPong({ melds }: Hand): number {
+  return melds.filter(({ type, tiles: [first] }) => type === 'pong' && isDragon(first)).length;
 }
 
-function pairOf258(hand: Hand): number {
-  return hand.melds.filter(m => m.type === 'pair' && is258(m.tiles[0])).length;
+function pairOf258({ melds }: Hand): number {
+  return melds.filter(({ type, tiles: [first] }) => type === 'pair' && is258(first)).length;
 }
 
 function canOnlyWinWithOne(hand: Hand): number {
   const meld = winningMeld(hand);
   if (!meld?.winTile) return 0;
-  if (meld.type === 'pair') return 1;
-  if (meld.type === 'chow' && chowCanOnlyWinWithOne(meld)) return 1;
-  if (meld.type === 'orphans') {
-    const count = meld.tiles.filter(t => t === meld.winTile).length;
-    return count === 1 ? 1 : 0;
-  }
+  const { type, tiles, winTile } = meld;
+  if (type === 'pair') return 1;
+  if (type === 'chow' && chowCanOnlyWinWithOne(meld)) return 1;
+  if (type === 'orphans') return tiles.filter(t => t === winTile).length === 1 ? 1 : 0;
   return 0;
 }
 
-function windPong(hand: Hand): number {
-  return hand.melds.filter(m => m.type === 'pong' && isWind(m.tiles[0])).length;
+function windPong({ melds }: Hand): number {
+  return melds.filter(({ type, tiles: [first] }) => type === 'pong' && isWind(first)).length;
 }
 
 function allChows(hand: Hand): number {
   const s = sets(hand);
-  return s.length && s.every(m => m.type === 'chow') ? 1 : 0;
+  return s.length && s.every(({ type }) => type === 'chow') ? 1 : 0;
 }
 
-function selfPick(_hand: Hand, win: Win): number {
-  return win.method === 'self-pick' ? 1 : 0;
+function selfPick(_hand: Hand, { method }: Win): number {
+  return method === 'self-pick' ? 1 : 0;
 }
 
 function only2Suits(hand: Hand): number {
-  const suits = new Set(hand.melds.flatMap(m => m.tiles.map(suit)));
-  return suits.size === 2 ? 1 : 0;
+  return new Set(allTiles(hand).map(suit)).size === 2 ? 1 : 0;
 }
 
 function allPongs(hand: Hand): number {
   const s = sets(hand);
-  return s.length && s.every(m => m.type === 'pong' || m.type === 'kong') ? 4 : 0;
+  return s.length && s.every(({ type }) => type === 'pong' || type === 'kong') ? 4 : 0;
 }
 
-function twoKongMahjong(hand: Hand): number {
-  const kongs = hand.melds.filter(m => m.type === 'kong');
-  return kongs.length === 2 ? 6 : 0;
+function twoKongMahjong({ melds }: Hand): number {
+  return melds.filter(({ type }) => type === 'kong').length === 2 ? 6 : 0;
 }
 
-function twoDoubleChows(hand: Hand): number {
-  const chows = hand.melds.filter(m => m.type === 'chow');
-  const byTiles = Map.groupBy(chows, m => m.tiles.join(','));
-  const duplicatedChows = [...byTiles.values()].filter(g => g.length === 2);
-  return duplicatedChows.length === 2 ? 12 : 0;
+function twoDoubleChows({ melds }: Hand): number {
+  const chows = melds.filter(({ type }) => type === 'chow');
+  const byTiles = Map.groupBy(chows, ({ tiles }) => tiles.join(','));
+  const duplicated = [...byTiles.values()].filter(g => g.length === 2);
+  return duplicated.length === 2 ? 12 : 0;
 }
 
-function littleDragons(hand: Hand): number {
-  const dragons = ['Rd', 'Gd', 'Wd'];
-  const dragonPongs = hand.melds.filter(m => m.type === 'pong' && isDragon(m.tiles[0]));
-  const dragonPair = hand.melds.find(m => m.type === 'pair' && isDragon(m.tiles[0]));
-  return dragonPongs.length === 2 && dragonPair ? 8 : 0;
+function littleDragons({ melds }: Hand): number {
+  const pongs = melds.filter(({ type, tiles: [first] }) => type === 'pong' && isDragon(first));
+  const pair = melds.find(({ type, tiles: [first] }) => type === 'pair' && isDragon(first));
+  return pongs.length === 2 && pair ? 8 : 0;
 }
 
-function bigWinds(hand: Hand): number {
-  const windPongs = hand.melds.filter(m => m.type === 'pong' && isWind(m.tiles[0]));
-  return windPongs.length === 4 ? 18 : 0;
+function bigWinds({ melds }: Hand): number {
+  return melds.filter(({ type, tiles: [first] }) => type === 'pong' && isWind(first)).length === 4 ? 18 : 0;
 }
 
 function semiPure(hand: Hand): number {
-  const suits = new Set(hand.melds.flatMap(m => m.tiles.map(suit)));
+  const suits = new Set(allTiles(hand).map(suit));
   const numberSuits = [...suits].filter(s => s === 'b' || s === 'd' || s === 'c');
-  const hasHonors = suits.has('dragon') || suits.has('wind');
-  return numberSuits.length === 1 && hasHonors ? 4 : 0;
+  return numberSuits.length === 1 && (suits.has('dragon') || suits.has('wind')) ? 4 : 0;
 }
 
-function fourConsecutivePongs(hand: Hand): number {
-  const pongs = hand.melds
-    .filter(m => (m.type === 'pong' || m.type === 'kong') && isNumberTile(m.tiles[0]));
-  const bySuit = Map.groupBy(pongs, m => suit(m.tiles[0]));
+function fourConsecutivePongs({ melds }: Hand): number {
+  const pongs = melds.filter(({ type, tiles: [first] }) =>
+    (type === 'pong' || type === 'kong') && isNumberTile(first));
+  const bySuit = Map.groupBy(pongs, ({ tiles: [first] }) => suit(first));
   return [...bySuit.values()].some(melds => {
-    const values = new Set(melds.map(m => numValue(m.tiles[0])));
+    const values = new Set(melds.map(({ tiles: [first] }) => numValue(first)));
     return [...values].some(v => values.has(v + 1) && values.has(v + 2) && values.has(v + 3));
   }) ? 8 : 0;
 }
 
-function littleWinds(hand: Hand): number {
-  const windPongs = hand.melds.filter(m => m.type === 'pong' && isWind(m.tiles[0]));
-  const windPair = hand.melds.find(m => m.type === 'pair' && isWind(m.tiles[0]));
-  return windPongs.length === 3 && windPair ? 12 : 0;
+function littleWinds({ melds }: Hand): number {
+  const pongs = melds.filter(({ type, tiles: [first] }) => type === 'pong' && isWind(first));
+  const pair = melds.find(({ type, tiles: [first] }) => type === 'pair' && isWind(first));
+  return pongs.length === 3 && pair ? 12 : 0;
 }
 
-function bigDragons(hand: Hand): number {
-  const dragonPongs = hand.melds.filter(m => m.type === 'pong' && isDragon(m.tiles[0]));
-  return dragonPongs.length === 3 ? 12 : 0;
+function bigDragons({ melds }: Hand): number {
+  return melds.filter(({ type, tiles: [first] }) => type === 'pong' && isDragon(first)).length === 3 ? 12 : 0;
 }
 
-function terminalsAndHonors(hand: Hand): number {
-  const sets = hand.melds.filter(m => m.type !== 'flower');
-  return sets.every(m =>
-    m.tiles.some(t => isHonor(t) || isTerminal(t))
+function terminalsAndHonors({ melds }: Hand): number {
+  return melds.filter(({ type }) => type !== 'flower').every(({ tiles }) =>
+    tiles.some(t => isHonor(t) || isTerminal(t))
   ) ? 4 : 0;
 }
 
 function pure(hand: Hand): number {
-  const suits = new Set(hand.melds.flatMap(m => m.tiles.map(suit)));
+  const suits = new Set(allTiles(hand).map(suit));
   return suits.size === 1 && isNumberTile(hand.melds[0].tiles[0]) ? 8 : 0;
 }
 
-function fourHiddenPongs(hand: Hand): number {
-  const hiddenPongs = hand.melds.filter(m =>
-    (m.type === 'pong' || m.type === 'kong') && m.concealed);
-  return hiddenPongs.length >= 4 ? 12 : 0;
+function fourHiddenPongs({ melds }: Hand): number {
+  return melds.filter(({ type, concealed }) =>
+    (type === 'pong' || type === 'kong') && concealed).length >= 4 ? 12 : 0;
 }
 
 function allKongs(hand: Hand): number {
   const s = sets(hand);
-  return s.length && s.every(m => m.type === 'kong') ? 14 : 0;
+  return s.length && s.every(({ type }) => type === 'kong') ? 14 : 0;
 }
 
 function all1sOr9s(hand: Hand): number {
-  const tiles = allTiles(hand);
-  return tiles.every(t => isTerminal(t)) ? 16 : 0;
+  return allTiles(hand).every(isTerminal) ? 16 : 0;
 }
 
-function threeSuitPongs(hand: Hand): number {
-  const pongs = hand.melds
-    .filter(m => (m.type === 'pong' || m.type === 'kong') && isNumberTile(m.tiles[0]));
-  const byValue = Map.groupBy(pongs, m => numValue(m.tiles[0]));
+function threeSuitPongs({ melds }: Hand): number {
+  const pongs = melds.filter(({ type, tiles: [first] }) =>
+    (type === 'pong' || type === 'kong') && isNumberTile(first));
+  const byValue = Map.groupBy(pongs, ({ tiles: [first] }) => numValue(first));
   return [...byValue.values()].some(hasAll3NumberSuits) ? 4 : 0;
 }
 
-function allPairs(hand: Hand): number {
-  const pairs = hand.melds.filter(m => m.type === 'pair');
-  return pairs.length === 7 ? 12 : 0;
+function allPairs({ melds }: Hand): number {
+  return melds.filter(({ type }) => type === 'pair').length === 7 ? 12 : 0;
 }
 
-function prodigyHand(_hand: Hand, win: Win): number {
-  return win.special.includes('prodigy') ? 12 : 0;
+function prodigyHand(_hand: Hand, { special }: Win): number {
+  return special.includes('prodigy') ? 12 : 0;
 }
 
-function heavenlyHand(_hand: Hand, win: Win): number {
-  return win.method === 'self-pick' && win.winner === win.dealer && win.special.includes('firstTurn') ? 20 : 0;
+function heavenlyHand(_hand: Hand, { method, winner, dealer, special }: Win): number {
+  return method === 'self-pick' && winner === dealer && special.includes('firstTurn') ? 20 : 0;
 }
 
-function earthlyHand(_hand: Hand, win: Win): number {
-  return win.method === 'discard' && win.winner !== win.dealer && win.special.includes('firstTurn') ? 16 : 0;
+function earthlyHand(_hand: Hand, { method, winner, dealer, special }: Win): number {
+  return method === 'discard' && winner !== dealer && special.includes('firstTurn') ? 16 : 0;
 }
 
 function heavenlyGates(hand: Hand): number {
@@ -256,54 +244,51 @@ function heavenlyGates(hand: Hand): number {
   return base.every((need, i) => (counts.get(i + 1)?.length ?? 0) >= need) ? 16 : 0;
 }
 
-function thirteenOrphans(hand: Hand): number {
-  return hand.melds.some(m => m.type === 'orphans') ? 14 : 0;
+function thirteenOrphans({ melds }: Hand): number {
+  return melds.some(({ type }) => type === 'orphans') ? 14 : 0;
 }
 
 function allHonors(hand: Hand): number {
-  const tiles = allTiles(hand);
-  return tiles.every(t => isHonor(t)) ? 12 : 0;
+  return allTiles(hand).every(isHonor) ? 12 : 0;
 }
 
 function allGreens(hand: Hand): number {
-  const tiles = allTiles(hand);
-  return tiles.every(t => suit(t) === 'b' || t === 'Gd') ? 14 : 0;
+  return allTiles(hand).every(t => suit(t) === 'b' || t === 'Gd') ? 14 : 0;
 }
 
-function splitKong(hand: Hand): number {
-  const tiles = hand.melds.filter(m => m.type !== 'kong').flatMap(m => m.tiles);
+function splitKong({ melds }: Hand): number {
+  const tiles = melds.filter(({ type }) => type !== 'kong').flatMap(({ tiles }) => tiles);
   const counts = Map.groupBy(tiles, t => t);
   return [...counts.values()].filter(group => group.length >= 4).length;
 }
 
-function winFromButt(_hand: Hand, win: Win): number {
-  return win.special.includes('fromButt') ? 1 : 0;
+function winFromButt(_hand: Hand, { special }: Win): number {
+  return special.includes('fromButt') ? 1 : 0;
 }
 
-function hiddenKong(hand: Hand): number {
-  return hand.melds.filter(m => m.type === 'kong' && m.concealed).length * 2;
+function hiddenKong({ melds }: Hand): number {
+  return melds.filter(({ type, concealed }) => type === 'kong' && concealed).length * 2;
 }
 
-function stolenKong(_hand: Hand, win: Win): number {
-  return win.method === 'stolen-kong' ? 1 : 0;
+function stolenKong(_hand: Hand, { method }: Win): number {
+  return method === 'stolen-kong' ? 1 : 0;
 }
 
 function allFromOthers(hand: Hand): number {
-  return sets(hand).every(m => !m.concealed) ? 1 : 0;
+  return sets(hand).every(({ concealed }) => !concealed) ? 1 : 0;
 }
 
 function cleanDoorstep(hand: Hand): number {
-  return sets(hand).every(m => m.concealed) ? 1 : 0;
+  return sets(hand).every(({ concealed }) => concealed) ? 1 : 0;
 }
 
 function cleanDoorstepAndSelfPick(hand: Hand, win: Win): number {
   return cleanDoorstep(hand) > 0 && selfPick(hand, win) > 0 ? 3 : 0;
 }
 
-function threeHiddenPongs(hand: Hand): number {
-  const hiddenPongs = hand.melds.filter(m =>
-    (m.type === 'pong' || m.type === 'kong') && m.concealed);
-  return hiddenPongs.length >= 3 ? 4 : 0;
+function threeHiddenPongs({ melds }: Hand): number {
+  return melds.filter(({ type, concealed }) =>
+    (type === 'pong' || type === 'kong') && concealed).length >= 3 ? 4 : 0;
 }
 
 function doubleChow(hand: Hand): number {
