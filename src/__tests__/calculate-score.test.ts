@@ -89,4 +89,34 @@ describe('calculateScore', () => {
     // C pays A 3 points, neither is dealer
     expect(result).toEqual({ A: 3, B: 0, C: -3, D: 0 });
   });
+
+  it('Hand 4 — all greens, all pongs, dealer self-pick (20 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['1b', '1b', '1b'], concealed: true },
+        { type: 'pong', tiles: ['5b', '5b', '5b'], concealed: true },
+        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: true },
+        { type: 'pong', tiles: ['Gd', 'Gd', 'Gd'], concealed: true },
+        { type: 'pair', tiles: ['3b', '3b'], concealed: true, winTile: '3b' },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'self-pick',
+      dealer: 'A',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // All Greens (+14) absorbs Semi-Pure (+4) and Green Dragon pong (+1)
+    // ALL pongs (+4), self-pick (+1), can only win with one (+1) = 20 pts
+    // Dealer self-pick: each loser pays 20+1=21
+    // A gets 63, others pay 21 each
+    expect(result).toEqual({ A: 63, B: -21, C: -21, D: -21 });
+  });
 });

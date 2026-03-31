@@ -7,15 +7,32 @@ export function calculateScore(hand: Hand, win: Win): RoundScore {
 
 // --- Scoring rules ---
 
-type Rule = (hand: Hand, win: Win) => number;
+interface Rule {
+  name: string;
+  score: (hand: Hand, win: Win) => number;
+  absorbs?: string[];
+}
 
 const rules: Rule[] = [
-  dragonPong, windPong, pairOf258, canOnlyWinWithOne,
-  allChows, selfPick, only2Suits, noTerminalsNoHonors, noTerminalsWithHonors,
+  { name: 'dragonPong', score: dragonPong },
+  { name: 'windPong', score: windPong },
+  { name: 'pairOf258', score: pairOf258 },
+  { name: 'canOnlyWinWithOne', score: canOnlyWinWithOne },
+  { name: 'allChows', score: allChows },
+  { name: 'allPongs', score: allPongs },
+  { name: 'selfPick', score: selfPick },
+  { name: 'only2Suits', score: only2Suits },
+  { name: 'noTerminalsNoHonors', score: noTerminalsNoHonors },
+  { name: 'noTerminalsWithHonors', score: noTerminalsWithHonors },
+  { name: 'allGreens', score: allGreens, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits'] },
 ];
 
 function calculateHandValue(hand: Hand, win: Win): number {
-  return rules.reduce((total, rule) => total + rule(hand, win), 0);
+  const fired = rules.filter(r => r.score(hand, win) > 0);
+  const absorbed = new Set(fired.flatMap(r => r.absorbs ?? []));
+  return fired
+    .filter(r => !absorbed.has(r.name))
+    .reduce((total, r) => total + r.score(hand, win), 0);
 }
 
 function dragonPong(hand: Hand): number {
@@ -50,6 +67,16 @@ function selfPick(_hand: Hand, win: Win): number {
 function only2Suits(hand: Hand): number {
   const suits = new Set(hand.melds.flatMap(m => m.tiles.map(suit)));
   return suits.size === 2 ? 1 : 0;
+}
+
+function allPongs(hand: Hand): number {
+  const sets = hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower');
+  return sets.every(m => m.type === 'pong' || m.type === 'kong') ? 4 : 0;
+}
+
+function allGreens(hand: Hand): number {
+  const tiles = hand.melds.flatMap(m => m.tiles);
+  return tiles.every(t => suit(t) === 'b' || t === 'Gd') ? 14 : 0;
 }
 
 function noTerminalsNoHonors(hand: Hand): number {
