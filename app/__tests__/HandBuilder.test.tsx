@@ -24,8 +24,8 @@ describe('HandBuilder', () => {
       { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: true },
       { type: 'pair', tiles: ['Rd', 'Rd'], concealed: true },
     ]);
-    expect(screen.getByText(/🀐🀑🀒/)).toBeTruthy();
-    expect(screen.getByText(/🀄🀄/)).toBeTruthy();
+    expect(screen.getByText(/1竹 2竹 3竹/)).toBeTruthy();
+    expect(screen.getByText(/中 中/)).toBeTruthy();
   });
 
   it('opens add set sheet when clicking add', async () => {

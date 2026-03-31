@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Meld, MeldType, Tile } from '../src/types.js';
 import type { ValidationError } from '../src/validate-hand.js';
 import { TilePicker } from './TilePicker.tsx';
-import { displayTiles, tileChar } from './tile-display.js';
+import { displayTiles, displayTile } from './tile-display.js';
 
 const ORPHAN_TILES: Tile[] = [
   '1b', '9b', '1d', '9d', '1c', '9c',
@@ -48,7 +48,7 @@ export function HandBuilder({ melds, errors, onChange }: Props) {
                 </div>
                 <div className="meld-meta">
                   {meld.concealed && 'concealed'}
-                  {meld.winTile && ` · won with ${tileChar(meld.winTile)}`}
+                  {meld.winTile && ` · won with ${displayTile(meld.winTile)}`}
                 </div>
                 {error && <div className="meld-error">{error.message}</div>}
               </div>
