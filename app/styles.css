@@ -144,17 +144,20 @@ body {
 }
 
 .meld-x {
-  width: 24px; height: 24px;
+  width: 36px; height: 36px;
   border-radius: 50%;
-  border: none;
-  background: transparent;
+  border: 1px solid var(--ivory-dark);
+  background: white;
   color: var(--warm-gray);
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   cursor: pointer;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.meld-x:hover { background: var(--ivory-dark); color: var(--red-accent); }
+.meld-x:active { background: var(--red-accent); color: white; border-color: var(--red-accent); }
 
 .meld-error {
   font-size: 0.7rem;
