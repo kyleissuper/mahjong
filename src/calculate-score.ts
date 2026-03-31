@@ -44,6 +44,7 @@ const rules: Rule[] = [
   { name: 'selfPick', score: selfPick },
   { name: 'only2Suits', score: only2Suits },
   { name: 'noTerminalsWithHonors', score: noTerminalsWithHonors },
+  { name: 'threeSuitsWithWindAndDragon', score: threeSuitsWithWindAndDragon },
   { name: 'splitKong', score: splitKong },
   { name: 'winFromButt', score: winFromButt },
   { name: 'hiddenKong', score: hiddenKong },
@@ -88,6 +89,7 @@ const rules: Rule[] = [
   { name: 'thirteenOrphans', score: thirteenOrphans, absorbs: [
     'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'terminalsAndHonors',
     'allPongs', 'windPong', 'dragonPong', 'noTerminalsWithHonors',
+    'threeSuitsWithWindAndDragon',
   ] },
   { name: 'allGreens', score: allGreens, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
 ];
@@ -242,6 +244,12 @@ function heavenlyGates(hand: Hand): number {
   //  base pattern: 1×3, 2-8×1, 9×3 — the extra tile adds +1 to any value
   const base = [3, 1, 1, 1, 1, 1, 1, 1, 3]; // required counts for values 1-9
   return base.every((need, i) => (counts.get(i + 1)?.length ?? 0) >= need) ? 16 : 0;
+}
+
+function threeSuitsWithWindAndDragon(hand: Hand): number {
+  const suits = new Set(allTiles(hand).map(suit));
+  const has3NumberSuits = ['b', 'd', 'c'].every(s => suits.has(s));
+  return has3NumberSuits && suits.has('wind') && suits.has('dragon') ? 1 : 0;
 }
 
 function thirteenOrphans({ melds }: Hand): number {

@@ -1041,4 +1041,35 @@ describe('calculateScore', () => {
     expect(result.handValue).toBe(18);
     expect(result.scores).toEqual({ A: 0, B: 0, C: 18, D: -18 });
   });
+
+  it('Hand 31 — three suits w/ wind and dragon (2 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['1b', '1b', '1b'], concealed: false },
+        { type: 'pong', tiles: ['9d', '9d', '9d'], concealed: false, winTile: '9d' },
+        { type: 'chow', tiles: ['4c', '5c', '6c'], concealed: true },
+        { type: 'pong', tiles: ['Sw', 'Sw', 'Sw'], concealed: false },
+        { type: 'pair', tiles: ['Rd', 'Rd'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'B',
+      method: 'discard',
+      from: 'C',
+      dealer: 'A',
+      dealerRounds: 1,
+      special: [],
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'windPong', points: 1 },
+      { name: 'threeSuitsWithWindAndDragon', points: 1 },
+    ]);
+    expect(result.handValue).toBe(2);
+    expect(result.scores).toEqual({ A: 0, B: 2, C: -2, D: 0 });
+  });
 });
