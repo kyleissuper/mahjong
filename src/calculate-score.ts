@@ -120,8 +120,8 @@ function windPong(hand: Hand): number {
 }
 
 function allChows(hand: Hand): number {
-  const sets = hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower');
-  return sets.length && sets.every(m => m.type === 'chow') ? 1 : 0;
+  const s = sets(hand);
+  return s.length && s.every(m => m.type === 'chow') ? 1 : 0;
 }
 
 function selfPick(_hand: Hand, win: Win): number {
@@ -134,8 +134,8 @@ function only2Suits(hand: Hand): number {
 }
 
 function allPongs(hand: Hand): number {
-  const sets = hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower');
-  return sets.length && sets.every(m => m.type === 'pong' || m.type === 'kong') ? 4 : 0;
+  const s = sets(hand);
+  return s.length && s.every(m => m.type === 'pong' || m.type === 'kong') ? 4 : 0;
 }
 
 function twoKongMahjong(hand: Hand): number {
@@ -193,7 +193,7 @@ function bigDragons(hand: Hand): number {
 function terminalsAndHonors(hand: Hand): number {
   const sets = hand.melds.filter(m => m.type !== 'flower');
   return sets.every(m =>
-    m.tiles.some(t => isDragon(t) || isWind(t) || isTerminal(t))
+    m.tiles.some(t => isHonor(t) || isTerminal(t))
   ) ? 4 : 0;
 }
 
@@ -209,12 +209,12 @@ function fourHiddenPongs(hand: Hand): number {
 }
 
 function allKongs(hand: Hand): number {
-  const sets = hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower');
-  return sets.length && sets.every(m => m.type === 'kong') ? 14 : 0;
+  const s = sets(hand);
+  return s.length && s.every(m => m.type === 'kong') ? 14 : 0;
 }
 
 function all1sOr9s(hand: Hand): number {
-  const tiles = hand.melds.flatMap(m => m.tiles);
+  const tiles = allTiles(hand);
   return tiles.every(t => isTerminal(t)) ? 16 : 0;
 }
 
@@ -222,10 +222,7 @@ function threeSuitPongs(hand: Hand): number {
   const pongs = hand.melds
     .filter(m => (m.type === 'pong' || m.type === 'kong') && isNumberTile(m.tiles[0]));
   const byValue = Map.groupBy(pongs, m => numValue(m.tiles[0]));
-  return [...byValue.values()].some(melds => {
-    const suits = new Set(melds.map(m => suit(m.tiles[0])));
-    return suits.has('b') && suits.has('d') && suits.has('c');
-  }) ? 4 : 0;
+  return [...byValue.values()].some(hasAll3NumberSuits) ? 4 : 0;
 }
 
 function allPairs(hand: Hand): number {
@@ -242,17 +239,16 @@ function earthlyHand(_hand: Hand, win: Win): number {
 }
 
 function heavenlyGates(hand: Hand): number {
-  const tiles = hand.melds.flatMap(m => m.tiles);
+  const tiles = allTiles(hand);
   if (tiles.length !== 14) return 0;
   const suits = new Set(tiles.map(suit));
   if (suits.size !== 1 || !isNumberTile(tiles[0])) return 0;
 
-  const counts = new Map<number, number>();
-  for (const t of tiles) counts.set(numValue(t), (counts.get(numValue(t)) ?? 0) + 1);
+  const counts = Map.groupBy(tiles, numValue);
 
   //  base pattern: 1×3, 2-8×1, 9×3 — the extra tile adds +1 to any value
   const base = [3, 1, 1, 1, 1, 1, 1, 1, 3]; // required counts for values 1-9
-  return base.every((need, i) => (counts.get(i + 1) ?? 0) >= need) ? 16 : 0;
+  return base.every((need, i) => (counts.get(i + 1)?.length ?? 0) >= need) ? 16 : 0;
 }
 
 function thirteenOrphans(hand: Hand): number {
@@ -260,12 +256,12 @@ function thirteenOrphans(hand: Hand): number {
 }
 
 function allHonors(hand: Hand): number {
-  const tiles = hand.melds.flatMap(m => m.tiles);
-  return tiles.every(t => isDragon(t) || isWind(t)) ? 12 : 0;
+  const tiles = allTiles(hand);
+  return tiles.every(t => isHonor(t)) ? 12 : 0;
 }
 
 function allGreens(hand: Hand): number {
-  const tiles = hand.melds.flatMap(m => m.tiles);
+  const tiles = allTiles(hand);
   return tiles.every(t => suit(t) === 'b' || t === 'Gd') ? 14 : 0;
 }
 
@@ -288,13 +284,11 @@ function stolenKong(_hand: Hand, win: Win): number {
 }
 
 function allFromOthers(hand: Hand): number {
-  const sets = hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower');
-  return sets.every(m => !m.concealed) ? 1 : 0;
+  return sets(hand).every(m => !m.concealed) ? 1 : 0;
 }
 
 function cleanDoorstep(hand: Hand): number {
-  const sets = hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower');
-  return sets.every(m => m.concealed) ? 1 : 0;
+  return sets(hand).every(m => m.concealed) ? 1 : 0;
 }
 
 function cleanDoorstepAndSelfPick(hand: Hand, win: Win): number {
@@ -316,10 +310,7 @@ function doubleChow(hand: Hand): number {
 function threeSuitChow(hand: Hand): number {
   const chows = hand.melds.filter(m => m.type === 'chow');
   const byValues = Map.groupBy(chows, m => m.tiles.map(numValue).join(','));
-  return [...byValues.values()].some(melds => {
-    const suits = new Set(melds.map(m => suit(m.tiles[0])));
-    return suits.has('b') && suits.has('d') && suits.has('c');
-  }) ? 4 : 0;
+  return [...byValues.values()].some(hasAll3NumberSuits) ? 4 : 0;
 }
 
 function threeConsecutivePongs(hand: Hand): number {
@@ -333,8 +324,8 @@ function threeConsecutivePongs(hand: Hand): number {
 }
 
 function noFlowersNoHonors(hand: Hand): number {
-  const tiles = hand.melds.flatMap(m => m.tiles);
-  const hasHonors = tiles.some(t => isDragon(t) || isWind(t));
+  const tiles = allTiles(hand);
+  const hasHonors = tiles.some(t => isHonor(t));
   const hasFlowers = hand.melds.some(m => m.type === 'flower');
   return !hasHonors && !hasFlowers ? 3 : 0;
 }
@@ -342,21 +333,20 @@ function noFlowersNoHonors(hand: Hand): number {
 function oneToNineChain(hand: Hand): number {
   const chows = hand.melds.filter(m => m.type === 'chow');
   const bySuit = Map.groupBy(chows, m => suit(m.tiles[0]));
-  for (const [, melds] of bySuit) {
+  return [...bySuit.values()].some(melds => {
     const values = new Set(melds.flatMap(m => m.tiles.map(numValue)));
-    if ([1, 2, 3, 4, 5, 6, 7, 8, 9].every(v => values.has(v))) return 3;
-  }
-  return 0;
+    return [1, 2, 3, 4, 5, 6, 7, 8, 9].every(v => values.has(v));
+  }) ? 3 : 0;
 }
 
 function noTerminalsNoHonors(hand: Hand): number {
-  const tiles = hand.melds.flatMap(m => m.tiles);
+  const tiles = allTiles(hand);
   return tiles.every(t => isNumberTile(t) && !isTerminal(t)) ? 3 : 0;
 }
 
 function noTerminalsWithHonors(hand: Hand): number {
-  const tiles = hand.melds.flatMap(m => m.tiles);
-  const hasHonors = tiles.some(t => isDragon(t) || isWind(t));
+  const tiles = allTiles(hand);
+  const hasHonors = tiles.some(t => isHonor(t));
   const noTerminals = tiles.filter(isNumberTile).every(t => !isTerminal(t));
   return hasHonors && noTerminals ? 1 : 0;
 }
@@ -388,39 +378,23 @@ function resolvePayments(points: number, win: Win): RoundScore {
 
 // --- Helpers ---
 
-function isDragon(tile: Tile): boolean {
-  return tile === 'Rd' || tile === 'Gd' || tile === 'Wd';
-}
+// Tile classification
+function isDragon(tile: Tile): boolean { return tile === 'Rd' || tile === 'Gd' || tile === 'Wd'; }
+function isWind(tile: Tile): boolean { return tile[1] === 'w'; }
+function isHonor(tile: Tile): boolean { return isDragon(tile) || isWind(tile); }
+function isNumberTile(tile: Tile): boolean { return tile.length === 2 && tile[0] >= '1' && tile[0] <= '9'; }
+function isTerminal(tile: Tile): boolean { return isNumberTile(tile) && (tile[0] === '1' || tile[0] === '9'); }
+function is258(tile: Tile): boolean { const v = tile[0]; return tile.length === 2 && (v === '2' || v === '5' || v === '8'); }
+function numValue(tile: Tile): number { return parseInt(tile[0]); }
+function suit(tile: Tile): string { return isHonor(tile) ? (isDragon(tile) ? 'dragon' : 'wind') : tile[1]; }
 
-function is258(tile: Tile): boolean {
-  const v = tile[0];
-  return tile.length === 2 && (v === '2' || v === '5' || v === '8');
-}
-
-function numValue(tile: Tile): number {
-  return parseInt(tile[0]);
-}
-
-function suit(tile: Tile): string {
-  if (isDragon(tile)) return 'dragon';
-  if (isWind(tile)) return 'wind';
-  return tile[1];
-}
-
-function isWind(tile: Tile): boolean {
-  return tile[1] === 'w';
-}
-
-function isNumberTile(tile: Tile): boolean {
-  return tile.length === 2 && tile[0] >= '1' && tile[0] <= '9';
-}
-
-function isTerminal(tile: Tile): boolean {
-  return isNumberTile(tile) && (tile[0] === '1' || tile[0] === '9');
-}
-
-function winningMeld(hand: Hand): Meld | undefined {
-  return hand.melds.find(m => m.winTile !== undefined);
+// Hand queries
+function allTiles(hand: Hand): Tile[] { return hand.melds.flatMap(m => m.tiles); }
+function sets(hand: Hand): Meld[] { return hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower'); }
+function winningMeld(hand: Hand): Meld | undefined { return hand.melds.find(m => m.winTile !== undefined); }
+function hasAll3NumberSuits(melds: Meld[]): boolean {
+  const s = new Set(melds.map(m => suit(m.tiles[0])));
+  return s.has('b') && s.has('d') && s.has('c');
 }
 
 function chowCanOnlyWinWithOne(meld: Meld): boolean {
