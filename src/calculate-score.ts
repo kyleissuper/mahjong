@@ -57,6 +57,7 @@ const rules: Rule[] = [
   { name: 'threeConsecutivePongs', score: threeConsecutivePongs },
   { name: 'noFlowersNoHonors', score: noFlowersNoHonors },
   { name: 'oneToNineChain', score: oneToNineChain },
+  { name: 'twoKongMahjong', score: twoKongMahjong },
   { name: 'twoDoubleChows', score: twoDoubleChows, absorbs: ['doubleChow'] },
   { name: 'littleDragons', score: littleDragons, absorbs: ['dragonPong'] },
   { name: 'littleWinds', score: littleWinds, absorbs: ['windPong'] },
@@ -123,6 +124,11 @@ function only2Suits(hand: Hand): number {
 function allPongs(hand: Hand): number {
   const sets = hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower');
   return sets.every(m => m.type === 'pong' || m.type === 'kong') ? 4 : 0;
+}
+
+function twoKongMahjong(hand: Hand): number {
+  const kongs = hand.melds.filter(m => m.type === 'kong');
+  return kongs.length === 2 ? 6 : 0;
 }
 
 function twoDoubleChows(hand: Hand): number {

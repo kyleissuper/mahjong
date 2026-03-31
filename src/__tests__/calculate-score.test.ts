@@ -777,6 +777,40 @@ describe('calculateScore', () => {
     expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeUndefined();
   });
 
+  it('Hand 24 — two kong mahjong (7 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'kong', tiles: ['3b', '3b', '3b', '3b'], concealed: false },
+        { type: 'kong', tiles: ['7c', '7c', '7c', '7c'], concealed: false },
+        { type: 'chow', tiles: ['4d', '5d', '6d'], concealed: false, winTile: '6d' },
+        { type: 'pong', tiles: ['2d', '2d', '2d'], concealed: false },
+        { type: 'pair', tiles: ['8b', '8b'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'discard',
+      from: 'B',
+      dealer: 'C',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'allFromOthers', points: 1 },
+      { name: 'twoKongMahjong', points: 6 },
+      { name: 'noTerminalsNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(11);
+    expect(result.scores).toEqual({ A: 11, B: -11, C: 0, D: 0 });
+  });
+
   it('Hand 23 — two double chows (16 pts)', () => {
     const hand: Hand = {
       melds: [
