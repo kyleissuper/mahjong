@@ -29,27 +29,14 @@ function MeldSlot({ meld, error, expanded, onToggle, onSave, onRemove }: {
 }) {
   return (
     <div className={`meld-slot ${expanded ? 'meld-slot-open' : ''}`}>
-      {meld && (
-        <div className="meld-row" onClick={expanded ? undefined : onToggle}>
-          <div className="meld-content">
-            <span className="meld-tiles">
-              {(meld.type === 'orphans' ? [...new Set(meld.tiles)] : meld.tiles).map((t, j) => (
-                <span key={j} className="tile-frame tile-sm">
-                  <TileImage tile={t} size={meld.type === 'orphans' ? 14 : 20} />
-                </span>
-              ))}
-            </span>
-            <span className="meld-info">
-              <span className="meld-type">{TYPE_LABELS[meld.type]}</span>
-              {meld.concealed && <span className="meld-tag">hidden</span>}
-              {meld.winTile && <span className="meld-tag">win</span>}
-            </span>
-          </div>
-          {onRemove && !expanded && <button className="meld-x" onClick={e => { e.stopPropagation(); onRemove(); }}>×</button>}
+      {!expanded && meld && (
+        <div className="meld-row" onClick={onToggle}>
+          <MeldPreview meld={meld} />
+          {onRemove && <button className="meld-x" onClick={e => { e.stopPropagation(); onRemove(); }}>×</button>}
         </div>
       )}
 
-      {!meld && !expanded && (
+      {!expanded && !meld && (
         <button className="add-set-btn" aria-label="Add set" onClick={onToggle}>
           + Add set
         </button>
@@ -65,6 +52,37 @@ function MeldSlot({ meld, error, expanded, onToggle, onSave, onRemove }: {
 }
 
 // --- MeldEditor: the editing controls for a single meld ---
+
+function MeldPreview({ meld }: { meld?: Partial<Meld> }) {
+  const expectedCount = !meld?.type ? 3 :
+    meld.type === 'kong' ? 4 : meld.type === 'pair' ? 2 :
+    meld.type === 'orphans' ? 13 : meld.type === 'flower' ? 1 : 3;
+
+  const displayTiles = meld?.type === 'orphans' && meld.tiles
+    ? [...new Set(meld.tiles)] : meld?.tiles ?? [];
+
+  const placeholders = Math.max(0, expectedCount - displayTiles.length);
+
+  return (
+    <div className="meld-content">
+      <span className="meld-tiles">
+        {displayTiles.map((t, j) => (
+          <span key={j} className="tile-frame tile-sm">
+            <TileImage tile={t} size={meld?.type === 'orphans' ? 14 : 20} />
+          </span>
+        ))}
+        {Array.from({ length: placeholders }, (_, j) => (
+          <span key={`empty-${j}`} className="tile-frame tile-sm tile-empty" />
+        ))}
+      </span>
+      <span className="meld-info">
+        {meld?.type && <span className="meld-type">{TYPE_LABELS[meld.type]}</span>}
+        {meld?.concealed && <span className="meld-tag">hidden</span>}
+        {meld?.winTile && <span className="meld-tag">win</span>}
+      </span>
+    </div>
+  );
+}
 
 function MeldEditor({ initial, onSave, onCancel }: {
   initial?: Meld;
@@ -122,8 +140,14 @@ function MeldEditor({ initial, onSave, onCancel }: {
     type === 'pair' ? tiles.length === 2 :
     tiles.length === 3;
 
+  const liveMeld: Partial<Meld> = { type, concealed, tiles, winTile: winTile ?? undefined };
+  if (type === 'flower') liveMeld.tiles = Array(flowerCount).fill('F');
+  if (type === 'orphans') liveMeld.tiles = [...ORPHAN_TILES, ...(orphanPair ? [orphanPair] : [])];
+
   return (
     <div className="meld-editor">
+      <MeldPreview meld={liveMeld} />
+
       <div className="type-selector">
         {MELD_TYPES.map(t => (
           <button key={t} className="type-btn" aria-pressed={type === t} onClick={() => changeType(t)}>

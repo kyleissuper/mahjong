@@ -180,6 +180,14 @@ body {
 
 .tile-sm { padding: 1px; }
 
+.tile-empty {
+  width: 24px;
+  height: 32px;
+  background: var(--ivory-dark);
+  border-style: dashed;
+  border-color: #ccc;
+}
+
 .tile-btn {
   cursor: pointer;
   transition: all 0.1s;
@@ -228,7 +236,8 @@ body {
 .meld-editor {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  padding-top: 8px;
 }
 
 .meld-editor-actions {
