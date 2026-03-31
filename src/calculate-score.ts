@@ -69,6 +69,7 @@ const rules: Rule[] = [
   { name: 'pure', score: pure },
   { name: 'fourHiddenPongs', score: fourHiddenPongs, absorbs: ['allPongs', 'threeHiddenPongs'] },
   { name: 'noTerminalsNoHonors', score: noTerminalsNoHonors, absorbs: ['noFlowersNoHonors'] },
+  { name: 'allKongs', score: allKongs, absorbs: ['twoKongMahjong', 'allPongs'] },
   { name: 'all1sOr9s', score: all1sOr9s, absorbs: ['terminalsAndHonors', 'noFlowersNoHonors'] },
   { name: 'threeSuitPongs', score: threeSuitPongs },
   { name: 'allPairs', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258', 'canOnlyWinWithOne'] },
@@ -205,6 +206,11 @@ function fourHiddenPongs(hand: Hand): number {
   const hiddenPongs = hand.melds.filter(m =>
     (m.type === 'pong' || m.type === 'kong') && m.concealed);
   return hiddenPongs.length >= 4 ? 12 : 0;
+}
+
+function allKongs(hand: Hand): number {
+  const sets = hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower');
+  return sets.length && sets.every(m => m.type === 'kong') ? 14 : 0;
 }
 
 function all1sOr9s(hand: Hand): number {

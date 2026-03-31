@@ -1032,4 +1032,41 @@ describe('calculateScore', () => {
     expect(result.handValue).toBe(19);
     expect(result.scores).toEqual({ A: -19, B: 0, C: 0, D: 19 });
   });
+
+  it('Hand 29 — all kongs, hidden kong, win from butt (20 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'kong', tiles: ['4b', '4b', '4b', '4b'], concealed: false },
+        { type: 'kong', tiles: ['7b', '7b', '7b', '7b'], concealed: false },
+        { type: 'kong', tiles: ['3d', '3d', '3d', '3d'], concealed: true },
+        { type: 'kong', tiles: ['9c', '9c', '9c', '9c'], concealed: false },
+        { type: 'pair', tiles: ['2d', '2d'], concealed: true, winTile: '2d' },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'B',
+      method: 'self-pick',
+      dealer: 'A',
+      dealerRounds: 1,
+      fromButt: true,
+      lastTile: false,
+      firstTurn: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'selfPick', points: 1 },
+      { name: 'winFromButt', points: 1 },
+      { name: 'hiddenKong', points: 2 },
+      { name: 'noFlowersNoHonors', points: 3 },
+      { name: 'allKongs', points: 14 },
+    ]);
+    expect(result.handValue).toBe(23);
+    expect(result.scores).toEqual({ A: -24, B: 70, C: -23, D: -23 });
+  });
 });
