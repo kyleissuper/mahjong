@@ -269,4 +269,35 @@ describe('calculateScore', () => {
     // A→C: 7, B→C: 7, D(dealer)→C: 7+1=8
     expect(result).toEqual({ A: -7, B: -7, C: 22, D: -8 });
   });
+
+  it('Hand 10 — pure, four hidden pongs, clean doorstep & self-pick (27 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: true },
+        { type: 'pong', tiles: ['3d', '3d', '3d'], concealed: true },
+        { type: 'pong', tiles: ['6d', '6d', '6d'], concealed: true },
+        { type: 'pong', tiles: ['9d', '9d', '9d'], concealed: true },
+        { type: 'pair', tiles: ['4d', '4d'], concealed: true, winTile: '4d' },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'B',
+      method: 'self-pick',
+      dealer: 'A',
+      dealerRounds: 1,
+      fromButt: false,
+      lastTile: false,
+    };
+
+    const result = calculateScore(hand, win);
+
+    // fourHiddenPongs (+12, absorbs allPongs +4 and threeHiddenPongs +4)
+    // pure (+8), cleanDoorstepAndSelfPick (+3, absorbs cleanDoorstep +1 and selfPick +1)
+    // noFlowersNoHonors (+3, absorbed by noTerminalsNoHonors... wait, hand HAS terminals)
+    // noFlowersNoHonors (+3), canOnlyWinWithOne (+1) = 27 pts
+    // A(dealer)→B: 27+1=28, C→B: 27, D→B: 27
+    expect(result).toEqual({ A: -28, B: 82, C: -27, D: -27 });
+  });
 });

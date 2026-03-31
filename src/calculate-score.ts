@@ -33,6 +33,8 @@ const rules: Rule[] = [
   { name: 'threeHiddenPongs', score: threeHiddenPongs },
   { name: 'noFlowersNoHonors', score: noFlowersNoHonors },
   { name: 'oneToNineChain', score: oneToNineChain },
+  { name: 'pure', score: pure },
+  { name: 'fourHiddenPongs', score: fourHiddenPongs, absorbs: ['allPongs', 'threeHiddenPongs'] },
   { name: 'noTerminalsNoHonors', score: noTerminalsNoHonors, absorbs: ['noFlowersNoHonors'] },
   { name: 'allGreens', score: allGreens, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits'] },
 ];
@@ -86,6 +88,17 @@ function only2Suits(hand: Hand): number {
 function allPongs(hand: Hand): number {
   const sets = hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower');
   return sets.every(m => m.type === 'pong' || m.type === 'kong') ? 4 : 0;
+}
+
+function pure(hand: Hand): number {
+  const suits = new Set(hand.melds.flatMap(m => m.tiles.map(suit)));
+  return suits.size === 1 && isNumberTile(hand.melds[0].tiles[0]) ? 8 : 0;
+}
+
+function fourHiddenPongs(hand: Hand): number {
+  const hiddenPongs = hand.melds.filter(m =>
+    (m.type === 'pong' || m.type === 'kong') && m.concealed);
+  return hiddenPongs.length >= 4 ? 12 : 0;
 }
 
 function allGreens(hand: Hand): number {
