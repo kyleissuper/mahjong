@@ -562,51 +562,6 @@ export function Prototype() {
       {/* Post-melds flow */}
       {phase === 'done' && (
         <div className="proto-finish">
-          {/* Score — always visible, shows placeholder until ready */}
-          {scoringResult ? (
-            <div className="proto-score">
-              <div className="proto-score-header">
-                <span className="proto-score-value">{scoringResult.handValue}</span>
-                <span className="proto-score-label">points</span>
-              </div>
-              <div className="proto-score-rules">
-                {scoringResult.appliedRules.map(({ name, points }) => (
-                  <div key={name} className="proto-score-rule">
-                    <span>{RULE_LABELS[name] ?? name}</span>
-                    <span className="proto-score-pts">+{points}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="proto-score-payments">
-                {scoringResult.payments.map((p, i) => (
-                  <div key={i} className="proto-payment-row">
-                    <span className="proto-payment-flow">{p.from} → {p.to}</span>
-                    <span className="proto-payment-amount">
-                      {p.total}
-                      {p.dealerBonus > 0 && (
-                        <span className="proto-payment-bonus"> ({p.base} + {p.dealerBonus} dealer)</span>
-                      )}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="proto-score-net">
-                {Object.entries(scoringResult.scores).map(([player, delta]) => (
-                  <div key={player} className="proto-score-pay">
-                    <span className="proto-score-pay-player">{player}</span>
-                    <span className={`proto-score-pay-val ${delta > 0 ? 'pos' : delta < 0 ? 'neg' : ''}`}>
-                      {delta > 0 ? '+' : ''}{delta}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="proto-score-pending">
-              {!winTilePos ? 'Tap winning tile above' : 'Fill in details below'}
-            </div>
-          )}
-
           {/* Win details — one compact card */}
           {winTilePos && (
             <div className="proto-step">
@@ -671,6 +626,47 @@ export function Prototype() {
                     >{labels[c]}</button>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* Score — appears after form is filled */}
+          {scoringResult && (
+            <div className="proto-score">
+              <div className="proto-score-header">
+                <span className="proto-score-value">{scoringResult.handValue}</span>
+                <span className="proto-score-label">points</span>
+              </div>
+              <div className="proto-score-rules">
+                {scoringResult.appliedRules.map(({ name, points }) => (
+                  <div key={name} className="proto-score-rule">
+                    <span>{RULE_LABELS[name] ?? name}</span>
+                    <span className="proto-score-pts">+{points}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="proto-score-payments">
+                {scoringResult.payments.map((p, i) => (
+                  <div key={i} className="proto-payment-row">
+                    <span className="proto-payment-flow">{p.from} → {p.to}</span>
+                    <span className="proto-payment-amount">
+                      {p.total}
+                      {p.dealerBonus > 0 && (
+                        <span className="proto-payment-bonus"> ({p.base} + {p.dealerBonus} dealer)</span>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="proto-score-net">
+                {Object.entries(scoringResult.scores).map(([player, delta]) => (
+                  <div key={player} className="proto-score-pay">
+                    <span className="proto-score-pay-player">{player}</span>
+                    <span className={`proto-score-pay-val ${delta > 0 ? 'pos' : delta < 0 ? 'neg' : ''}`}>
+                      {delta > 0 ? '+' : ''}{delta}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
