@@ -24,7 +24,7 @@ const RULE_LABELS: Record<string, string> = {
   allPairs: 'All pairs', allHonors: 'All honors',
   prodigyHand: 'Prodigy', heavenlyHand: 'Heavenly hand',
   earthlyHand: 'Earthly hand', heavenlyGates: 'Heavenly gates',
-  thirteenOrphans: '13 orphans', allGreens: 'All greens',
+  thirteenOrphans: '13 orphans', jadeDragon: 'Jade Dragon',
 };
 
 interface Props {

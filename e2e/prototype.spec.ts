@@ -133,7 +133,7 @@ const HANDS: HandDef[] = [
     winTile: '3b',
     context: { method: 'self-pick', winner: 'A', dealer: 'A' },
     expectedPts: 20,
-    expectedRules: ['All greens', 'All pongs'],
+    expectedRules: ['Jade Dragon', 'All pongs'],
     expectedPayments: { A: 63 },
   },
   {

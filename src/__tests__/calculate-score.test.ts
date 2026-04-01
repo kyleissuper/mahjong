@@ -127,7 +127,7 @@ describe('calculateScore', () => {
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'allPongs', points: 4 },
       { name: 'selfPick', points: 1 },
-      { name: 'allGreens', points: 14 },
+      { name: 'jadeDragon', points: 14 },
     ]);
     expect(result.handValue).toBe(20);
     expect(result.scores).toEqual({ A: 63, B: -21, C: -21, D: -21 });
@@ -1136,5 +1136,187 @@ describe('calculateScore', () => {
     ]);
     expect(result.handValue).toBe(6);
     expect(result.scores).toEqual({ A: -6, B: 0, C: 0, D: 6 });
+  });
+
+  it('Jade Dragon: bamboo + green dragon requires green dragon present', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Gd', 'Gd', 'Gd'], concealed: false },
+        { type: 'pong', tiles: ['2b', '2b', '2b'], concealed: false },
+        { type: 'pong', tiles: ['4b', '4b', '4b'], concealed: false },
+        { type: 'chow', tiles: ['6b', '7b', '8b'], concealed: true },
+        { type: 'pair', tiles: ['3b', '3b'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard',
+      from: 'B', dealer: 'C', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'jadeDragon')).toEqual(
+      { name: 'jadeDragon', points: 14 },
+    );
+  });
+
+  it('Jade Dragon: all bamboo WITHOUT green dragon is NOT jade dragon', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['2b', '2b', '2b'], concealed: false },
+        { type: 'pong', tiles: ['4b', '4b', '4b'], concealed: false },
+        { type: 'chow', tiles: ['5b', '6b', '7b'], concealed: true },
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: true },
+        { type: 'pair', tiles: ['8b', '8b'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard',
+      from: 'B', dealer: 'C', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'jadeDragon')).toBeUndefined();
+    // Should be pure instead
+    expect(result.appliedRules.find(r => r.name === 'pure')).toBeDefined();
+  });
+
+  it('Ruby Dragon: characters + red dragon', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Rd', 'Rd', 'Rd'], concealed: false },
+        { type: 'pong', tiles: ['1c', '1c', '1c'], concealed: false },
+        { type: 'chow', tiles: ['4c', '5c', '6c'], concealed: true },
+        { type: 'chow', tiles: ['7c', '8c', '9c'], concealed: true },
+        { type: 'pair', tiles: ['3c', '3c'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard',
+      from: 'B', dealer: 'C', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'rubyDragon')).toEqual(
+      { name: 'rubyDragon', points: 14 },
+    );
+  });
+
+  it('Ruby Dragon: all characters WITHOUT red dragon is NOT ruby dragon', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['1c', '1c', '1c'], concealed: false },
+        { type: 'chow', tiles: ['2c', '3c', '4c'], concealed: true },
+        { type: 'chow', tiles: ['5c', '6c', '7c'], concealed: true },
+        { type: 'pong', tiles: ['9c', '9c', '9c'], concealed: false },
+        { type: 'pair', tiles: ['8c', '8c'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard',
+      from: 'B', dealer: 'C', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'rubyDragon')).toBeUndefined();
+  });
+
+  it('Ruby Dragon absorbs dragonPong, semiPure, only2Suits', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Rd', 'Rd', 'Rd'], concealed: false },
+        { type: 'pong', tiles: ['3c', '3c', '3c'], concealed: false },
+        { type: 'pong', tiles: ['6c', '6c', '6c'], concealed: false },
+        { type: 'chow', tiles: ['7c', '8c', '9c'], concealed: true },
+        { type: 'pair', tiles: ['5c', '5c'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard',
+      from: 'B', dealer: 'C', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'rubyDragon')).toBeDefined();
+    expect(result.appliedRules.find(r => r.name === 'dragonPong')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'semiPure')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'only2Suits')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'pure')).toBeUndefined();
+  });
+
+  it('Pearl Dragon: dots + white dragon', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Wd', 'Wd', 'Wd'], concealed: false },
+        { type: 'pong', tiles: ['2d', '2d', '2d'], concealed: false },
+        { type: 'chow', tiles: ['4d', '5d', '6d'], concealed: true },
+        { type: 'chow', tiles: ['7d', '8d', '9d'], concealed: true },
+        { type: 'pair', tiles: ['3d', '3d'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard',
+      from: 'B', dealer: 'C', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'pearlDragon')).toEqual(
+      { name: 'pearlDragon', points: 14 },
+    );
+  });
+
+  it('Pearl Dragon: all dots WITHOUT white dragon is NOT pearl dragon', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: true },
+        { type: 'chow', tiles: ['2d', '3d', '4d'], concealed: true },
+        { type: 'chow', tiles: ['5d', '6d', '7d'], concealed: true },
+        { type: 'pong', tiles: ['9d', '9d', '9d'], concealed: true },
+        { type: 'pair', tiles: ['8d', '8d'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'self-pick',
+      dealer: 'C', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'pearlDragon')).toBeUndefined();
+  });
+
+  it('Pearl Dragon absorbs dragonPong, semiPure, only2Suits', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Wd', 'Wd', 'Wd'], concealed: false },
+        { type: 'pong', tiles: ['3d', '3d', '3d'], concealed: false },
+        { type: 'pong', tiles: ['6d', '6d', '6d'], concealed: false },
+        { type: 'chow', tiles: ['7d', '8d', '9d'], concealed: true },
+        { type: 'pair', tiles: ['5d', '5d'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard',
+      from: 'B', dealer: 'C', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'pearlDragon')).toBeDefined();
+    expect(result.appliedRules.find(r => r.name === 'dragonPong')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'semiPure')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'only2Suits')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'pure')).toBeUndefined();
+  });
+
+  it('Jade Dragon absorbs green dragon pong, semi-pure, only2Suits', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Gd', 'Gd', 'Gd'], concealed: false },
+        { type: 'pong', tiles: ['3b', '3b', '3b'], concealed: false },
+        { type: 'pong', tiles: ['6b', '6b', '6b'], concealed: false },
+        { type: 'chow', tiles: ['7b', '8b', '9b'], concealed: true },
+        { type: 'pair', tiles: ['5b', '5b'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard',
+      from: 'B', dealer: 'C', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'jadeDragon')).toBeDefined();
+    expect(result.appliedRules.find(r => r.name === 'dragonPong')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'semiPure')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'only2Suits')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'pure')).toBeUndefined();
   });
 });

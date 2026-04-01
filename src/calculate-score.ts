@@ -94,7 +94,9 @@ const rules: Rule[] = [
     'allPongs', 'windPong', 'dragonPong', 'noTerminalsWithHonors',
     'threeSuitsWithWindAndDragon',
   ] },
-  { name: 'allGreens', score: allGreens, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure', 'pure'] },
+  { name: 'jadeDragon', score: jadeDragon, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
+  { name: 'rubyDragon', score: rubyDragon, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
+  { name: 'pearlDragon', score: pearlDragon, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
 ];
 
 function flower({ melds }: Hand): number {
@@ -263,8 +265,25 @@ function allHonors(hand: Hand): number {
   return allTiles(hand).every(isHonor) ? 12 : 0;
 }
 
-function allGreens(hand: Hand): number {
-  return allTiles(hand).every(t => suit(t) === 'b' || t === 'Gd') ? 14 : 0;
+function pearlDragon(hand: Hand): number {
+  const tiles = allTiles(hand);
+  const allDotsOrWhite = tiles.every(t => suit(t) === 'd' || t === 'Wd');
+  const hasWhiteDragon = tiles.some(t => t === 'Wd');
+  return allDotsOrWhite && hasWhiteDragon ? 14 : 0;
+}
+
+function rubyDragon(hand: Hand): number {
+  const tiles = allTiles(hand);
+  const allCharsOrRed = tiles.every(t => suit(t) === 'c' || t === 'Rd');
+  const hasRedDragon = tiles.some(t => t === 'Rd');
+  return allCharsOrRed && hasRedDragon ? 14 : 0;
+}
+
+function jadeDragon(hand: Hand): number {
+  const tiles = allTiles(hand);
+  const allBambooOrGreen = tiles.every(t => suit(t) === 'b' || t === 'Gd');
+  const hasGreenDragon = tiles.some(t => t === 'Gd');
+  return allBambooOrGreen && hasGreenDragon ? 14 : 0;
 }
 
 function lastWallTile(_hand: Hand, { method, special }: Win): number {
