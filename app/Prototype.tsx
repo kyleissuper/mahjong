@@ -542,7 +542,7 @@ export function Prototype() {
               </div>
               <div className="proto-breakdown">
                 <div className="proto-breakdown-header">Hand value: {scoringResult.handValue} pts</div>
-                {scoringResult.appliedRules.map(({ name, points }) => (
+                {[...scoringResult.appliedRules].sort((a, b) => b.points - a.points).map(({ name, points }) => (
                   <div key={name} className="proto-breakdown-rule">
                     <span>{RULE_LABELS[name] ?? name}</span>
                     <span className="proto-breakdown-pts">+{points}</span>
