@@ -357,6 +357,11 @@ export function Prototype() {
 
       {/* Hand display */}
       <div className="proto-hand">
+        {isEntering && (
+          <div className="proto-progress">
+            <div className="proto-progress-fill" style={{ width: `${Math.min(100, ((regularSets + (hasPair ? 1 : 0)) / 5) * 100)}%` }} />
+          </div>
+        )}
         {phase === 'done' && winMeld === null && (
           <div className="proto-pick-hint">Tap the tile you won with</div>
         )}
@@ -409,9 +414,6 @@ export function Prototype() {
       {/* Bottom sheet */}
       {isEntering && (
         <div className="proto-bottom-sheet">
-          <div className="proto-progress">
-            <div className="proto-progress-fill" style={{ width: `${Math.min(100, ((regularSets + (hasPair ? 1 : 0)) / 5) * 100)}%` }} />
-          </div>
           <div className="proto-sheet-actions">
             <button onClick={undo} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn">
               {isFlowersActive ? '− Flower' : 'Undo'}
