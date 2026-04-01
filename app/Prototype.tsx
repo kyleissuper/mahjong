@@ -321,7 +321,6 @@ export function Prototype() {
   }
 
   function finishMelds() {
-    commitCurrentSet();
     setState(s => ({ ...s, phase: 'done' }));
   }
 
@@ -570,14 +569,8 @@ export function Prototype() {
             >
               Undo
             </button>
-            {currentSet.tiles.length >= 3 && detectMeldType(currentSet.tiles) !== 'invalid' && (
-              <button onClick={() => commitCurrentSet()} className="proto-btn proto-btn-primary">Save set</button>
-            )}
-            {currentSet.tiles.length === 2 && currentSet.tiles[0] === currentSet.tiles[1] && (
-              <button onClick={() => commitCurrentSet(true)} className="proto-btn proto-btn-primary">Save set</button>
-            )}
             {currentSet.tiles.length > 0 && (
-              <button onClick={() => setState(s => ({ ...s, [activeSetKey(s)]: { tiles: [] } }))} className="proto-btn proto-btn-danger">Clear set</button>
+              <button onClick={() => setState(s => ({ ...s, [activeSetKey(s)]: { tiles: [] } }))} className="proto-btn proto-btn-danger">Clear</button>
             )}
             {handReady && (
               <button onClick={finishMelds} className="proto-btn proto-btn-primary">Score →</button>
