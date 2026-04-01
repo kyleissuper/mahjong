@@ -357,7 +357,7 @@ export function Prototype() {
 
       {/* Hand display */}
       <div className="proto-hand">
-        {phase === 'done' && !winTilePos && (
+        {phase === 'done' && winMeld === null && (
           <div className="proto-pick-hint">Tap the tile you won with</div>
         )}
 
@@ -451,7 +451,7 @@ export function Prototype() {
       {/* Post-melds flow */}
       {phase === 'done' && (
         <div className="proto-finish">
-          {winTilePos && (
+          {winMeld !== null && (
             <div className="proto-step">
               <div className="proto-step-row">
                 {(['self-pick', 'discard', 'stolen-kong'] as const).map(method => (
