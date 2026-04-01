@@ -205,12 +205,14 @@ export function Prototype() {
   // --- Actions ---
 
   function tapTile(tile: Tile) {
-    if (phase !== 'entering' || !active) return;
+    if (phase !== 'entering') return;
 
     if (tile === 'F') {
       setState(s => ({ ...s, flowers: s.flowers + 1 }));
       return;
     }
+
+    if (!active) return;
 
     setState(s => {
       if (!s.active) return s;
