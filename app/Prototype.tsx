@@ -315,11 +315,7 @@ export function Prototype() {
             <span key={`e-${j}`} className="tile-frame tile-sm tile-empty" />
           ))}
           {!isActive && tiles.length === 0 && (
-            <>
-              <span className="tile-frame tile-sm tile-empty" />
-              <span className="tile-frame tile-sm tile-empty" />
-              <span className="tile-frame tile-sm tile-empty" />
-            </>
+            <span className="tile-frame tile-sm tile-empty" />
           )}
         </div>
         {label && <span className={`proto-set-label ${type !== 'incomplete' && type !== 'invalid' ? 'valid' : type === 'invalid' ? 'invalid' : ''}`}>{label}</span>}
@@ -367,8 +363,6 @@ export function Prototype() {
                 <div className="proto-set proto-set-placeholder" onClick={() => tapSlot('exposed', exposed.length)}>
                   <div className="proto-set-tiles">
                     <span className="tile-frame tile-sm tile-empty" />
-                    <span className="tile-frame tile-sm tile-empty" />
-                    <span className="tile-frame tile-sm tile-empty" />
                   </div>
                 </div>
               )}
@@ -386,8 +380,6 @@ export function Prototype() {
               {isEntering && (
                 <div className="proto-set proto-set-placeholder" onClick={() => tapSlot('concealed', concealed.length)}>
                   <div className="proto-set-tiles">
-                    <span className="tile-frame tile-sm tile-empty" />
-                    <span className="tile-frame tile-sm tile-empty" />
                     <span className="tile-frame tile-sm tile-empty" />
                   </div>
                 </div>
