@@ -562,82 +562,8 @@ export function Prototype() {
       {/* Post-melds flow */}
       {phase === 'done' && (
         <div className="proto-finish">
-          {winTilePos && (<>
-          {/* Step 1: How did you win? */}
-          <div className="proto-step">
-            <div className="proto-step-label">How did you win?</div>
-            <div className="proto-step-row">
-              {(['self-pick', 'discard', 'stolen-kong'] as const).map(method => (
-                <button
-                  key={method}
-                  className={`proto-btn ${win.method === method ? 'proto-btn-primary' : ''}`}
-                  onClick={() => setWin(w => ({ ...w, method }))}
-                >
-                  {method}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Step 3: Players */}
-          <div className="proto-step">
-            <div className="proto-step-row">
-              <span className="proto-field-label">Winner</span>
-              {['A','B','C','D'].map(p => (
-                <button key={p} className={`proto-player ${win.winner === p ? 'proto-player-active' : ''}`}
-                  onClick={() => setWin(w => ({ ...w, winner: p }))}>{p}</button>
-              ))}
-            </div>
-            <div className="proto-step-row">
-              <span className="proto-field-label">Dealer</span>
-              {['A','B','C','D'].map(p => (
-                <button key={p} className={`proto-player ${win.dealer === p ? 'proto-player-active' : ''}`}
-                  onClick={() => setWin(w => ({ ...w, dealer: p }))}>{p}</button>
-              ))}
-            </div>
-            {win.method !== 'self-pick' && (
-              <div className="proto-step-row">
-                <span className="proto-field-label">From</span>
-                {['A','B','C','D'].map(p => (
-                  <button key={p} className={`proto-player ${win.from === p ? 'proto-player-active' : ''}`}
-                    onClick={() => setWin(w => ({ ...w, from: p }))}>{p}</button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Step 4: Extras (dealer rounds, special) */}
-          <div className="proto-step">
-            <div className="proto-step-row">
-              <span className="proto-field-label">Dealer round</span>
-              <div className="proto-stepper">
-                <button className="proto-stepper-btn"
-                  disabled={(win.dealerRounds ?? 1) <= 1}
-                  onClick={() => setWin(w => ({ ...w, dealerRounds: Math.max(1, (w.dealerRounds ?? 1) - 1) }))}>−</button>
-                <span className="proto-stepper-val">{win.dealerRounds ?? 1}</span>
-                <button className="proto-stepper-btn"
-                  onClick={() => setWin(w => ({ ...w, dealerRounds: (w.dealerRounds ?? 1) + 1 }))}>+</button>
-              </div>
-            </div>
-            <div className="proto-step-row" style={{ flexWrap: 'wrap' }}>
-              {(['fromButt', 'lastTile', 'firstTurn', 'prodigy'] as const).map(c => {
-                const labels = { fromButt: 'Replacement draw', lastTile: 'Last tile', firstTurn: '1st turn win', prodigy: 'Ready in 4' };
-                const active = (win.special ?? []).includes(c);
-                return (
-                  <button key={c}
-                    className={`proto-tag ${active ? 'proto-tag-active' : ''}`}
-                    onClick={() => setWin(w => {
-                      const cur = w.special ?? [];
-                      return { ...w, special: active ? cur.filter(x => x !== c) : [...cur, c] };
-                    })}
-                  >{labels[c]}</button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Score */}
-          {scoringResult && (
+          {/* Score — always visible, shows placeholder until ready */}
+          {scoringResult ? (
             <div className="proto-score">
               <div className="proto-score-header">
                 <span className="proto-score-value">{scoringResult.handValue}</span>
@@ -675,9 +601,80 @@ export function Prototype() {
                 ))}
               </div>
             </div>
+          ) : (
+            <div className="proto-score-pending">
+              {!winTilePos ? 'Tap winning tile above' : 'Fill in details below'}
+            </div>
           )}
 
-          </>)}
+          {/* Win details — one compact card */}
+          {winTilePos && (
+            <div className="proto-step">
+              {/* Method */}
+              <div className="proto-step-row">
+                {(['self-pick', 'discard', 'stolen-kong'] as const).map(method => (
+                  <button key={method}
+                    className={`proto-btn proto-btn-fill ${win.method === method ? 'proto-btn-primary' : ''}`}
+                    onClick={() => setWin(w => ({ ...w, method }))}
+                  >{method}</button>
+                ))}
+              </div>
+
+              {/* Players */}
+              <div className="proto-step-row">
+                <span className="proto-field-label">Winner</span>
+                {['A','B','C','D'].map(p => (
+                  <button key={p} className={`proto-player ${win.winner === p ? 'proto-player-active' : ''}`}
+                    onClick={() => setWin(w => ({ ...w, winner: p }))}>{p}</button>
+                ))}
+              </div>
+              <div className="proto-step-row">
+                <span className="proto-field-label">Dealer</span>
+                {['A','B','C','D'].map(p => (
+                  <button key={p} className={`proto-player ${win.dealer === p ? 'proto-player-active' : ''}`}
+                    onClick={() => setWin(w => ({ ...w, dealer: p }))}>{p}</button>
+                ))}
+              </div>
+              {win.method !== 'self-pick' && (
+                <div className="proto-step-row">
+                  <span className="proto-field-label">From</span>
+                  {['A','B','C','D'].map(p => (
+                    <button key={p} className={`proto-player ${win.from === p ? 'proto-player-active' : ''}`}
+                      onClick={() => setWin(w => ({ ...w, from: p }))}>{p}</button>
+                  ))}
+                </div>
+              )}
+
+              {/* Dealer round + specials */}
+              <div className="proto-step-row">
+                <span className="proto-field-label">Round</span>
+                <div className="proto-stepper">
+                  <button className="proto-stepper-btn"
+                    disabled={(win.dealerRounds ?? 1) <= 1}
+                    onClick={() => setWin(w => ({ ...w, dealerRounds: Math.max(1, (w.dealerRounds ?? 1) - 1) }))}>−</button>
+                  <span className="proto-stepper-val">{win.dealerRounds ?? 1}</span>
+                  <button className="proto-stepper-btn"
+                    onClick={() => setWin(w => ({ ...w, dealerRounds: (w.dealerRounds ?? 1) + 1 }))}>+</button>
+                </div>
+              </div>
+              <div className="proto-step-row" style={{ flexWrap: 'wrap' }}>
+                {(['fromButt', 'lastTile', 'firstTurn', 'prodigy'] as const).map(c => {
+                  const labels = { fromButt: 'Replacement draw', lastTile: 'Last tile', firstTurn: '1st turn win', prodigy: 'Ready in 4' };
+                  const active = (win.special ?? []).includes(c);
+                  return (
+                    <button key={c}
+                      className={`proto-tag ${active ? 'proto-tag-active' : ''}`}
+                      onClick={() => setWin(w => {
+                        const cur = w.special ?? [];
+                        return { ...w, special: active ? cur.filter(x => x !== c) : [...cur, c] };
+                      })}
+                    >{labels[c]}</button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="proto-actions">
             <button onClick={() => setState(s => ({ ...s, phase: 'concealed', winTilePos: null }))} className="proto-btn">← Back to editing</button>
             <button onClick={reset} className="proto-btn">New hand</button>

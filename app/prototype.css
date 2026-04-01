@@ -266,25 +266,31 @@
 .proto-finish {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   padding-bottom: 40px;
+}
+
+.proto-score-pending {
+  text-align: center;
+  padding: 20px;
+  font-size: 0.85rem;
+  color: #8a8070;
+  background: white;
+  border-radius: 8px;
+  border: 1px dashed #ebe4d6;
 }
 
 .proto-step {
   background: white;
   border-radius: 8px;
   border: 1px solid #ebe4d6;
-  padding: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.proto-step-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #8a8070;
-  margin-bottom: 8px;
-}
+.proto-btn-fill { flex: 1; }
 
 .proto-step-row {
   display: flex;
