@@ -100,6 +100,7 @@ function isPongMaybeKong(tiles: Slot): boolean {
 function statusLabel(tiles: Slot): string {
   const t = detectType(tiles);
   if (t === 'chow' || t === 'pong' || t === 'kong') return t;
+  if (tiles.length === 2 && tiles[0] === tiles[1]) return 'pair';
   if (t === 'invalid') return 'invalid';
   return '';
 }
