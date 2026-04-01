@@ -191,6 +191,20 @@ body {
   border-color: #ccc;
 }
 
+.tile-plus {
+  width: 24px;
+  height: 32px;
+  background: var(--ivory-dark);
+  border-style: dashed;
+  border-color: #ccc;
+  color: #bbb;
+  font-size: 1rem;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .tile-btn {
   cursor: pointer;
   transition: all 0.1s;
