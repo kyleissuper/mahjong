@@ -339,7 +339,7 @@ const HANDS: HandDef[] = [
 test.describe('Prototype scoring', () => {
   for (const hand of HANDS) {
     test(hand.name, async ({ page }) => {
-      await page.goto('http://localhost:3000/prototype.html');
+      await page.goto('http://localhost:3000/');
 
       // Enter flowers
       if (hand.flowers) await enterFlowers(page, hand.flowers);
