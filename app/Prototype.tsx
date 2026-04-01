@@ -540,6 +540,9 @@ export function Prototype() {
       {/* Bottom sheet: tile grid + actions */}
       {isEntering && (
         <div className="proto-bottom-sheet">
+          <div className="proto-progress">
+            <div className="proto-progress-fill" style={{ width: `${Math.min(100, ((regularSets + (hasPair ? 1 : 0)) / 5) * 100)}%` }} />
+          </div>
           <div className="proto-grid">
             {ALL_SUITS.map(({ name, tiles }) => (
               <div key={name} className="proto-suit">
@@ -576,13 +579,9 @@ export function Prototype() {
             {currentSet.tiles.length > 0 && (
               <button onClick={() => setState(s => ({ ...s, [activeSetKey(s)]: { tiles: [] } }))} className="proto-btn proto-btn-danger">Clear set</button>
             )}
-            <button
-              onClick={finishMelds}
-              disabled={!handReady && currentSet.tiles.length === 0}
-              className={`proto-btn ${handReady ? 'proto-btn-primary' : ''}`}
-            >
-              {handReady ? 'Score →' : `${regularSets}/4 sets${hasPair ? ' + pair' : ''}`}
-            </button>
+            {handReady && (
+              <button onClick={finishMelds} className="proto-btn proto-btn-primary">Score →</button>
+            )}
           </div>
         </div>
       )}
