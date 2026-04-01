@@ -129,10 +129,7 @@ interface WinTilePos {
   tile: number;
 }
 
-interface ActiveSlot {
-  row: 'exposed' | 'concealed';
-  index: number;
-}
+type ActiveSlot = { type: 'slot'; row: 'exposed' | 'concealed'; index: number } | { type: 'flowers' };
 
 interface State {
   exposed: Slot[];
@@ -208,14 +205,14 @@ export function Prototype() {
     if (phase !== 'entering') return;
 
     if (tile === 'F') {
-      setState(s => ({ ...s, flowers: s.flowers + 1 }));
+      setState(s => ({ ...s, flowers: s.flowers + 1, active: { type: 'flowers' } }));
       return;
     }
 
-    if (!active) return;
+    if (!active || active.type !== 'slot') return;
 
     setState(s => {
-      if (!s.active) return s;
+      if (!s.active || s.active.type !== 'slot') return s;
       const { row, index } = s.active;
       const slots = s[row];
       const slot = slots[index] ?? [];
@@ -232,7 +229,7 @@ export function Prototype() {
     if (phase !== 'entering') return;
     setState(s => {
       // Toggle: tap active slot to deselect
-      if (s.active?.row === row && s.active.index === index) {
+      if (s.active?.type === 'slot' && s.active.row === row && s.active.index === index) {
         return { ...s, active: null };
       }
 
@@ -249,9 +246,9 @@ export function Prototype() {
 
       // Create new slot if needed
       if (targetIndex >= slots.length) {
-        return { ...next, [row]: [...slots, []], active: { row, index: targetIndex } };
+        return { ...next, [row]: [...slots, []], active: { type: 'slot', row, index: targetIndex } };
       }
-      return { ...next, active: { row, index: targetIndex } };
+      return { ...next, active: { type: 'slot', row, index: targetIndex } };
     });
   }
 
@@ -271,30 +268,35 @@ export function Prototype() {
   function undo() {
     setState(s => {
       if (!s.active) return s;
+      if (s.active.type === 'flowers') {
+        return { ...s, flowers: Math.max(0, s.flowers - 1), ...(s.flowers <= 1 ? { active: null } : {}) };
+      }
       const { row, index } = s.active;
-      const slots = s[row];
-      const slot = slots[index];
+      const slot = s[row][index];
       if (!slot || slot.length === 0) return s;
-      const newSlots = slots.map((sl, i) => i === index ? sl.slice(0, -1) : sl);
-      return { ...s, [row]: newSlots };
+      return { ...s, [row]: s[row].map((sl, i) => i === index ? sl.slice(0, -1) : sl) };
     });
   }
 
   function clearSlot() {
     setState(s => {
       if (!s.active) return s;
+      if (s.active.type === 'flowers') {
+        return { ...s, flowers: 0, active: null };
+      }
       const { row, index } = s.active;
-      const newSlots = s[row].map((sl, i) => i === index ? [] : sl);
-      return { ...s, [row]: newSlots };
+      return { ...s, [row]: s[row].map((sl, i) => i === index ? [] : sl) };
     });
   }
 
   function deleteSlot() {
     setState(s => {
       if (!s.active) return s;
+      if (s.active.type === 'flowers') {
+        return { ...s, flowers: 0, active: null };
+      }
       const { row, index } = s.active;
-      const newSlots = s[row].filter((_, i) => i !== index);
-      return { ...s, [row]: newSlots, active: null };
+      return { ...s, [row]: s[row].filter((_, i) => i !== index), active: null };
     });
   }
 
@@ -306,12 +308,13 @@ export function Prototype() {
   }
 
   const isEntering = phase === 'entering';
-  const activeSlotTiles = active ? (state[active.row][active.index] ?? []) : [];
+  const isFlowersActive = active?.type === 'flowers';
+  const activeSlotTiles = active?.type === 'slot' ? (state[active.row][active.index] ?? []) : [];
 
   // --- Render helpers ---
 
   function renderSlot(row: 'exposed' | 'concealed', index: number, tiles: Slot) {
-    const isActive = isEntering && active?.row === row && active.index === index;
+    const isActive = isEntering && active?.type === 'slot' && active.row === row && active.index === index;
     const type = detectType(tiles);
     const label = statusLabel(tiles);
 
@@ -351,10 +354,8 @@ export function Prototype() {
   function renderFlowers() {
     if (flowers === 0) return null;
     return (
-      <div className="proto-set proto-set-tappable" onClick={() => setState(s => ({
-        ...s,
-        flowers: Math.max(0, s.flowers - 1),
-      }))}>
+      <div className={`proto-set ${isFlowersActive ? 'proto-set-active' : 'proto-set-tappable'}`}
+        onClick={() => setState(s => ({ ...s, active: isFlowersActive ? null : { type: 'flowers' } }))}>
         <div className="proto-set-tiles">
           {Array.from({ length: flowers }, (_, j) => (
             <span key={j} className="tile-frame tile-sm"><TileImage tile="F" size={18} /></span>
@@ -379,7 +380,7 @@ export function Prototype() {
         )}
 
         {(exposed.length > 0 || flowers > 0 || isEntering) && (
-          <div className={`proto-row ${active?.row === 'exposed' ? 'proto-row-active' : ''}`}>
+          <div className={`proto-row ${(active?.type === 'slot' && active.row === 'exposed') || active?.type === 'flowers' ? 'proto-row-active' : ''}`}>
             <span className="proto-row-label">Exposed</span>
             <div className="proto-sets">
               {renderFlowers()}
@@ -398,7 +399,7 @@ export function Prototype() {
         {isEntering && <div className="proto-row-divider" />}
 
         {(concealed.length > 0 || isEntering) && (
-          <div className={`proto-row ${active?.row === 'concealed' ? 'proto-row-active' : ''}`}>
+          <div className={`proto-row ${active?.type === 'slot' && active.row === 'concealed' ? 'proto-row-active' : ''}`}>
             <span className="proto-row-label">Concealed</span>
             <div className="proto-sets">
               {concealed.map((slot, i) => renderSlot('concealed', i, slot))}
@@ -450,9 +451,9 @@ export function Prototype() {
             ))}
           </div>
           <div className="proto-sheet-actions">
-            <button onClick={undo} disabled={!active || activeSlotTiles.length === 0} className="proto-btn">Undo</button>
-            <button onClick={clearSlot} disabled={!active || activeSlotTiles.length === 0} className="proto-btn">Clear</button>
-            <button onClick={deleteSlot} disabled={!active || activeSlotTiles.length === 0} className="proto-btn proto-btn-danger">Delete</button>
+            <button onClick={undo} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn">Undo</button>
+            <button onClick={clearSlot} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn">Clear</button>
+            <button onClick={deleteSlot} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn proto-btn-danger">Delete</button>
             {handReady && (
               <button onClick={() => setState(s => ({ ...s, phase: 'done', active: null }))} className="proto-btn proto-btn-primary">Score →</button>
             )}
