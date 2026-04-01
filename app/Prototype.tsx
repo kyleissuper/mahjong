@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { Tile, MeldType, Meld, Win, ScoreResult } from '../src/types.js';
 import { calculateScore } from '../src/calculate-score.js';
+import { isHandReady } from '../src/validate-hand.js';
 import { TileImage } from './TileImage.tsx';
 import './prototype.css';
 
@@ -177,6 +178,7 @@ export function Prototype() {
   const regularSets = allMelds.filter(m => m.type !== 'flower' && m.type !== 'pair').length;
   const hasPair = allMelds.some(m => m.type === 'pair');
   const needsPair = regularSets >= 4 && !hasPair;
+  const handReady = isHandReady({ melds: allMelds });
 
   // Build Hand for scoring engine
   const scoringResult: ScoreResult | null = useMemo(() => {
@@ -574,7 +576,16 @@ export function Prototype() {
             {currentSet.tiles.length > 0 && (
               <button onClick={() => setState(s => ({ ...s, [activeSetKey(s)]: { tiles: [] } }))} className="proto-btn proto-btn-danger">Clear set</button>
             )}
-            <button onClick={finishMelds} className="proto-btn">Done</button>
+            <button
+              onClick={finishMelds}
+              disabled={!handReady && currentSet.tiles.length === 0}
+              className={`proto-btn-score ${handReady ? 'proto-btn-score-ready' : ''}`}
+            >
+              {handReady
+                ? 'Score hand →'
+                : `${regularSets}/4 sets${hasPair ? ' + pair' : ''}`
+              }
+            </button>
           </div>
         </div>
       )}

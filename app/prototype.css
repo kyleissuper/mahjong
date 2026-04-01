@@ -198,6 +198,35 @@
 
 .proto-btn-primary:active { background: #40916c; }
 
+.proto-btn-score {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  color: #8a8070;
+  min-height: 48px;
+  cursor: pointer;
+}
+
+.proto-btn-score:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.proto-btn-score-ready {
+  background: #2d6a4f;
+  color: white;
+  border-color: #2d6a4f;
+}
+
+.proto-btn-score-ready:active {
+  background: #40916c;
+}
+
 .proto-btn-danger {
   color: #c1440e;
   border-color: #c1440e44;
