@@ -59,14 +59,15 @@ describe('calculateScore', () => {
 
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
-      { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'allChows', points: 1 },
       { name: 'selfPick', points: 1 },
       { name: 'only2Suits', points: 1 },
       { name: 'noTerminalsNoHonors', points: 3 },
     ]);
-    expect(result.handValue).toBe(8);
-    expect(result.scores).toEqual({ A: 25, B: -9, C: -8, D: -8 });
+    // canOnlyWinWithOne does NOT fire — 5b also completes the hand
+    // (pair 5b + chow 6b-7b-8b instead of pair 8b + chow 5b-6b-7b)
+    expect(result.handValue).toBe(7);
+    expect(result.scores).toEqual({ A: 22, B: -8, C: -7, D: -7 });
   });
 
   it('Hand 3 — wind pong, no 1s/9s with honors, discard win (3 pts)', () => {
@@ -101,7 +102,9 @@ describe('calculateScore', () => {
     expect(result.scores).toEqual({ A: 3, B: 0, C: -3, D: 0 });
   });
 
-  it('Hand 4 — all greens, all pongs, dealer self-pick (20 pts)', () => {
+  it('Hand 4 — all greens, all pongs, dealer self-pick (19 pts)', () => {
+    // canOnlyWinWithOne does NOT fire: concealed 1b×3 + 3b can rearrange
+    // to pair(1b) + chow(1b,2b,3b), so 2b also completes the hand.
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['1b', '1b', '1b'], concealed: true },
@@ -124,13 +127,12 @@ describe('calculateScore', () => {
     const result = calculateScore(hand, win);
 
     expect(result.appliedRules).toEqual([
-      { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'allPongs', points: 4 },
       { name: 'selfPick', points: 1 },
       { name: 'jadeDragon', points: 14 },
     ]);
-    expect(result.handValue).toBe(20);
-    expect(result.scores).toEqual({ A: 63, B: -21, C: -21, D: -21 });
+    expect(result.handValue).toBe(19);
+    expect(result.scores).toEqual({ A: 60, B: -20, C: -20, D: -20 });
   });
 
   it('Hand 5 — clean doorstep, 1-9 chain, discard win (5 pts)', () => {
@@ -299,7 +301,9 @@ describe('calculateScore', () => {
     expect(result.scores).toEqual({ A: -7, B: -7, C: 22, D: -8 });
   });
 
-  it('Hand 10 — pure, four hidden pongs, clean doorstep & self-pick (27 pts)', () => {
+  it('Hand 10 — pure, four hidden pongs, clean doorstep & self-pick (26 pts)', () => {
+    // canOnlyWinWithOne does NOT fire: concealed 3d×3 + 4d can rearrange
+    // to pair(3d) + chow(3d,4d,5d), so 5d also completes the hand.
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: true },
@@ -322,14 +326,13 @@ describe('calculateScore', () => {
     const result = calculateScore(hand, win);
 
     expect(result.appliedRules).toEqual([
-      { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'cleanDoorstepAndSelfPick', points: 3 },
       { name: 'noFlowersNoHonors', points: 3 },
       { name: 'pure', points: 8 },
       { name: 'fourHiddenPongs', points: 12 },
     ]);
-    expect(result.handValue).toBe(27);
-    expect(result.scores).toEqual({ A: -28, B: 82, C: -27, D: -27 });
+    expect(result.handValue).toBe(26);
+    expect(result.scores).toEqual({ A: -27, B: 79, C: -26, D: -26 });
   });
 
   it('Hand 11 — 1-9 chain, split kong, clean doorstep (10 pts)', () => {
@@ -752,6 +755,87 @@ describe('calculateScore', () => {
     const result = calculateScore(hand, win);
 
     expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeUndefined();
+  });
+
+  it('staircase pair wait: 2b-3b-3b-4b-4b-5b-5b should NOT be single wait', () => {
+    // 13 tiles: Ew Ew Ew | Sw Sw Sw | 2b 3b 3b 4b 4b 5b 5b
+    // Win with 2b → pair(2b) + chow(3-4-5) + chow(3-4-5) — looks like pair wait
+    // But 5b ALSO wins → chow(2-3-4) + chow(3-4-5) + pair(5b)
+    // NOT single wait
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'pong', tiles: ['Sw', 'Sw', 'Sw'], concealed: false },
+        { type: 'chow', tiles: ['3b', '4b', '5b'], concealed: true },
+        { type: 'chow', tiles: ['3b', '4b', '5b'], concealed: true },
+        { type: 'pair', tiles: ['2b', '2b'], concealed: true, winTile: '2b' },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard',
+      from: 'B', dealer: 'C', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeUndefined();
+  });
+
+  it('staircase pair wait: other end (5b) also should NOT be single wait', () => {
+    // Same 13 tiles, but win with 5b instead
+    // 5b → chow(2-3-4) + chow(3-4-5) + pair(5b) — looks like pair wait
+    // But 2b also wins — NOT single wait
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'pong', tiles: ['Sw', 'Sw', 'Sw'], concealed: false },
+        { type: 'chow', tiles: ['2b', '3b', '4b'], concealed: true },
+        { type: 'chow', tiles: ['3b', '4b', '5b'], concealed: true },
+        { type: 'pair', tiles: ['5b', '5b'], concealed: true, winTile: '5b' },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard',
+      from: 'B', dealer: 'C', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeUndefined();
+  });
+
+  it('staircase at edge: 6b-7b-7b-8b-8b-9b-9b should NOT be single wait', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'pong', tiles: ['Sw', 'Sw', 'Sw'], concealed: false },
+        { type: 'chow', tiles: ['7b', '8b', '9b'], concealed: true },
+        { type: 'chow', tiles: ['7b', '8b', '9b'], concealed: true },
+        { type: 'pair', tiles: ['6b', '6b'], concealed: true, winTile: '6b' },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard',
+      from: 'B', dealer: 'C', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeUndefined();
+  });
+
+  it('genuine pair wait IS single wait (no staircase)', () => {
+    // 13 tiles: Ew Ew Ew | 1b 2b 3b | 4d 5d 6d | 7c 8c 9c | 5b
+    // Only 5b completes the pair — no alternative decomposition
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: true },
+        { type: 'chow', tiles: ['4d', '5d', '6d'], concealed: true },
+        { type: 'chow', tiles: ['7c', '8c', '9c'], concealed: true },
+        { type: 'pair', tiles: ['5b', '5b'], concealed: true, winTile: '5b' },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard',
+      from: 'B', dealer: 'C', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeDefined();
   });
 
   it('Hand 24 — two kong mahjong (7 pts)', () => {

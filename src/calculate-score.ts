@@ -115,10 +115,61 @@ function canOnlyWinWithOne(hand: Hand): number {
   const meld = winningMeld(hand);
   if (!meld?.winTile) return 0;
   const { type, tiles, winTile } = meld;
-  if (type === 'pair') return 1;
+  if (type === 'pair') return pairIsOnlyWait(hand, meld) ? 1 : 0;
   if (type === 'chow' && chowCanOnlyWinWithOne(meld)) return 1;
   if (type === 'orphans') return tiles.filter(t => t === winTile).length === 1 ? 1 : 0;
   return 0;
+}
+
+// Pair waits are single-wait only if no other tile also completes the hand.
+function pairIsOnlyWait({ melds }: Hand, pairMeld: Meld): boolean {
+  const winTile = pairMeld.winTile!;
+  if (!isNumberTile(winTile)) return true; // honor pairs can't form chows
+
+  const exposedSets = melds.filter(m => !m.concealed && m.type !== 'flower').length;
+  const concealedTiles = melds.filter(m => m.concealed).flatMap(m => m.tiles);
+  const withoutWinningTile = concealedTiles.toSpliced(concealedTiles.indexOf(winTile), 1);
+  const setsNeeded = 4 - exposedSets;
+
+  for (const suitCode of ['b', 'd', 'c']) {
+    for (let rank = 1; rank <= 9; rank++) {
+      const candidateTile = `${rank}${suitCode}` as Tile;
+      if (candidateTile === winTile) continue;
+      if (canFormHand([...withoutWinningTile, candidateTile], setsNeeded)) return false;
+    }
+  }
+  return true;
+
+  // Backtracking: can these tiles be grouped into sets + 1 pair?
+  function canFormHand(handTiles: Tile[], setsNeeded: number): boolean {
+    return solve([...handTiles].sort(), setsNeeded, false);
+
+    function solve(tiles: Tile[], setsLeft: number, hasPair: boolean): boolean {
+      if (tiles.length === 0) return setsLeft === 0 && hasPair;
+      const first = tiles[0];
+
+      // try as pair
+      if (!hasPair && tiles[1] === first) {
+        if (solve(tiles.slice(2), setsLeft, true)) return true;
+      }
+      // try as pong
+      if (setsLeft > 0 && tiles[2] === first) {
+        if (solve(tiles.slice(3), setsLeft - 1, hasPair)) return true;
+      }
+      // try as start of chow
+      if (setsLeft > 0 && isNumberTile(first)) {
+        const plus1 = `${numValue(first) + 1}${suit(first)}` as Tile;
+        const plus2 = `${numValue(first) + 2}${suit(first)}` as Tile;
+        if (tiles.includes(plus1) && tiles.includes(plus2)) {
+          const rest = tiles.slice(1);
+          const withoutPlus1 = rest.toSpliced(rest.indexOf(plus1), 1);
+          const withoutChow = withoutPlus1.toSpliced(withoutPlus1.indexOf(plus2), 1);
+          if (solve(withoutChow, setsLeft - 1, hasPair)) return true;
+        }
+      }
+      return false;
+    }
+  }
 }
 
 function windPong({ melds }: Hand): number {
