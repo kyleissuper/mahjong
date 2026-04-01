@@ -374,7 +374,23 @@ export function Prototype() {
     if (phase !== 'exposed' && phase !== 'concealed') return;
     const sets = row === 'exposed' ? exposed : concealed;
     const meld = sets[index];
-    if (!meld || meld.type === 'flower') return;
+    if (!meld) return;
+
+    // Flowers: tap to remove one
+    if (meld.type === 'flower') {
+      setState(s => {
+        if (meld.tiles.length <= 1) {
+          return { ...s, exposed: s.exposed.filter((_, i) => i !== index), flowers: s.flowers - 1 };
+        }
+        return {
+          ...s,
+          exposed: s.exposed.map((m, i) => i === index ? { ...m, tiles: m.tiles.slice(0, -1) } : m),
+          flowers: s.flowers - 1,
+        };
+      });
+      return;
+    }
+
     const targetKey = row === 'exposed' ? 'currentExposed' as const : 'currentConcealed' as const;
     setState(s => ({
       ...s,
@@ -473,6 +489,10 @@ export function Prototype() {
             )}
           </div>
         </div>
+        )}
+
+        {(exposed.length > 0 || isEntering) && (concealed.length > 0 || isEntering) && (
+          <div className="proto-row-divider" />
         )}
 
         {(concealed.length > 0 || isEntering) && (

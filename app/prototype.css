@@ -98,6 +98,11 @@
 
 .proto-row-active .proto-row-label { color: #2d6a4f; }
 
+.proto-row-divider {
+  border-top: 2px solid #ebe4d6;
+  margin: 4px 0;
+}
+
 .proto-set-placeholder {
   cursor: pointer;
   opacity: 0.5;
