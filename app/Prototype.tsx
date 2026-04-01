@@ -134,11 +134,15 @@ interface WinTilePos {
   tile: number;
 }
 
+interface ActiveSlot {
+  row: 'exposed' | 'concealed';
+  index: number;
+}
+
 interface State {
   exposed: Slot[];
   concealed: Slot[];
-  activeRow: 'exposed' | 'concealed';
-  activeSlot: number;
+  active: ActiveSlot | null;
   phase: 'entering' | 'done';
   winTilePos: WinTilePos | null;
   flowers: number;
@@ -148,16 +152,15 @@ interface State {
 
 export function Prototype() {
   const [state, setState] = useState<State>({
-    exposed: [[]],
-    concealed: [[]],
-    activeRow: 'exposed',
-    activeSlot: 0,
+    exposed: [],
+    concealed: [],
+    active: null,
     phase: 'entering',
     winTilePos: null,
     flowers: 0,
   });
 
-  const { exposed, concealed, activeRow, activeSlot, phase, winTilePos, flowers } = state;
+  const { exposed, concealed, active, phase, winTilePos, flowers } = state;
 
   const [win, setWin] = useState<Partial<Win>>({
     method: 'discard',
@@ -207,71 +210,46 @@ export function Prototype() {
   // --- Actions ---
 
   function tapTile(tile: Tile) {
-    if (phase !== 'entering') return;
+    if (phase !== 'entering' || !active) return;
 
-    // Flower
     if (tile === 'F') {
       setState(s => ({ ...s, flowers: s.flowers + 1 }));
       return;
     }
 
     setState(s => {
-      const row = s[s.activeRow];
-      const slot = row[s.activeSlot];
+      if (!s.active) return s;
+      const { row, index } = s.active;
+      const slots = s[row];
+      const slot = slots[index] ?? [];
 
-      // If active slot is a complete chow or kong, start a new slot
-      if (isComplete(slot)) {
-        const newRow = [...row, [tile]];
-        return { ...s, [s.activeRow]: newRow, activeSlot: newRow.length - 1 };
-      }
+      if (!couldExtend(slot, tile) && slot.length > 0) return s;
 
-      // If active slot is a pong and new tile is different, start new slot
-      if (isPongMaybeKong(slot) && slot[0] !== tile) {
-        const newRow = [...row, [tile]];
-        return { ...s, [s.activeRow]: newRow, activeSlot: newRow.length - 1 };
-      }
-
-      // Can extend?
-      if (slot.length === 0 || couldExtend(slot, tile)) {
-        const newTiles = [...slot, tile];
-
-        // Auto-pair: if 4+ sets done and 2 identical
-        const allSlots = s.activeRow === 'exposed'
-          ? [...row.map((sl, i) => i === s.activeSlot ? newTiles : sl), ...s.concealed]
-          : [...s.exposed, ...row.map((sl, i) => i === s.activeSlot ? newTiles : sl)];
-        const tempMelds = slotsToMelds(
-          allSlots.filter((_, i) => i < (s.activeRow === 'exposed' ? row.length : s.exposed.length + row.length)),
-          false, 0,
-        );
-        // Simpler: just count from committed melds
-        const sets = allMelds.filter(m => m.type !== 'flower' && m.type !== 'pair').length;
-        const pair = allMelds.some(m => m.type === 'pair');
-        if (sets >= 4 && !pair && newTiles.length === 2 && newTiles[0] === newTiles[1]) {
-          // Auto-commit pair, add new empty slot
-          const newRow = [...row.map((sl, i) => i === s.activeSlot ? newTiles : sl), []];
-          return { ...s, [s.activeRow]: newRow, activeSlot: newRow.length - 1 };
-        }
-
-        const newRow = row.map((sl, i) => i === s.activeSlot ? newTiles : sl);
-        return { ...s, [s.activeRow]: newRow };
-      }
-
-      // Doesn't extend — if current slot is valid, start new slot
-      const type = detectType(slot);
-      if (type !== 'incomplete' && type !== 'invalid') {
-        const newRow = [...row, [tile]];
-        return { ...s, [s.activeRow]: newRow, activeSlot: newRow.length - 1 };
-      }
-
-      // Current slot invalid/incomplete — replace with new tile
-      const newRow = row.map((sl, i) => i === s.activeSlot ? [tile] : sl);
-      return { ...s, [s.activeRow]: newRow };
+      const newSlot = [...slot, tile];
+      const newSlots = slots.map((sl, i) => i === index ? newSlot : sl);
+      return { ...s, [row]: newSlots };
     });
   }
 
   function tapSlot(row: 'exposed' | 'concealed', index: number) {
     if (phase !== 'entering') return;
-    setState(s => ({ ...s, activeRow: row, activeSlot: index }));
+    setState(s => {
+      // Toggle: tap active slot to deselect
+      if (s.active?.row === row && s.active.index === index) {
+        return { ...s, active: null };
+      }
+      // Ensure slot exists
+      const slots = s[row];
+      if (index >= slots.length) {
+        const newSlots = [...slots, []];
+        return { ...s, [row]: newSlots, active: { row, index } };
+      }
+      return { ...s, active: { row, index } };
+    });
+  }
+
+  function deselect() {
+    setState(s => ({ ...s, active: null }));
   }
 
   function pickWinTile(pos: WinTilePos) {
@@ -280,46 +258,40 @@ export function Prototype() {
 
   function undo() {
     setState(s => {
-      const row = s[s.activeRow];
-      const slot = row[s.activeSlot];
-      if (slot.length > 0) {
-        const newRow = row.map((sl, i) => i === s.activeSlot ? sl.slice(0, -1) : sl);
-        return { ...s, [s.activeRow]: newRow };
-      }
-      // Remove empty slot if not the only one
-      if (row.length > 1 && s.activeSlot === row.length - 1) {
-        return { ...s, [s.activeRow]: row.slice(0, -1), activeSlot: row.length - 2 };
-      }
-      return s;
+      if (!s.active) return s;
+      const { row, index } = s.active;
+      const slots = s[row];
+      const slot = slots[index];
+      if (!slot || slot.length === 0) return s;
+      const newSlots = slots.map((sl, i) => i === index ? sl.slice(0, -1) : sl);
+      return { ...s, [row]: newSlots };
     });
   }
 
   function clearSlot() {
     setState(s => {
-      const row = s[s.activeRow];
-      if (row.length > 1) {
-        const newRow = row.filter((_, i) => i !== s.activeSlot);
-        const newActive = Math.min(s.activeSlot, newRow.length - 1);
-        return { ...s, [s.activeRow]: newRow, activeSlot: newActive };
-      }
-      return { ...s, [s.activeRow]: [[]], activeSlot: 0 };
+      if (!s.active) return s;
+      const { row, index } = s.active;
+      const slots = s[row];
+      const newSlots = slots.filter((_, i) => i !== index);
+      return { ...s, [row]: newSlots, active: null };
     });
   }
 
   function reset() {
     setState({
-      exposed: [[]], concealed: [[]], activeRow: 'exposed', activeSlot: 0,
+      exposed: [], concealed: [], active: null,
       phase: 'entering', winTilePos: null, flowers: 0,
     });
   }
 
   const isEntering = phase === 'entering';
-  const activeSlotTiles = state[activeRow][activeSlot] ?? [];
+  const activeSlotTiles = active ? (state[active.row][active.index] ?? []) : [];
 
   // --- Render helpers ---
 
   function renderSlot(row: 'exposed' | 'concealed', index: number, tiles: Slot) {
-    const isActive = isEntering && activeRow === row && activeSlot === index;
+    const isActive = isEntering && active?.row === row && active.index === index;
     const type = detectType(tiles);
     const label = tiles.length === 0 ? '' :
       (tiles.length === 2 && tiles[0] === tiles[1] && type === 'incomplete') ? 'pair? pong?' :
@@ -394,25 +366,41 @@ export function Prototype() {
           <div className="proto-pick-hint">Tap the tile you won with</div>
         )}
 
-        {(exposed.some(s => s.length > 0) || flowers > 0 || isEntering) && (
-          <div className={`proto-row ${isEntering && activeRow === 'exposed' ? 'proto-row-active' : ''}`}>
+        {(exposed.length > 0 || flowers > 0 || isEntering) && (
+          <div className={`proto-row ${active?.row === 'exposed' ? 'proto-row-active' : ''}`}>
             <span className="proto-row-label">Exposed</span>
             <div className="proto-sets">
               {renderFlowers()}
               {exposed.map((slot, i) => renderSlot('exposed', i, slot))}
+              {isEntering && (
+                <div className="proto-set proto-set-placeholder" onClick={() => tapSlot('exposed', exposed.length)}>
+                  <div className="proto-set-tiles">
+                    <span className="tile-frame tile-sm tile-empty" />
+                    <span className="tile-frame tile-sm tile-empty" />
+                    <span className="tile-frame tile-sm tile-empty" />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {(exposed.some(s => s.length > 0) || concealed.some(s => s.length > 0) || isEntering) && (
-          <div className="proto-row-divider" />
-        )}
+        {isEntering && <div className="proto-row-divider" />}
 
-        {(concealed.some(s => s.length > 0) || isEntering) && (
-          <div className={`proto-row ${isEntering && activeRow === 'concealed' ? 'proto-row-active' : ''}`}>
+        {(concealed.length > 0 || isEntering) && (
+          <div className={`proto-row ${active?.row === 'concealed' ? 'proto-row-active' : ''}`}>
             <span className="proto-row-label">Concealed</span>
             <div className="proto-sets">
               {concealed.map((slot, i) => renderSlot('concealed', i, slot))}
+              {isEntering && (
+                <div className="proto-set proto-set-placeholder" onClick={() => tapSlot('concealed', concealed.length)}>
+                  <div className="proto-set-tiles">
+                    <span className="tile-frame tile-sm tile-empty" />
+                    <span className="tile-frame tile-sm tile-empty" />
+                    <span className="tile-frame tile-sm tile-empty" />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -454,12 +442,14 @@ export function Prototype() {
             ))}
           </div>
           <div className="proto-sheet-actions">
-            <button onClick={undo} disabled={activeSlotTiles.length === 0 && allMelds.length === 0} className="proto-btn">Undo</button>
-            {activeSlotTiles.length > 0 && (
+            {active && activeSlotTiles.length > 0 && (
+              <button onClick={undo} className="proto-btn">Undo</button>
+            )}
+            {active && activeSlotTiles.length > 0 && (
               <button onClick={clearSlot} className="proto-btn proto-btn-danger">Clear</button>
             )}
             {handReady && (
-              <button onClick={() => setState(s => ({ ...s, phase: 'done' }))} className="proto-btn proto-btn-primary">Score →</button>
+              <button onClick={() => setState(s => ({ ...s, phase: 'done', active: null }))} className="proto-btn proto-btn-primary">Score →</button>
             )}
           </div>
         </div>
@@ -551,7 +541,7 @@ export function Prototype() {
           )}
 
           <div className="proto-actions">
-            <button onClick={() => setState(s => ({ ...s, phase: 'entering', winTilePos: null }))} className="proto-btn">← Edit hand</button>
+            <button onClick={() => setState(s => ({ ...s, phase: 'entering', winTilePos: null, active: null }))} className="proto-btn">← Edit hand</button>
             <button onClick={reset} className="proto-btn">New hand</button>
           </div>
         </div>
