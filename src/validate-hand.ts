@@ -4,6 +4,21 @@ import { isNumberTile, numValue, suit } from './tiles.js';
 export type ValidationError =
   | { type: 'meld'; meld: number; message: string };
 
+export function isHandReady(hand: Hand): boolean {
+  const melds = hand.melds.filter(m => m.type !== 'flower');
+
+  // Thirteen orphans
+  if (melds.some(m => m.type === 'orphans')) return true;
+
+  // All pairs: 7 pairs
+  if (melds.length === 7 && melds.every(m => m.type === 'pair')) return true;
+
+  // Standard: 4 sets (chow/pong/kong) + 1 pair
+  const sets = melds.filter(m => m.type === 'chow' || m.type === 'pong' || m.type === 'kong');
+  const pairs = melds.filter(m => m.type === 'pair');
+  return sets.length === 4 && pairs.length === 1;
+}
+
 export function validateHand(hand: Hand): ValidationError[] {
   return hand.melds.flatMap((meld, i) => {
     const message = validateMeld(meld);
