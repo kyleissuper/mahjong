@@ -412,6 +412,20 @@ export function Prototype() {
           <div className="proto-progress">
             <div className="proto-progress-fill" style={{ width: `${Math.min(100, ((regularSets + (hasPair ? 1 : 0)) / 5) * 100)}%` }} />
           </div>
+          <div className="proto-sheet-actions">
+            <button onClick={undo} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn">
+              {isFlowersActive ? '− Flower' : 'Undo'}
+            </button>
+            <button onClick={clearSlot} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn">
+              {isFlowersActive ? 'Remove all' : 'Clear'}
+            </button>
+            {!isFlowersActive && (
+              <button onClick={deleteSlot} disabled={!active || activeSlotTiles.length === 0} className="proto-btn proto-btn-danger">Delete</button>
+            )}
+            {handReady && (
+              <button onClick={() => setState(s => ({ ...s, phase: 'done', active: null }))} className="proto-btn proto-btn-primary">Score →</button>
+            )}
+          </div>
           <div className="proto-grid">
             {ALL_SUITS.map(({ name, tiles }) => (
               <div key={name} className="proto-suit">
@@ -430,20 +444,6 @@ export function Prototype() {
                 </div>
               </div>
             ))}
-          </div>
-          <div className="proto-sheet-actions">
-            <button onClick={undo} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn">
-              {isFlowersActive ? '− Flower' : 'Undo'}
-            </button>
-            <button onClick={clearSlot} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn">
-              {isFlowersActive ? 'Remove all' : 'Clear'}
-            </button>
-            {!isFlowersActive && (
-              <button onClick={deleteSlot} disabled={!active || activeSlotTiles.length === 0} className="proto-btn proto-btn-danger">Delete</button>
-            )}
-            {handReady && (
-              <button onClick={() => setState(s => ({ ...s, phase: 'done', active: null }))} className="proto-btn proto-btn-primary">Score →</button>
-            )}
           </div>
         </div>
       )}
