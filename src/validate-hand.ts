@@ -7,8 +7,8 @@ export type ValidationError =
 export function isHandReady(hand: Hand): boolean {
   const melds = hand.melds.filter(m => m.type !== 'flower');
 
-  // Thirteen orphans
-  if (melds.some(m => m.type === 'orphans')) return true;
+  // Thirteen orphans: must be the only non-flower meld
+  if (melds.length === 1 && melds[0].type === 'orphans') return true;
 
   // All pairs: 7 pairs
   if (melds.length === 7 && melds.every(m => m.type === 'pair')) return true;
