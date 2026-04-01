@@ -233,18 +233,33 @@ export function Prototype() {
       if (s.active?.row === row && s.active.index === index) {
         return { ...s, active: null };
       }
-      // Ensure slot exists
-      const slots = s[row];
-      if (index >= slots.length) {
-        const newSlots = [...slots, []];
-        return { ...s, [row]: newSlots, active: { row, index } };
+
+      // Clean up empty slots from both rows
+      let next = { ...s };
+      for (const r of ['exposed', 'concealed'] as const) {
+        const cleaned = next[r].filter(sl => sl.length > 0);
+        next = { ...next, [r]: cleaned };
       }
-      return { ...s, active: { row, index } };
+
+      // Recalculate target index after cleanup
+      const slots = next[row];
+      const targetIndex = index >= slots.length ? slots.length : index;
+
+      // Create new slot if needed
+      if (targetIndex >= slots.length) {
+        return { ...next, [row]: [...slots, []], active: { row, index: targetIndex } };
+      }
+      return { ...next, active: { row, index: targetIndex } };
     });
   }
 
   function deselect() {
-    setState(s => ({ ...s, active: null }));
+    setState(s => ({
+      ...s,
+      active: null,
+      exposed: s.exposed.filter(sl => sl.length > 0),
+      concealed: s.concealed.filter(sl => sl.length > 0),
+    }));
   }
 
   function pickWinTile(pos: WinTilePos) {
