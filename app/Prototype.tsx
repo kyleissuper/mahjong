@@ -99,13 +99,7 @@ function isPongMaybeKong(tiles: Slot): boolean {
 
 function statusLabel(tiles: Slot): string {
   const t = detectType(tiles);
-  if (t === 'incomplete') {
-    if (tiles.length === 2 && tiles[0] === tiles[1]) return 'pair? pong?';
-    return '...';
-  }
-  if (t === 'pong') return 'pong ✓';
-  if (t === 'chow') return 'chow ✓';
-  if (t === 'kong') return 'kong ✓';
+  if (t === 'chow' || t === 'pong' || t === 'kong') return t;
   if (t === 'invalid') return 'invalid';
   return '';
 }
@@ -293,11 +287,7 @@ export function Prototype() {
   function renderSlot(row: 'exposed' | 'concealed', index: number, tiles: Slot) {
     const isActive = isEntering && active?.row === row && active.index === index;
     const type = detectType(tiles);
-    const label = tiles.length === 0 ? '' :
-      (tiles.length === 2 && tiles[0] === tiles[1] && type === 'incomplete') ? 'pair? pong?' :
-      type === 'incomplete' ? '...' :
-      type === 'invalid' ? 'invalid' :
-      `${type} ✓`;
+    const label = statusLabel(tiles);
 
     const canPickWin = phase === 'done';
 
