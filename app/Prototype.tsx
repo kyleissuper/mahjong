@@ -579,12 +579,9 @@ export function Prototype() {
             <button
               onClick={finishMelds}
               disabled={!handReady && currentSet.tiles.length === 0}
-              className={`proto-btn-score ${handReady ? 'proto-btn-score-ready' : ''}`}
+              className={`proto-btn ${handReady ? 'proto-btn-primary' : ''}`}
             >
-              {handReady
-                ? 'Score hand →'
-                : `${regularSets}/4 sets${hasPair ? ' + pair' : ''}`
-              }
+              {handReady ? 'Score →' : `${regularSets}/4 sets${hasPair ? ' + pair' : ''}`}
             </button>
           </div>
         </div>
