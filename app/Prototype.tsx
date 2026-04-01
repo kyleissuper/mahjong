@@ -603,13 +603,6 @@ export function Prototype() {
                     onClick={() => setWin(w => ({ ...w, winner: p }))}>{p}</button>
                 ))}
               </div>
-              <div className="proto-step-row">
-                <span className="proto-field-label">Dealer</span>
-                {['A','B','C','D'].map(p => (
-                  <button key={p} className={`proto-player ${win.dealer === p ? 'proto-player-active' : ''}`}
-                    onClick={() => setWin(w => ({ ...w, dealer: p }))}>{p}</button>
-                ))}
-              </div>
               {win.method !== 'self-pick' && (
                 <div className="proto-step-row">
                   <span className="proto-field-label">From</span>
@@ -619,6 +612,13 @@ export function Prototype() {
                   ))}
                 </div>
               )}
+              <div className="proto-step-row">
+                <span className="proto-field-label">Dealer</span>
+                {['A','B','C','D'].map(p => (
+                  <button key={p} className={`proto-player ${win.dealer === p ? 'proto-player-active' : ''}`}
+                    onClick={() => setWin(w => ({ ...w, dealer: p }))}>{p}</button>
+                ))}
+              </div>
 
               {/* Dealer round + specials */}
               <div className="proto-step-row">
