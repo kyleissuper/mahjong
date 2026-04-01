@@ -94,7 +94,7 @@ const rules: Rule[] = [
     'allPongs', 'windPong', 'dragonPong', 'noTerminalsWithHonors',
     'threeSuitsWithWindAndDragon',
   ] },
-  { name: 'allGreens', score: allGreens, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
+  { name: 'allGreens', score: allGreens, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure', 'pure'] },
 ];
 
 function flower({ melds }: Hand): number {
