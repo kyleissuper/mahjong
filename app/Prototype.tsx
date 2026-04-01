@@ -562,6 +562,7 @@ export function Prototype() {
       {/* Post-melds flow */}
       {phase === 'done' && (
         <div className="proto-finish">
+          {winTilePos && (<>
           {/* Step 1: How did you win? */}
           <div className="proto-step">
             <div className="proto-step-label">How did you win?</div>
@@ -676,6 +677,7 @@ export function Prototype() {
             </div>
           )}
 
+          </>)}
           <div className="proto-actions">
             <button onClick={() => setState(s => ({ ...s, phase: 'concealed', winTilePos: null }))} className="proto-btn">← Back to editing</button>
             <button onClick={reset} className="proto-btn">New hand</button>
