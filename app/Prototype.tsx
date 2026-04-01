@@ -658,41 +658,43 @@ export function Prototype() {
             </div>
           )}
 
-          {/* Score — appears after form is filled */}
+          {/* Results — payments as hero */}
           {scoringResult && (
-            <div className="proto-score">
-              <div className="proto-score-header">
-                <span className="proto-score-value">{scoringResult.handValue}</span>
-                <span className="proto-score-label">points</span>
-              </div>
-              <div className="proto-score-rules">
-                {scoringResult.appliedRules.map(({ name, points }) => (
-                  <div key={name} className="proto-score-rule">
-                    <span>{RULE_LABELS[name] ?? name}</span>
-                    <span className="proto-score-pts">+{points}</span>
+            <div className="proto-results">
+              {/* Hero: net per player */}
+              <div className="proto-hero">
+                {Object.entries(scoringResult.scores).map(([player, delta]) => (
+                  <div key={player} className={`proto-hero-player ${delta > 0 ? 'pos' : delta < 0 ? 'neg' : ''}`}>
+                    <span className="proto-hero-name">{player}</span>
+                    <span className="proto-hero-delta">{delta > 0 ? '+' : ''}{delta}</span>
                   </div>
                 ))}
               </div>
-              <div className="proto-score-payments">
+
+              {/* Transaction details */}
+              <div className="proto-transactions">
                 {scoringResult.payments.map((p, i) => (
-                  <div key={i} className="proto-payment-row">
-                    <span className="proto-payment-flow">{p.from} → {p.to}</span>
-                    <span className="proto-payment-amount">
+                  <div key={i} className="proto-tx">
+                    <span className="proto-tx-flow">{p.from} pays {p.to}</span>
+                    <span className="proto-tx-amount">
                       {p.total}
                       {p.dealerBonus > 0 && (
-                        <span className="proto-payment-bonus"> ({p.base} + {p.dealerBonus} dealer)</span>
+                        <span className="proto-tx-bonus"> ({p.base} + {p.dealerBonus} dealer)</span>
                       )}
                     </span>
                   </div>
                 ))}
               </div>
-              <div className="proto-score-net">
-                {Object.entries(scoringResult.scores).map(([player, delta]) => (
-                  <div key={player} className="proto-score-pay">
-                    <span className="proto-score-pay-player">{player}</span>
-                    <span className={`proto-score-pay-val ${delta > 0 ? 'pos' : delta < 0 ? 'neg' : ''}`}>
-                      {delta > 0 ? '+' : ''}{delta}
-                    </span>
+
+              {/* Hand value + rules breakdown */}
+              <div className="proto-breakdown">
+                <div className="proto-breakdown-header">
+                  Hand value: {scoringResult.handValue} pts
+                </div>
+                {scoringResult.appliedRules.map(({ name, points }) => (
+                  <div key={name} className="proto-breakdown-rule">
+                    <span>{RULE_LABELS[name] ?? name}</span>
+                    <span className="proto-breakdown-pts">+{points}</span>
                   </div>
                 ))}
               </div>

@@ -390,63 +390,69 @@
   color: #2d6a4f;
 }
 
-/* === Score display === */
+/* === Results === */
 
-.proto-score {
+.proto-results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Hero: big payment numbers per player */
+.proto-hero {
+  display: flex;
+  gap: 4px;
+}
+
+.proto-hero-player {
+  flex: 1;
+  text-align: center;
+  padding: 14px 4px;
+  border-radius: 8px;
+  background: white;
+  border: 1px solid #ebe4d6;
+}
+
+.proto-hero-player.pos {
+  background: #2d6a4f;
+  border-color: #2d6a4f;
+}
+
+.proto-hero-player.neg {
+  background: white;
+}
+
+.proto-hero-name {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #8a8070;
+}
+
+.proto-hero-player.pos .proto-hero-name { color: rgba(255,255,255,0.7); }
+
+.proto-hero-delta {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #8a8070;
+}
+
+.proto-hero-player.pos .proto-hero-delta { color: white; }
+.proto-hero-player.neg .proto-hero-delta { color: #c1440e; }
+
+/* Transactions */
+.proto-transactions {
   background: white;
   border-radius: 8px;
   border: 1px solid #ebe4d6;
-  overflow: hidden;
+  padding: 8px 12px;
 }
 
-.proto-score-header {
-  background: #2d6a4f;
-  color: white;
-  text-align: center;
-  padding: 16px;
-}
-
-.proto-score-value {
-  font-family: 'DM Serif Display', serif;
-  font-size: 2.5rem;
-  line-height: 1;
-}
-
-.proto-score-label {
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  opacity: 0.8;
-  margin-top: 2px;
-  display: block;
-}
-
-.proto-score-rules {
-  padding: 8px 14px;
-}
-
-.proto-score-rule {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-  border-bottom: 1px solid #ebe4d6;
-  font-size: 0.8rem;
-}
-
-.proto-score-rule:last-child { border-bottom: none; }
-
-.proto-score-pts {
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 600;
-  color: #2d6a4f;
-}
-
-.proto-score-payments {
-  padding: 8px 14px;
-  border-top: 1px solid #ebe4d6;
-}
-
-.proto-payment-row {
+.proto-tx {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -454,48 +460,48 @@
   font-size: 0.8rem;
 }
 
-.proto-payment-flow {
-  font-weight: 500;
-  color: #2b2b2b;
-}
+.proto-tx-flow { color: #555; }
 
-.proto-payment-amount {
+.proto-tx-amount {
   font-family: 'JetBrains Mono', monospace;
   font-weight: 600;
   color: #2b2b2b;
 }
 
-.proto-payment-bonus {
+.proto-tx-bonus {
   font-weight: 400;
   font-size: 0.7rem;
   color: #8a8070;
 }
 
-.proto-score-net {
-  display: flex;
-  padding: 10px 14px;
-  border-top: 1px solid #ebe4d6;
+/* Rules breakdown */
+.proto-breakdown {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #ebe4d6;
+  padding: 8px 12px;
 }
 
-.proto-score-pay {
-  flex: 1;
-  text-align: center;
-}
-
-.proto-score-pay-player {
-  font-size: 0.6rem;
+.proto-breakdown-header {
+  font-size: 0.7rem;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #8a8070;
-  display: block;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #ebe4d6;
+  margin-bottom: 4px;
 }
 
-.proto-score-pay-val {
+.proto-breakdown-rule {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 0.8rem;
+}
+
+.proto-breakdown-pts {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 1rem;
   font-weight: 600;
-  color: #8a8070;
+  color: #2d6a4f;
 }
-
-.proto-score-pay-val.pos { color: #2d6a4f; }
-.proto-score-pay-val.neg { color: #c1440e; }
