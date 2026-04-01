@@ -451,9 +451,15 @@ export function Prototype() {
             ))}
           </div>
           <div className="proto-sheet-actions">
-            <button onClick={undo} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn">Undo</button>
-            <button onClick={clearSlot} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn">Clear</button>
-            <button onClick={deleteSlot} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn proto-btn-danger">Delete</button>
+            <button onClick={undo} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn">
+              {isFlowersActive ? '− Flower' : 'Undo'}
+            </button>
+            <button onClick={clearSlot} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn">
+              {isFlowersActive ? 'Remove all' : 'Clear'}
+            </button>
+            {!isFlowersActive && (
+              <button onClick={deleteSlot} disabled={!active || activeSlotTiles.length === 0} className="proto-btn proto-btn-danger">Delete</button>
+            )}
             {handReady && (
               <button onClick={() => setState(s => ({ ...s, phase: 'done', active: null }))} className="proto-btn proto-btn-primary">Score →</button>
             )}
