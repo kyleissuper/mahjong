@@ -671,21 +671,6 @@ export function Prototype() {
                 ))}
               </div>
 
-              {/* Transaction details */}
-              <div className="proto-transactions">
-                {scoringResult.payments.map((p, i) => (
-                  <div key={i} className="proto-tx">
-                    <span className="proto-tx-flow">{p.from} pays {p.to}</span>
-                    <span className="proto-tx-amount">
-                      {p.total}
-                      {p.dealerBonus > 0 && (
-                        <span className="proto-tx-bonus"> ({p.base} + {p.dealerBonus} dealer)</span>
-                      )}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
               {/* Hand value + rules breakdown */}
               <div className="proto-breakdown">
                 <div className="proto-breakdown-header">
