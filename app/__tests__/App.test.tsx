@@ -145,7 +145,7 @@ describe('App', () => {
       await setWin(user, { winner: 'A', dealer: 'B', from: 'D' });
 
       expectScore(3);
-      expectRules(['Dragon pong', '2/5/8 pair', 'Single tile wait']);
+      expectRules(['Dragon pong', '2/5/8 pair', 'Only one you can win with']);
       expectPayments({ A: 3, B: 0, C: 0, D: -3 });
     });
   });
@@ -182,7 +182,7 @@ describe('App', () => {
       await setWin(user, { method: 'self-pick', winner: 'A', dealer: 'A' });
 
       expectScore(16);
-      expectRules(['13 orphans', 'Self-pick', 'Single tile wait']);
+      expectRules(['13 orphans', 'Self-pick', 'Only one you can win with']);
     });
   });
 

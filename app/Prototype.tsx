@@ -7,7 +7,7 @@ import './prototype.css';
 
 const RULE_LABELS: Record<string, string> = {
   flower: 'Flower', dragonPong: 'Dragon pong', windPong: 'Wind pong',
-  pairOf258: '2/5/8 pair', canOnlyWinWithOne: 'Single tile wait',
+  pairOf258: '2/5/8 pair', canOnlyWinWithOne: 'Only one you can win with',
   allChows: 'All chows', allPongs: 'All pongs', selfPick: 'Self-pick',
   only2Suits: 'Only 2 suits', noTerminalsWithHonors: 'No 1s/9s (w/ honors)',
   threeSuitsWithWindAndDragon: '3 suits + wind + dragon',
