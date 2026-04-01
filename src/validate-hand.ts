@@ -13,7 +13,8 @@ export function isHandReady(hand: Hand): boolean {
   // All pairs: 7 pairs
   if (melds.length === 7 && melds.every(m => m.type === 'pair')) return true;
 
-  // Standard: 4 sets (chow/pong/kong) + 1 pair
+  // Standard: exactly 4 sets (chow/pong/kong) + 1 pair, nothing else
+  if (melds.length !== 5) return false;
   const sets = melds.filter(m => m.type === 'chow' || m.type === 'pong' || m.type === 'kong');
   const pairs = melds.filter(m => m.type === 'pair');
   return sets.length === 4 && pairs.length === 1;

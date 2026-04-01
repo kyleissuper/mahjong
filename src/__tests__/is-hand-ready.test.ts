@@ -219,6 +219,24 @@ describe('isHandReady', () => {
     expect(isHandReady(hand)).toBe(false);
   });
 
+  it('not ready: 4 sets + pair + stray orphans meld', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: true },
+        { type: 'chow', tiles: ['4b', '5b', '6b'], concealed: true },
+        { type: 'chow', tiles: ['7d', '8d', '9d'], concealed: true },
+        { type: 'pong', tiles: ['Rd', 'Rd', 'Rd'], concealed: false },
+        { type: 'pair', tiles: ['5b', '5b'], concealed: true },
+        {
+          type: 'orphans',
+          tiles: ['1b', '9b', '1d', '9d', '1c', '9c', 'Ew', 'Sw', 'Ww', 'Nw', 'Rd', 'Gd', 'Wd', '1b'],
+          concealed: true,
+        },
+      ],
+    };
+    expect(isHandReady(hand)).toBe(false);
+  });
+
   it('not ready: orphans meld mixed with other melds', () => {
     const hand: Hand = {
       melds: [
