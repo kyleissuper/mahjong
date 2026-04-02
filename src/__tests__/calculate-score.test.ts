@@ -1552,4 +1552,137 @@ describe('calculateScore', () => {
     ]);
     expect(result.handValue).toBe(11);
   });
+
+  // --- Edge case battery ---
+
+  it('split orphans (exposed pair + concealed rest) scores correctly', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pair', tiles: ['Rd', 'Rd'], concealed: false, winTile: 'Rd' },
+        { type: 'orphans', tiles: ['1b', '9b', '1d', '9d', '1c', '9c', 'Ew', 'Sw', 'Ww', 'Nw', 'Gd', 'Wd'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard', from: 'C',
+      dealer: 'B', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'thirteenOrphans')).toBeDefined();
+    // allFromOthers and cleanDoorstep should NOT fire
+    expect(result.appliedRules.find(r => r.name === 'allFromOthers')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'cleanDoorstep')).toBeUndefined();
+  });
+
+  it('all pairs hand (7 pairs) scores correctly', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pair', tiles: ['1b', '1b'], concealed: true },
+        { type: 'pair', tiles: ['3b', '3b'], concealed: true },
+        { type: 'pair', tiles: ['5d', '5d'], concealed: true },
+        { type: 'pair', tiles: ['7d', '7d'], concealed: true },
+        { type: 'pair', tiles: ['9c', '9c'], concealed: true },
+        { type: 'pair', tiles: ['Ew', 'Ew'], concealed: true },
+        { type: 'pair', tiles: ['Rd', 'Rd'], concealed: true, winTile: 'Rd' },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'self-pick',
+      dealer: 'B', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'allPairs')).toEqual(
+      { name: 'allPairs', points: 12 },
+    );
+    // allChows, allPongs, allFromOthers should NOT fire
+    expect(result.appliedRules.find(r => r.name === 'allChows')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'allPongs')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'allFromOthers')).toBeUndefined();
+  });
+
+  it('hand with kong counts tiles correctly for suit rules', () => {
+    // Kong = 4 tiles, hand has 15 tiles total
+    const hand: Hand = {
+      melds: [
+        { type: 'kong', tiles: ['3b', '3b', '3b', '3b'], concealed: true },
+        { type: 'chow', tiles: ['4b', '5b', '6b'], concealed: false },
+        { type: 'chow', tiles: ['7b', '8b', '9b'], concealed: false },
+        { type: 'pong', tiles: ['1b', '1b', '1b'], concealed: true },
+        { type: 'pair', tiles: ['2b', '2b'], concealed: true, winTile: '2b' },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'self-pick',
+      dealer: 'B', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    // Should be pure (all bamboo)
+    expect(result.appliedRules.find(r => r.name === 'pure')).toEqual(
+      { name: 'pure', points: 8 },
+    );
+    // Should have hidden kong
+    expect(result.appliedRules.find(r => r.name === 'hiddenKong')).toEqual(
+      { name: 'hiddenKong', points: 2 },
+    );
+  });
+
+  it('cleanDoorstep does not fire for all-pairs hand', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pair', tiles: ['1b', '1b'], concealed: true },
+        { type: 'pair', tiles: ['2b', '2b'], concealed: true },
+        { type: 'pair', tiles: ['3b', '3b'], concealed: true },
+        { type: 'pair', tiles: ['4b', '4b'], concealed: true },
+        { type: 'pair', tiles: ['5b', '5b'], concealed: true },
+        { type: 'pair', tiles: ['6b', '6b'], concealed: true },
+        { type: 'pair', tiles: ['7b', '7b'], concealed: true, winTile: '7b' },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard', from: 'B',
+      dealer: 'B', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'allPairs')).toBeDefined();
+    // cleanDoorstep/allFromOthers should not fire (no sets)
+    expect(result.appliedRules.find(r => r.name === 'cleanDoorstep')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'allFromOthers')).toBeUndefined();
+  });
+
+  it('canOnlyWinWithOne: middle wait chow (4-6 waiting on 5) is single wait', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'pong', tiles: ['Rd', 'Rd', 'Rd'], concealed: false },
+        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: true },
+        { type: 'chow', tiles: ['4d', '5d', '6d'], concealed: true, winTile: '5d' },
+        { type: 'pair', tiles: ['1c', '1c'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard', from: 'B',
+      dealer: 'B', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toEqual(
+      { name: 'canOnlyWinWithOne', points: 1 },
+    );
+  });
+
+  it('canOnlyWinWithOne: non-edge chow wait (3-4-5 won on 3) is NOT single wait', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'pong', tiles: ['Rd', 'Rd', 'Rd'], concealed: false },
+        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: true },
+        { type: 'chow', tiles: ['3d', '4d', '5d'], concealed: true, winTile: '3d' },
+        { type: 'pair', tiles: ['1c', '1c'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard', from: 'B',
+      dealer: 'B', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeUndefined();
+  });
 });

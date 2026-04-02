@@ -31,7 +31,7 @@ const CATEGORIES: { title: string; rules: { label: string; pts: string }[] }[] =
     rules: [
       { label: 'All chows', pts: '1' },
       { label: 'All pongs', pts: '4' },
-      { label: 'All pairs (7 pairs)', pts: '14' },
+      { label: 'All pairs (7 pairs)', pts: '12' },
       { label: 'All kongs', pts: '14' },
     ],
   },
