@@ -139,9 +139,9 @@ function pairIsOnlyWait({ melds }: Hand, pairMeld: Meld): boolean {
   const winTile = pairMeld.winTile!;
   if (!isNumberTile(winTile)) return true; // honor pairs can't form chows
 
-  const exposedSets = melds.filter(m => !m.concealed && m.type !== 'flower').length;
-  const concealedTiles = melds.filter(m => m.concealed).flatMap(m => m.tiles);
-  const withoutWinningTile = concealedTiles.toSpliced(concealedTiles.indexOf(winTile), 1);
+  const exposedSets = melds.filter(m => !m.concealed && m.type !== 'flower' && m.type !== 'pair').length;
+  const freeTiles = melds.filter(m => m.concealed || m === pairMeld).flatMap(m => m.tiles);
+  const withoutWinningTile = freeTiles.toSpliced(freeTiles.indexOf(winTile), 1);
   const setsNeeded = 4 - exposedSets;
 
   for (const suitCode of ['b', 'd', 'c']) {

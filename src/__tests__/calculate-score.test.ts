@@ -1463,6 +1463,61 @@ describe('calculateScore', () => {
     expect(result.appliedRules.find(r => r.name === 'allSetsHave19WithHonors')).toBeUndefined();
   });
 
+  it('7788899 pattern: pair wait is NOT single (pong+pair decomposition)', () => {
+    // 7,7,8,8,8,9,9 in concealed can decompose as:
+    // chow(789)+chow(789)+pair(8) — looks like single wait on 8
+    // BUT also: pong(888)+pair(77) waiting on 9, or pong(888)+pair(99) waiting on 7
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: false },
+        { type: 'pong', tiles: ['5c', '5c', '5c'], concealed: false },
+        { type: 'chow', tiles: ['7b', '8b', '9b'], concealed: true },
+        { type: 'chow', tiles: ['7b', '8b', '9b'], concealed: true },
+        { type: 'pair', tiles: ['8b', '8b'], concealed: true, winTile: '8b' },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'self-pick',
+      dealer: 'B',
+      dealerRounds: 1,
+      special: [],
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeUndefined();
+  });
+
+  it('7788899 pattern with exposed pair: not single wait', () => {
+    // Same pattern but pair is exposed — pairIsOnlyWait must still
+    // include the pair tiles in the free pool
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: false },
+        { type: 'chow', tiles: ['4b', '5b', '6b'], concealed: false },
+        { type: 'pair', tiles: ['8b', '8b'], concealed: false, winTile: '8b' },
+        { type: 'chow', tiles: ['7b', '8b', '9b'], concealed: true },
+        { type: 'chow', tiles: ['7b', '8b', '9b'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'self-pick',
+      dealer: 'B',
+      dealerRounds: 1,
+      special: [],
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeUndefined();
+  });
+
   it('unordered chow tiles produce the same score as sorted', () => {
     const win: Win = {
       players: ['A', 'B', 'C', 'D'],
