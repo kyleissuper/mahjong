@@ -58,15 +58,27 @@ function detectType(tiles: Slot): MeldType | 'invalid' | 'incomplete' {
     if (isNumberTile(tiles[0]) && isNumberTile(tiles[1]) && tiles[0][1] === tiles[1][1]) {
       return 'incomplete'; // could be chow
     }
-    return 'invalid';
+    return 'incomplete'; // could be start of orphans
   }
   if (tiles.length === 3) {
     if (allSame) return 'pong';
     if (isValidChow(tiles)) return 'chow';
-    return 'invalid';
+    return 'incomplete'; // could be building toward orphans
   }
   if (tiles.length === 4 && allSame) return 'kong';
+  if (tiles.length >= 4 && tiles.length < 14) return 'incomplete';
+  if (tiles.length === 14 && isOrphans(tiles)) return 'orphans';
   return 'invalid';
+}
+
+function isOrphans(tiles: Slot): boolean {
+  const required = ['1b','9b','1d','9d','1c','9c','Ew','Sw','Ww','Nw','Rd','Gd','Wd'];
+  const counts = new Map<string, number>();
+  for (const t of tiles) counts.set(t, (counts.get(t) ?? 0) + 1);
+  // Must have all 13 unique terminals/honors, with exactly one duplicate
+  return required.every(t => (counts.get(t) ?? 0) >= 1)
+    && tiles.length === 14
+    && [...counts.values()].filter(c => c === 2).length === 1;
 }
 
 function isNumberTile(tile: Tile): boolean {
@@ -82,7 +94,7 @@ function isValidChow(tiles: Tile[]): boolean {
 
 function isComplete(tiles: Slot): boolean {
   const t = detectType(tiles);
-  return t === 'chow' || t === 'kong';
+  return t === 'chow' || t === 'kong' || t === 'orphans';
 }
 
 function isPongMaybeKong(tiles: Slot): boolean {
@@ -91,7 +103,7 @@ function isPongMaybeKong(tiles: Slot): boolean {
 
 function statusLabel(tiles: Slot): string {
   const t = detectType(tiles);
-  if (t === 'chow' || t === 'pong' || t === 'kong') return t;
+  if (t === 'chow' || t === 'pong' || t === 'kong' || t === 'orphans') return t;
   if (tiles.length === 2 && tiles[0] === tiles[1]) return 'pair';
   if (t === 'invalid') return 'invalid';
   return '';
@@ -216,7 +228,7 @@ export function Prototype() {
       const idx = s.active.index;
       const meld = s.melds[idx];
       if (!meld) return s;
-      if (meld.tiles.length >= 4) return s;
+      if (meld.tiles.length >= 14) return s;
       return { ...s, melds: s.melds.map((m, i) => i === idx ? { ...m, tiles: [...m.tiles, tile] } : m) };
     });
   }

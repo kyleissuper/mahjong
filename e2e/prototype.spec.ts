@@ -332,6 +332,15 @@ const HANDS: HandDef[] = [
     expectedRules: ['Flower', 'Wind pong', '2/5/8 pair'],
     expectedPayments: { A: 5, B: -5 },
   },
+  {
+    name: 'Hand 22: thirteen orphans (16 pts)',
+    concealed: [['1b', '9b', '1d', '9d', '1c', '9c', 'Ew', 'Sw', 'Ww', 'Nw', 'Rd', 'Gd', 'Wd', '1b']],
+    winTile: '9c',
+    context: { method: 'self-pick', winner: 'A', dealer: 'A' },
+    expectedPts: 16,
+    expectedRules: ['13 orphans'],
+    expectedPayments: { A: 51 },
+  },
 ];
 
 // --- Tests ---
