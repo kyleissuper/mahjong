@@ -388,11 +388,13 @@ function stolenKong(_hand: Hand, { method }: Win): number {
 }
 
 function allFromOthers(hand: Hand): number {
-  return sets(hand).every(({ concealed }) => !concealed) ? 1 : 0;
+  const s = sets(hand);
+  return s.length > 0 && s.every(({ concealed }) => !concealed) ? 1 : 0;
 }
 
 function cleanDoorstep(hand: Hand): number {
-  return sets(hand).every(({ concealed }) => concealed) ? 1 : 0;
+  const s = sets(hand);
+  return s.length > 0 && s.every(({ concealed }) => concealed) ? 1 : 0;
 }
 
 function cleanDoorstepAndSelfPick(hand: Hand, win: Win): number {
@@ -481,7 +483,7 @@ function resolvePayments(points: number, win: Win): { scores: RoundScore; paymen
 
 // --- Helpers ---
 function allTiles(hand: Hand): Tile[] { return hand.melds.flatMap(m => m.tiles); }
-function sets(hand: Hand): Meld[] { return hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower'); }
+function sets(hand: Hand): Meld[] { return hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower' && m.type !== 'orphans'); }
 function winningMeld(hand: Hand): Meld | undefined { return hand.melds.find(m => m.winTile !== undefined); }
 function hasAll3NumberSuits(melds: Meld[]): boolean {
   const s = new Set(melds.map(m => suit(m.tiles[0])));

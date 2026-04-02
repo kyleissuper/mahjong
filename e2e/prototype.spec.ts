@@ -333,13 +333,22 @@ const HANDS: HandDef[] = [
     expectedPayments: { A: 5, B: -5 },
   },
   {
-    name: 'Hand 22: thirteen orphans (16 pts)',
+    name: 'Hand 22: thirteen orphans, self-pick (16 pts)',
     concealed: [['1b', '9b', '1d', '9d', '1c', '9c', 'Ew', 'Sw', 'Ww', 'Nw', 'Rd', 'Gd', 'Wd', '1b']],
     winTile: '9c',
     context: { method: 'self-pick', winner: 'A', dealer: 'A' },
     expectedPts: 16,
     expectedRules: ['13 orphans'],
     expectedPayments: { A: 51 },
+  },
+  {
+    name: 'Hand 22b: thirteen orphans, discard (15 pts)',
+    exposed: [['1b', '9b', '1d', '9d', '1c', '9c', 'Ew', 'Sw', 'Ww', 'Nw', 'Rd', 'Gd', 'Wd', '1b']],
+    winTile: '9c',
+    context: { winner: 'A', dealer: 'B', from: 'C' },
+    expectedPts: 15,
+    expectedRules: ['13 orphans'],
+    expectedPayments: { A: 15, C: -15 },
   },
 ];
 
