@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mahjong Score Sheet</title>
+<style>
+@page { size: letter landscape; margin: 0; }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #1A1A1A;
+}
+
+.page {
+  width: 11in;
+  height: 8.5in;
+  padding: 0.35in 0.5in 0.3in;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding-bottom: 1px;
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 14pt;
+  font-weight: bold;
+  color: #333;
+}
+
+.instructions {
+  font-size: 7pt;
+  font-style: italic;
+  color: #999;
+  padding-bottom: 3px;
+  flex-shrink: 0;
+}
+
+.wrap {
+  flex: 1;
+  min-height: 0;
+  border: 1.5px solid #333;
+  overflow: hidden;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: 28px repeat(15, 1fr);
+  width: 100%;
+  height: 100%;
+}
+
+/* Borders: right + bottom on every cell */
+.grid > * {
+  border-right: 1px solid #BDC3C7;
+  border-bottom: 1px solid #BDC3C7;
+}
+
+/* No right border on last column */
+.grid > *:nth-child(12n) {
+  border-right: none;
+}
+
+/* Header cells */
+.hdr {
+  font-size: 10pt;
+  font-weight: bold;
+  color: #333;
+  border-bottom: 2px solid #333;
+  padding: 3px 4px 4px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.name-line {
+  width: 100%;
+  border-bottom: 1.5px solid #999;
+}
+
+/* Diagonal-split score cells */
+.sc {
+  position: relative;
+}
+
+.sc::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(
+    to top right,
+    transparent calc(50% - 0.5px),
+    #bbb calc(50% - 0.5px),
+    #bbb calc(50% + 0.5px),
+    transparent calc(50% + 0.5px)
+  );
+  pointer-events: none;
+}
+
+.footer {
+  font-size: 7pt;
+  color: #999;
+  text-align: center;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+@media screen {
+  body {
+    background: #b0b0b0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .page {
+    background: #fff;
+    box-shadow: 0 4px 24px rgba(0,0,0,.25);
+    flex-shrink: 0;
+  }
+}
+
+@media print {
+  body { background: none; }
+  .page { box-shadow: none; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <span class="title">Mahjong Score Sheet</span>
+  </div>
+  <div class="instructions">Each cell: round score upper-right, running total lower-left.</div>
+  <div class="wrap">
+    <div class="grid">
+      <div class="hdr"><div class="name-line"></div></div>
+      <div class="hdr"><div class="name-line"></div></div>
+      <div class="hdr"><div class="name-line"></div></div>
+      <div class="hdr"><div class="name-line"></div></div>
+      <div class="hdr"><div class="name-line"></div></div>
+      <div class="hdr"><div class="name-line"></div></div>
+      <div class="hdr"><div class="name-line"></div></div>
+      <div class="hdr"><div class="name-line"></div></div>
+      <div class="hdr"><div class="name-line"></div></div>
+      <div class="hdr"><div class="name-line"></div></div>
+      <div class="hdr"><div class="name-line"></div></div>
+      <div class="hdr"><div class="name-line"></div></div>
+      <div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div>
+      <div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div>
+      <div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div>
+      <div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div>
+      <div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div>
+      <div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div>
+      <div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div>
+      <div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div>
+      <div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div>
+      <div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div>
+      <div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div>
+      <div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div>
+      <div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div>
+      <div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div>
+      <div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div>
+    </div>
+  </div>
+  <div class="footer">For longer sessions, continue on a second sheet.</div>
+</div>
+</body>
+</html>
