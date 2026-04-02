@@ -343,8 +343,9 @@ const HANDS: HandDef[] = [
   },
   {
     name: 'Hand 22b: thirteen orphans, discard (15 pts)',
-    exposed: [['1b', '9b', '1d', '9d', '1c', '9c', 'Ew', 'Sw', 'Ww', 'Nw', 'Rd', 'Gd', 'Wd', '1b']],
-    winTile: '9c',
+    exposed: [['Rd', 'Rd']],
+    concealed: [['1b', '9b', '1d', '9d', '1c', '9c', 'Ew', 'Sw', 'Ww', 'Nw', 'Gd', 'Wd']],
+    winTile: 'Rd',
     context: { winner: 'A', dealer: 'B', from: 'C' },
     expectedPts: 15,
     expectedRules: ['13 orphans'],

@@ -332,8 +332,16 @@ function threeSuitsWithWindAndDragon(hand: Hand): number {
   return has3NumberSuits && suits.has('wind') && suits.has('dragon') ? 1 : 0;
 }
 
-function thirteenOrphans({ melds }: Hand): number {
-  return melds.some(({ type }) => type === 'orphans') ? 14 : 0;
+function thirteenOrphans(hand: Hand): number {
+  if (hand.melds.some(({ type }) => type === 'orphans')) return 14;
+  const tiles = allTiles(hand);
+  if (tiles.length !== 14) return 0;
+  const required = ['1b','9b','1d','9d','1c','9c','Ew','Sw','Ww','Nw','Rd','Gd','Wd'];
+  const counts = new Map<string, number>();
+  for (const t of tiles) counts.set(t, (counts.get(t) ?? 0) + 1);
+  return required.every(t => (counts.get(t) ?? 0) >= 1)
+    && [...counts.values()].filter(c => c === 2).length === 1
+    && [...counts.values()].every(c => c <= 2) ? 14 : 0;
 }
 
 function allHonors(hand: Hand): number {

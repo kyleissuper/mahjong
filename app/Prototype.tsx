@@ -131,14 +131,17 @@ function toScoringMelds(state: State): Meld[] {
   const result: Meld[] = [];
   for (const m of state.melds) {
     const type = detectType(m.tiles);
-    if (type === 'incomplete' || type === 'invalid') continue;
-    result.push({ type, tiles: m.tiles, concealed: m.concealed });
-  }
-  // Handle pairs (2 identical detected as incomplete by detectType)
-  for (const m of state.melds) {
-    if (m.tiles.length === 2 && m.tiles[0] === m.tiles[1] && detectType(m.tiles) === 'incomplete') {
-      result.push({ type: 'pair', tiles: m.tiles, concealed: m.concealed });
+    if (type === 'invalid') continue;
+    if (type === 'incomplete') {
+      if (m.tiles.length === 2 && m.tiles[0] === m.tiles[1]) {
+        result.push({ type: 'pair', tiles: m.tiles, concealed: m.concealed });
+      } else if (m.tiles.length > 0) {
+        // Pass unclassified tiles through — the engine detects orphans from all tiles
+        result.push({ type: 'orphans', tiles: m.tiles, concealed: m.concealed });
+      }
+      continue;
     }
+    result.push({ type, tiles: m.tiles, concealed: m.concealed });
   }
   if (state.flowers > 0) {
     result.push({ type: 'flower', tiles: Array(state.flowers).fill('F'), concealed: false });
@@ -189,8 +192,10 @@ export function Prototype() {
 
   const scoringMelds = useMemo(() => toScoringMelds(state), [melds, flowers]);
   const handReady = isHandReady({ melds: scoringMelds });
-  const regularSets = scoringMelds.filter(m => m.type !== 'flower' && m.type !== 'pair').length;
-  const hasPair = scoringMelds.some(m => m.type === 'pair');
+  const completeMelds = scoringMelds.filter(m => m.type !== 'flower').length;
+  const allPairs = scoringMelds.filter(m => m.type !== 'flower').every(m => m.type === 'pair');
+  const hasOrphans = scoringMelds.some(m => m.type === 'orphans');
+  const meldsNeeded = hasOrphans ? 1 : allPairs && completeMelds >= 2 ? 7 : 5;
 
   const exposedMelds = melds.map((m, i) => ({ ...m, _i: i })).filter(m => !m.concealed);
   const concealedMelds = melds.map((m, i) => ({ ...m, _i: i })).filter(m => m.concealed);
@@ -382,7 +387,7 @@ export function Prototype() {
           </div>
         )}
         {isEntering && (melds.length > 0 || flowers > 0) && (
-          <div className="proto-status"><span className="proto-status-pill">{regularSets + (hasPair ? 1 : 0)} / 5</span></div>
+          <div className="proto-status"><span className="proto-status-pill">{completeMelds} / {meldsNeeded}</span></div>
         )}
         {phase === 'done' && winMeld === null && (
           <div className="proto-pick-hint">Tap the tile you won with</div>

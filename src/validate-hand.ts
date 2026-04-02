@@ -7,8 +7,9 @@ export type ValidationError =
 export function isHandReady(hand: Hand): boolean {
   const melds = hand.melds.filter(m => m.type !== 'flower');
 
-  // Thirteen orphans: must be the only non-flower meld
+  // Thirteen orphans: single orphans meld, or split across melds
   if (melds.length === 1 && melds[0].type === 'orphans') return true;
+  if (isOrphansSplit(melds)) return true;
 
   // All pairs: 7 pairs
   if (melds.length === 7 && melds.every(m => m.type === 'pair')) return true;
@@ -18,6 +19,17 @@ export function isHandReady(hand: Hand): boolean {
   const sets = melds.filter(m => m.type === 'chow' || m.type === 'pong' || m.type === 'kong');
   const pairs = melds.filter(m => m.type === 'pair');
   return sets.length === 4 && pairs.length === 1;
+}
+
+function isOrphansSplit(melds: Meld[]): boolean {
+  const allTiles = melds.flatMap(m => m.tiles);
+  if (allTiles.length !== 14) return false;
+  const required = ['1b','9b','1d','9d','1c','9c','Ew','Sw','Ww','Nw','Rd','Gd','Wd'];
+  const counts = new Map<string, number>();
+  for (const t of allTiles) counts.set(t, (counts.get(t) ?? 0) + 1);
+  return required.every(t => (counts.get(t) ?? 0) >= 1)
+    && [...counts.values()].filter(c => c === 2).length === 1
+    && [...counts.values()].every(c => c <= 2);
 }
 
 export function validateHand(hand: Hand): ValidationError[] {
