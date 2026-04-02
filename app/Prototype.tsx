@@ -3,6 +3,7 @@ import type { Tile, MeldType, Meld, Win, ScoreResult } from '../src/types.js';
 import { calculateScore } from '../src/calculate-score.js';
 import { isHandReady } from '../src/validate-hand.js';
 import { TileImage } from './TileImage.tsx';
+import { ScoringReference } from './ScoringReference.tsx';
 import './prototype.css';
 
 const RULE_LABELS: Record<string, string> = {
@@ -173,6 +174,7 @@ export function Prototype() {
     winMeld: null,
     winTile: null,
   });
+  const [showReference, setShowReference] = useState(false);
 
   const { melds, flowers, active, phase, winMeld, winTile } = state;
 
@@ -352,8 +354,13 @@ export function Prototype() {
     <div className={`proto ${isEntering ? 'proto-entering' : ''}`}>
       <div className="proto-header">
         <span className="proto-phase">Mahjong Scorer <small>(beta)</small></span>
-        <button onClick={reset} className="proto-btn-sm">Reset</button>
+        <div className="proto-header-actions">
+          <button onClick={() => setShowReference(true)} className="proto-btn-sm">?</button>
+          <button onClick={reset} className="proto-btn-sm">Reset</button>
+        </div>
       </div>
+
+      {showReference && <ScoringReference onClose={() => setShowReference(false)} />}
 
       {/* Hand display */}
       <div className="proto-hand">
