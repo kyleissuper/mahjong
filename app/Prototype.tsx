@@ -517,7 +517,7 @@ export function Prototype() {
                 ))}
               </div>
               <div className="proto-step-row">
-                <span className="proto-field-label">Round</span>
+                <span className="proto-field-label">Dealer round</span>
                 <div className="proto-stepper">
                   <button className="proto-stepper-btn" disabled={(win.dealerRounds ?? 1) <= 1}
                     onClick={() => setWin(w => ({ ...w, dealerRounds: Math.max(1, (w.dealerRounds ?? 1) - 1) }))}>−</button>
