@@ -432,10 +432,10 @@ describe('calculateScore', () => {
       { name: 'windPong', points: 1 },
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'allPongs', points: 4 },
-      { name: 'terminalsAndHonors', points: 4 },
+      { name: 'all19WithHonors', points: 8 },
     ]);
-    expect(result.handValue).toBe(10);
-    expect(result.scores).toEqual({ A: 0, B: 11, C: -11, D: 0 });
+    expect(result.handValue).toBe(14);
+    expect(result.scores).toEqual({ A: 0, B: 15, C: -15, D: 0 });
   });
 
   it('Hand 14 — little dragons (8 pts)', () => {
@@ -529,7 +529,7 @@ describe('calculateScore', () => {
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'allPongs', points: 4 },
       { name: 'selfPick', points: 1 },
-      { name: 'all1sOr9s', points: 16 },
+      { name: 'all19', points: 16 },
       { name: 'threeSuitPongs', points: 4 },
     ]);
     expect(result.handValue).toBe(26);
@@ -1402,6 +1402,65 @@ describe('calculateScore', () => {
     expect(result.appliedRules.find(r => r.name === 'semiPure')).toBeUndefined();
     expect(result.appliedRules.find(r => r.name === 'only2Suits')).toBeUndefined();
     expect(result.appliedRules.find(r => r.name === 'pure')).toBeUndefined();
+  });
+
+  it('all 1s/9s with honors — every tile is terminal or honor (8 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['9d', '9d', '9d'], concealed: false },
+        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: false },
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: true },
+        { type: 'pair', tiles: ['Wd', 'Wd'], concealed: true, winTile: 'Wd' },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'B',
+      method: 'discard',
+      from: 'C',
+      dealer: 'B',
+      dealerRounds: 1,
+      special: [],
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules.find(r => r.name === 'all19WithHonors')).toEqual(
+      { name: 'all19WithHonors', points: 8 },
+    );
+    // should absorb the "all sets have" variant
+    expect(result.appliedRules.find(r => r.name === 'allSetsHave19WithHonors')).toBeUndefined();
+  });
+
+  it('all sets have 1/9, no honors (4 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: false },
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: false },
+        { type: 'chow', tiles: ['7b', '8b', '9b'], concealed: true },
+        { type: 'chow', tiles: ['7b', '8b', '9b'], concealed: true, winTile: '7b' },
+        { type: 'pair', tiles: ['9b', '9b'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'self-pick',
+      dealer: 'B',
+      dealerRounds: 1,
+      special: [],
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules.find(r => r.name === 'allSetsHave19')).toEqual(
+      { name: 'allSetsHave19', points: 4 },
+    );
+    // should absorb the "with honors" variant
+    expect(result.appliedRules.find(r => r.name === 'allSetsHave19WithHonors')).toBeUndefined();
   });
 
   it('unordered chow tiles produce the same score as sorted', () => {

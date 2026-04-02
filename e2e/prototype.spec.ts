@@ -164,14 +164,14 @@ const HANDS: HandDef[] = [
     expectedPayments: { B: 79, A: -27 },
   },
   {
-    name: 'Hand 13: terminals & honors, all pongs (10 pts)',
+    name: 'Hand 13: all 1s/9s w/ honors, all pongs (14 pts)',
     exposed: [['9d', '9d', '9d'], ['9b', '9b', '9b'], ['Ew', 'Ew', 'Ew']],
     concealed: [['1d', '1d', '1d'], ['Wd', 'Wd']],
     winTile: 'Wd',
     context: { winner: 'B', dealer: 'B', from: 'C' },
-    expectedPts: 10,
-    expectedRules: ['Terminals & honors', 'All pongs', 'Wind pong'],
-    expectedPayments: { B: 11, C: -11 },
+    expectedPts: 14,
+    expectedRules: ['All 1s/9s (w/ honors)', 'All pongs', 'Wind pong'],
+    expectedPayments: { B: 15, C: -15 },
   },
   {
     name: 'Hand 15: three suit chow, double chow (11 pts)',
@@ -279,7 +279,7 @@ const HANDS: HandDef[] = [
     winTile: '1c',
     context: { method: 'self-pick', winner: 'B', dealer: 'A', dealerRounds: 5 },
     expectedPts: 26,
-    expectedRules: ['All 1s or 9s', '3 suit pongs', 'All pongs'],
+    expectedRules: ['All 1s/9s', '3 suit pongs', 'All pongs'],
     expectedPayments: { B: 87 },
   },
   {

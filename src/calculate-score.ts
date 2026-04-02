@@ -77,18 +77,20 @@ const rules: Rule[] = [
   { name: 'littleDragons', score: littleDragons, absorbs: ['dragonPong'] },
   { name: 'littleWinds', score: littleWinds, absorbs: ['windPong'] },
   { name: 'bigDragons', score: bigDragons, absorbs: ['littleDragons', 'dragonPong'] },
-  { name: 'bigWinds', score: bigWinds, absorbs: ['littleWinds', 'windPong', 'allPongs', 'noTerminalsWithHonors', 'semiPure', 'only2Suits', 'terminalsAndHonors'] },
+  { name: 'bigWinds', score: bigWinds, absorbs: ['littleWinds', 'windPong', 'allPongs', 'noTerminalsWithHonors', 'semiPure', 'only2Suits', 'allSetsHave19WithHonors'] },
   { name: 'semiPure', score: semiPure, absorbs: ['only2Suits'] },
   { name: 'fourConsecutivePongs', score: fourConsecutivePongs, absorbs: ['allPongs', 'threeConsecutivePongs'] },
-  { name: 'terminalsAndHonors', score: terminalsAndHonors },
+  { name: 'allSetsHave19WithHonors', score: allSetsHave19WithHonors },
+  { name: 'allSetsHave19', score: allSetsHave19, absorbs: ['allSetsHave19WithHonors'] },
+  { name: 'all19WithHonors', score: all19WithHonors, absorbs: ['allSetsHave19WithHonors'] },
   { name: 'pure', score: pure },
   { name: 'fourHiddenPongs', score: fourHiddenPongs, absorbs: ['allPongs', 'threeHiddenPongs'] },
   { name: 'noTerminalsNoHonors', score: noTerminalsNoHonors, absorbs: ['noFlowersNoHonors'] },
   { name: 'allKongs', score: allKongs, absorbs: ['twoKongMahjong', 'allPongs'] },
-  { name: 'all1sOr9s', score: all1sOr9s, absorbs: ['terminalsAndHonors', 'noFlowersNoHonors'] },
+  { name: 'all19', score: all19, absorbs: ['allSetsHave19WithHonors', 'allSetsHave19', 'all19WithHonors', 'noFlowersNoHonors'] },
   { name: 'threeSuitPongs', score: threeSuitPongs },
   { name: 'allPairs', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258', 'canOnlyWinWithOne'] },
-  { name: 'allHonors', score: allHonors, absorbs: ['allPongs', 'windPong', 'dragonPong', 'terminalsAndHonors', 'noTerminalsWithHonors', 'only2Suits'] },
+  { name: 'allHonors', score: allHonors, absorbs: ['allPongs', 'windPong', 'dragonPong', 'allSetsHave19WithHonors', 'all19WithHonors', 'noTerminalsWithHonors', 'only2Suits'] },
   { name: 'prodigyHand', score: prodigyHand },
   { name: 'heavenlyHand', score: heavenlyHand, absorbs: [
     'selfPick', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'noFlowersNoHonors',
@@ -101,7 +103,7 @@ const rules: Rule[] = [
     'canOnlyWinWithOne', 'pairOf258', 'noFlowersNoHonors', 'oneToNineChain',
   ] },
   { name: 'thirteenOrphans', score: thirteenOrphans, absorbs: [
-    'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'terminalsAndHonors',
+    'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allSetsHave19WithHonors', 'all19WithHonors',
     'allPongs', 'windPong', 'dragonPong', 'noTerminalsWithHonors',
     'threeSuitsWithWindAndDragon',
   ] },
@@ -252,10 +254,21 @@ function bigDragons({ melds }: Hand): number {
   return melds.filter(({ type, tiles: [first] }) => type === 'pong' && isDragon(first)).length === 3 ? 12 : 0;
 }
 
-function terminalsAndHonors({ melds }: Hand): number {
+function allSetsHave19WithHonors({ melds }: Hand): number {
   return melds.filter(({ type }) => type !== 'flower').every(({ tiles }) =>
     tiles.some(t => isHonor(t) || isTerminal(t))
-  ) ? 4 : 0;
+  ) ? 2 : 0;
+}
+
+function all19WithHonors(hand: Hand): number {
+  return allTiles(hand).every(t => isTerminal(t) || isHonor(t)) ? 8 : 0;
+}
+
+function allSetsHave19({ melds }: Hand): number {
+  const nonFlower = melds.filter(({ type }) => type !== 'flower');
+  return nonFlower.every(({ tiles }) => tiles.some(isTerminal))
+    && nonFlower.every(({ tiles }) => tiles.every(isNumberTile))
+    ? 4 : 0;
 }
 
 function pure(hand: Hand): number {
@@ -273,7 +286,7 @@ function allKongs(hand: Hand): number {
   return s.length && s.every(({ type }) => type === 'kong') ? 14 : 0;
 }
 
-function all1sOr9s(hand: Hand): number {
+function all19(hand: Hand): number {
   return allTiles(hand).every(isTerminal) ? 16 : 0;
 }
 
