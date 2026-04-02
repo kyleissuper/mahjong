@@ -119,6 +119,10 @@ export function ScoringReference({ onClose }: Props) {
               Loser pays winner the hand value. Dealer involvement adds +1 (+2 per extra round). Self-pick: all non-winners pay.
             </div>
           </div>
+          <div className="ref-footer">
+            <div className="ref-footer-name">Mahjong Scorer <span className="ref-footer-badge">beta</span></div>
+            <a href="https://github.com/kyleissuper/mahjong" target="_blank" rel="noopener noreferrer">Open source on GitHub</a>
+          </div>
         </div>
       </div>
     </div>

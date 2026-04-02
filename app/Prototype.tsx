@@ -80,16 +80,6 @@ function isValidChow(tiles: Tile[]): boolean {
   return v[1] === v[0] + 1 && v[2] === v[0] + 2;
 }
 
-function couldExtend(tiles: Slot, tile: Tile): boolean {
-  const next = [...tiles, tile];
-  if (detectType(next) !== 'invalid') return true;
-  if (next.length <= 3 && next.every(isNumberTile) && next.every(t => t[1] === next[0][1])) {
-    const v = next.map(t => parseInt(t[0])).sort((a, b) => a - b);
-    return v[v.length - 1] - v[0] <= 2;
-  }
-  return false;
-}
-
 function isComplete(tiles: Slot): boolean {
   const t = detectType(tiles);
   return t === 'chow' || t === 'kong';
@@ -226,7 +216,7 @@ export function Prototype() {
       const idx = s.active.index;
       const meld = s.melds[idx];
       if (!meld) return s;
-      if (meld.tiles.length > 0 && !couldExtend(meld.tiles, tile)) return s;
+      if (meld.tiles.length >= 4) return s;
       return { ...s, melds: s.melds.map((m, i) => i === idx ? { ...m, tiles: [...m.tiles, tile] } : m) };
     });
   }
@@ -291,6 +281,7 @@ export function Prototype() {
 
   function reset() {
     setState({ melds: [], flowers: 0, active: null, phase: 'entering', winMeld: null, winTile: null });
+    setWin({ method: 'discard', dealerRounds: 1, special: [], winner: undefined, dealer: undefined, from: undefined });
   }
 
   const isEntering = phase === 'entering';
@@ -331,7 +322,7 @@ export function Prototype() {
             <span className="tile-frame tile-sm tile-empty" />
           )}
         </div>
-        {label && <span className={`proto-set-label ${type !== 'incomplete' && type !== 'invalid' ? 'valid' : type === 'invalid' ? 'invalid' : ''}`}>{label}</span>}
+        {label && <span className={`proto-set-label ${label === 'invalid' ? 'invalid' : 'valid'}`}>{label}</span>}
       </div>
     );
   }
@@ -346,18 +337,25 @@ export function Prototype() {
             <span key={j} className="tile-frame tile-sm"><TileImage tile="F" size={18} /></span>
           ))}
         </div>
-        <span className="proto-set-label">flower</span>
+        <span className="proto-set-label valid">flower</span>
       </div>
     );
   }
 
   return (
     <div className={`proto ${isEntering ? 'proto-entering' : ''}`}>
-      <div className="proto-header">
-        <span className="proto-phase">Mahjong Scorer <small>(beta)</small></span>
-        <div className="proto-header-actions">
-          <button onClick={() => setShowReference(true)} className="proto-btn-sm">?</button>
-          <button onClick={reset} className="proto-btn-sm">Reset</button>
+      <div className="proto-appbar">
+        <div className="proto-appbar-left">
+          {!isEntering && (
+            <button className="proto-appbar-back" onClick={() => setState(s => ({ ...s, phase: 'entering', winMeld: null, winTile: null, active: null }))}>
+              <svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 2L2 10l8 8"/></svg>
+            </button>
+          )}
+        </div>
+        <div className="proto-appbar-title"></div>
+        <div className="proto-appbar-right">
+          <button className="proto-appbar-text-btn proto-appbar-text-secondary" onClick={() => setShowReference(true)}>Rules</button>
+          <button className="proto-appbar-text-btn" onClick={reset}>New</button>
         </div>
       </div>
 
@@ -365,10 +363,14 @@ export function Prototype() {
 
       {/* Hand display */}
       <div className="proto-hand">
-        {isEntering && (
-          <div className="proto-progress">
-            <div className="proto-progress-fill" style={{ width: `${Math.min(100, ((regularSets + (hasPair ? 1 : 0)) / 5) * 100)}%` }} />
+        {isEntering && melds.length === 0 && flowers === 0 && (
+          <div className="proto-onboarding">
+            <span className="proto-onboarding-title">Mahjong Scorer</span>
+            <span className="ref-footer-badge">beta</span>
           </div>
+        )}
+        {isEntering && (melds.length > 0 || flowers > 0) && (
+          <div className="proto-status"><span className="proto-status-pill">{regularSets + (hasPair ? 1 : 0)} / 5</span></div>
         )}
         {phase === 'done' && winMeld === null && (
           <div className="proto-pick-hint">Tap the tile you won with</div>
@@ -423,23 +425,26 @@ export function Prototype() {
       {isEntering && (
         <div className="proto-bottom-sheet">
           <div className="proto-sheet-actions">
-            <button onClick={undo} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn">
-              {isFlowersActive ? '− Flower' : 'Undo'}
-            </button>
-            <button onClick={clearSlot} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn">
-              {isFlowersActive ? 'Remove all' : 'Clear'}
-            </button>
-            {!isFlowersActive && (
-              <button onClick={deleteSlot} disabled={!active || activeSlotTiles.length === 0} className="proto-btn proto-btn-danger">Delete</button>
-            )}
             {handReady && (
-              <button onClick={() => setState(s => ({ ...s, phase: 'done', active: null }))} className="proto-btn proto-btn-primary">Score →</button>
+              <button onClick={() => setState(s => ({ ...s, phase: 'done', active: null }))} className="proto-btn proto-btn-primary proto-btn-score">Score →</button>
+            )}
+            {(melds.length > 0 || flowers > 0) && (
+              <div className="proto-sheet-secondary">
+                <button onClick={undo} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn-text">
+                  {isFlowersActive ? '− Flower' : 'Undo'}
+                </button>
+                <button onClick={clearSlot} disabled={!active || (activeSlotTiles.length === 0 && !isFlowersActive)} className="proto-btn-text">
+                  {isFlowersActive ? 'Clear flowers' : 'Clear'}
+                </button>
+                {!isFlowersActive && (
+                  <button onClick={deleteSlot} disabled={!active || activeSlotTiles.length === 0} className="proto-btn-text proto-btn-text-danger">Delete</button>
+                )}
+              </div>
             )}
           </div>
           <div className="proto-grid">
             {ALL_SUITS.map(({ name, tiles }) => (
               <div key={name} className="proto-suit">
-                <div className="proto-suit-name">{name}</div>
                 <div className="proto-suit-tiles">
                   {tiles.map(tile => (
                     <button
@@ -542,11 +547,6 @@ export function Prototype() {
               </div>
             </div>
           )}
-
-          <div className="proto-actions">
-            <button onClick={() => setState(s => ({ ...s, phase: 'entering', winMeld: null, winTile: null, active: null }))} className="proto-btn">← Edit hand</button>
-            <button onClick={reset} className="proto-btn">New hand</button>
-          </div>
         </div>
       )}
     </div>

@@ -1,28 +1,29 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  --ivory: #f5f0e8;
-  --ivory-dark: #ebe4d6;
-  --jade: #2d6a4f;
-  --jade-light: #40916c;
-  --jade-muted: #52b78833;
-  --charcoal: #2b2b2b;
-  --charcoal-light: #555;
-  --warm-gray: #8a8070;
-  --red-accent: #c1440e;
-  --green-accent: #2d6a4f;
-  --tile-shadow: 0 1px 2px rgba(0,0,0,0.1);
-  --card-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  --radius: 8px;
-  --radius-sm: 4px;
+  --bg: #f5f5f5;
+  --surface: #ffffff;
+  --border: #e8e8e8;
+  --text: #333;
+  --text-secondary: #666;
+  --text-muted: #6e6e6e;
+  --accent: #5bc5a7;
+  --accent-dark: #4aab90;
+  --accent-text: #287d62;
+  --accent-subtle: rgba(91, 197, 167, 0.08);
+  --red-accent: #d44427;
+  --tile-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --radius: 10px;
+  --radius-sm: 6px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { font-size: 16px; -webkit-tap-highlight-color: transparent; }
 body {
   font-family: 'DM Sans', sans-serif;
-  background: var(--ivory);
-  color: var(--charcoal);
+  background: var(--bg);
+  color: var(--text);
   line-height: 1.5;
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
@@ -194,12 +195,12 @@ body {
 .tile-plus {
   width: 24px;
   height: 32px;
-  background: var(--ivory-dark);
+  background: var(--bg);
   border-style: dashed;
   border-color: #ccc;
-  color: #bbb;
-  font-size: 1rem;
-  font-weight: 300;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: center;
