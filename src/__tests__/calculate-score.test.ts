@@ -1403,4 +1403,39 @@ describe('calculateScore', () => {
     expect(result.appliedRules.find(r => r.name === 'only2Suits')).toBeUndefined();
     expect(result.appliedRules.find(r => r.name === 'pure')).toBeUndefined();
   });
+
+  it('unordered chow tiles produce the same score as sorted', () => {
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'discard',
+      from: 'D',
+      dealer: 'D',
+      dealerRounds: 1,
+      special: [],
+    };
+
+    // Same hand as "double chow + 3 suit chow" but tiles entered out of order
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['5b', '3b', '4b'], concealed: true },
+        { type: 'chow', tiles: ['4b', '5b', '3b'], concealed: true },
+        { type: 'chow', tiles: ['5d', '3d', '4d'], concealed: true },
+        { type: 'chow', tiles: ['4c', '3c', '5c'], concealed: true, winTile: '5c' },
+        { type: 'pair', tiles: ['8d', '8d'], concealed: true },
+      ],
+    };
+
+    const result = calculateScore(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'allChows', points: 1 },
+      { name: 'cleanDoorstep', points: 1 },
+      { name: 'doubleChow', points: 1 },
+      { name: 'threeSuitChow', points: 4 },
+      { name: 'noTerminalsNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(11);
+  });
 });

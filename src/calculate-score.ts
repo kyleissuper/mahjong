@@ -2,10 +2,21 @@ import type { Hand, Meld, Win, RoundScore, Tile, Player, ScoreResult, AppliedRul
 import { isDragon, isWind, isHonor, isNumberTile, isTerminal, is258, numValue, suit } from './tiles.js';
 
 export function calculateScore(hand: Hand, win: Win): ScoreResult {
-  const appliedRules = getAppliedRules(hand, win);
+  const normalized = normalizeHand(hand);
+  const appliedRules = getAppliedRules(normalized, win);
   const handValue = appliedRules.reduce((sum, r) => sum + r.points, 0);
   const { scores, payments } = resolvePayments(handValue, win);
   return { scores, handValue, appliedRules, payments };
+}
+
+function normalizeHand(hand: Hand): Hand {
+  return {
+    melds: hand.melds.map(meld =>
+      meld.type === 'chow'
+        ? { ...meld, tiles: [...meld.tiles].sort() }
+        : meld
+    ),
+  };
 }
 
 // --- Rule resolution ---
