@@ -89,7 +89,7 @@ const rules: Rule[] = [
   { name: 'allKongs', score: allKongs, absorbs: ['twoKongMahjong', 'allPongs'] },
   { name: 'all19', score: all19, absorbs: ['allSetsHave19WithHonors', 'allSetsHave19', 'all19WithHonors', 'noFlowersNoHonors'] },
   { name: 'threeSuitPongs', score: threeSuitPongs },
-  { name: 'allPairs', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258', 'canOnlyWinWithOne'] },
+  { name: 'allPairs', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258'] },
   { name: 'allHonors', score: allHonors, absorbs: ['allPongs', 'windPong', 'dragonPong', 'allSetsHave19WithHonors', 'all19WithHonors', 'noTerminalsWithHonors', 'only2Suits'] },
   { name: 'prodigyHand', score: prodigyHand },
   { name: 'heavenlyHand', score: heavenlyHand, absorbs: [
