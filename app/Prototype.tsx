@@ -192,10 +192,6 @@ export function Prototype() {
 
   const scoringMelds = useMemo(() => toScoringMelds(state), [melds, flowers]);
   const handReady = isHandReady({ melds: scoringMelds });
-  const completeMelds = scoringMelds.filter(m => m.type !== 'flower').length;
-  const allPairs = scoringMelds.filter(m => m.type !== 'flower').every(m => m.type === 'pair');
-  const hasOrphans = scoringMelds.some(m => m.type === 'orphans');
-  const meldsNeeded = hasOrphans ? 1 : allPairs && completeMelds >= 2 ? 7 : 5;
 
   const exposedMelds = melds.map((m, i) => ({ ...m, _i: i })).filter(m => !m.concealed);
   const concealedMelds = melds.map((m, i) => ({ ...m, _i: i })).filter(m => m.concealed);
@@ -385,9 +381,6 @@ export function Prototype() {
             <span className="proto-onboarding-title">Mahjong Scorer</span>
             <span className="ref-footer-badge">beta</span>
           </div>
-        )}
-        {isEntering && (melds.length > 0 || flowers > 0) && (
-          <div className="proto-status"><span className="proto-status-pill">{completeMelds} / {meldsNeeded}</span></div>
         )}
         {phase === 'done' && winMeld === null && (
           <div className="proto-pick-hint">Tap the tile you won with</div>
