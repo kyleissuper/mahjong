@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { Meld, Win } from '../src/types.js';
 import { calculateScore } from '../src/calculate-score.js';
-import { validateHand } from '../src/validate-hand.js';
+import { validateHand, isHandReady } from '../src/validate-hand.js';
 import { HandBuilder } from './HandBuilder.tsx';
 import { WinContext } from './WinContext.tsx';
 import { ScoreBreakdown } from './ScoreBreakdown.tsx';
@@ -36,6 +36,7 @@ export function App() {
   const hand = { melds };
   const errors = useMemo(() => validateHand(hand), [melds]);
   const fullWin = buildWin(win);
+  const ready = isHandReady(hand) && errors.length === 0;
 
   const result = useMemo(() => {
     if (melds.length === 0 || errors.length > 0 || !fullWin) return null;
@@ -54,7 +55,7 @@ export function App() {
     <div className="app">
       <HandBuilder melds={melds} errors={errors} onChange={setMelds} />
 
-      {melds.length > 0 && (
+      {ready && (
         <>
           <WinContext win={win} onChange={setWin} />
           {result && <ScoreBreakdown result={result} onReset={resetHand} />}

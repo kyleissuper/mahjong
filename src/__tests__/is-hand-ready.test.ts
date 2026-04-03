@@ -274,6 +274,24 @@ describe('isHandReady', () => {
     expect(isHandReady(hand)).toBe(true);
   });
 
+  it('not ready: orphans meld with only 1 tile', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'orphans', tiles: ['1b'], concealed: true },
+      ],
+    };
+    expect(isHandReady(hand)).toBe(false);
+  });
+
+  it('not ready: orphans meld with 5 tiles', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'orphans', tiles: ['1b', '9b', '1d', '9d', '1c'], concealed: true },
+      ],
+    };
+    expect(isHandReady(hand)).toBe(false);
+  });
+
   it('not ready: 3 pairs + 2 sets is neither standard nor all-pairs', () => {
     const hand: Hand = {
       melds: [

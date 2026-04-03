@@ -8,7 +8,7 @@ export function isHandReady(hand: Hand): boolean {
   const melds = hand.melds.filter(m => m.type !== 'flower');
 
   // Thirteen orphans: single orphans meld, or split across melds
-  if (melds.length === 1 && melds[0].type === 'orphans') return true;
+  if (melds.length === 1 && melds[0].type === 'orphans' && melds[0].tiles.length === 14) return true;
   if (isOrphansSplit(melds)) return true;
 
   // All pairs: 7 pairs

@@ -110,22 +110,74 @@ describe('App', () => {
     });
   });
 
-  describe('win context visibility', () => {
-    it('appears after first meld is added', async () => {
+  describe('score section gating', () => {
+    it('hides scoring controls when hand has only a pair (2 tiles)', async () => {
       const user = userEvent.setup();
       render(<App />);
 
       await addPair(user, '5b');
+
+      expect(screen.queryByText('Winner')).not.toBeInTheDocument();
+      expect(screen.queryByText('Dealer')).not.toBeInTheDocument();
+    });
+
+    it('hides scoring controls when hand has only a flower', async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(addButton());
+      await user.click(screen.getByText('Flower'));
+      await user.click(screen.getByText('Add'));
+
+      expect(screen.queryByText('Winner')).not.toBeInTheDocument();
+    });
+
+    it('hides scoring controls when hand has two chows (6 tiles)', async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await addChow(user, ['1b', '2b', '3b']);
+      await addChow(user, ['4b', '5b', '6b']);
+
+      expect(screen.queryByText('Winner')).not.toBeInTheDocument();
+    });
+
+    it('hides scoring controls with 5 sets but no pair (invalid structure)', async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await addChow(user, ['1b', '2b', '3b']);
+      await addChow(user, ['4b', '5b', '6b']);
+      await addChow(user, ['7d', '8d', '9d']);
+      await addChow(user, ['1c', '2c', '3c']);
+      await addPong(user, 'Rd', { exposed: true });
+
+      expect(screen.queryByText('Winner')).not.toBeInTheDocument();
+    });
+
+    it('shows scoring controls once hand is a valid structure', async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await addChow(user, ['1b', '2b', '3b']);
+      await addChow(user, ['4b', '5b', '6b']);
+      await addChow(user, ['7d', '8d', '9d']);
+      await addPong(user, 'Rd', { exposed: true });
+      await addPair(user, '5d');
 
       expect(screen.getByText('Winner')).toBeInTheDocument();
       expect(screen.getByText('Dealer')).toBeInTheDocument();
     });
 
-    it('shows hint when melds exist but win details are incomplete', async () => {
+    it('shows hint when hand is complete but win details are incomplete', async () => {
       const user = userEvent.setup();
       render(<App />);
 
-      await addPair(user, '5b');
+      await addChow(user, ['1b', '2b', '3b']);
+      await addChow(user, ['4b', '5b', '6b']);
+      await addChow(user, ['7d', '8d', '9d']);
+      await addPong(user, 'Rd', { exposed: true });
+      await addPair(user, '5d');
 
       expect(screen.getByText(/select winner and dealer/i)).toBeInTheDocument();
     });
@@ -211,6 +263,9 @@ describe('App', () => {
       const user = userEvent.setup();
       render(<App />);
 
+      await addChow(user, ['1b', '2b', '3b']);
+      await addChow(user, ['4b', '5b', '6b']);
+      await addChow(user, ['7d', '8d', '9d']);
       await addPong(user, 'Rd', { exposed: true });
       await addPair(user, '5b');
       await setWin(user, { method: 'self-pick', winner: 'A', dealer: 'B' });
