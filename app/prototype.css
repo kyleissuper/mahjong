@@ -587,6 +587,7 @@
 .proto-hero-player.pos .proto-hero-delta { color: white; font-size: 2rem; }
 .proto-hero-player.neg .proto-hero-delta { color: var(--red-accent); font-size: 1.5rem; }
 
+
 /* Transactions */
 .proto-transactions {
   background: var(--surface);
@@ -641,6 +642,21 @@
   justify-content: space-between;
   padding: 4px 0;
   font-size: 0.8rem;
+}
+
+.proto-breakdown-dealer {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0 2px;
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.proto-breakdown-dealer-pts {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
 }
 
 .proto-breakdown-pts {

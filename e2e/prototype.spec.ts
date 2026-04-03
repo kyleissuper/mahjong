@@ -353,6 +353,16 @@ const HANDS: HandDef[] = [
   },
 ];
 
+async function expectDealerBonus(page: Page, bonus: number) {
+  const dealer = page.locator('.proto-breakdown-dealer');
+  await expect(dealer).toContainText('Dealer');
+  await expect(dealer).toContainText(`+${bonus} per payment`);
+}
+
+async function expectNoDealerBonus(page: Page) {
+  await expect(page.locator('.proto-breakdown-dealer')).toHaveCount(0);
+}
+
 // --- Tests ---
 
 test.describe('Prototype scoring', () => {
@@ -390,4 +400,43 @@ test.describe('Prototype scoring', () => {
       }
     });
   }
+
+  test('dealer bonus is shown in breakdown when dealer is involved', async ({ page }) => {
+    await page.goto('http://localhost:3000/');
+
+    // Simple hand: 3 chows + 1 pong + pair
+    await enterMeld(page, ['Rd', 'Rd', 'Rd'], false);
+    await enterMeld(page, ['1b', '2b', '3b'], true);
+    await enterMeld(page, ['4b', '5b', '6b'], true);
+    await enterMeld(page, ['7d', '8d', '9d'], true);
+    await enterMeld(page, ['5b', '5b'], true);
+
+    await score(page);
+    await pickWin(page, ALT['8d']);
+
+    // Dealer is the discarder — bonus applies
+    await setContext(page, { winner: 'A', dealer: 'D', from: 'D' });
+    await expectDealerBonus(page, 1);
+    await expectPayment(page, 'A', 4); // 3 pts + 1 dealer
+    await expectPayment(page, 'D', -4);
+  });
+
+  test('dealer bonus is hidden when dealer is not involved', async ({ page }) => {
+    await page.goto('http://localhost:3000/');
+
+    await enterMeld(page, ['Rd', 'Rd', 'Rd'], false);
+    await enterMeld(page, ['1b', '2b', '3b'], true);
+    await enterMeld(page, ['4b', '5b', '6b'], true);
+    await enterMeld(page, ['7d', '8d', '9d'], true);
+    await enterMeld(page, ['5b', '5b'], true);
+
+    await score(page);
+    await pickWin(page, ALT['8d']);
+
+    // Dealer is C, not involved in the A←D payment
+    await setContext(page, { winner: 'A', dealer: 'C', from: 'D' });
+    await expectNoDealerBonus(page);
+    await expectPayment(page, 'A', 3);
+    await expectPayment(page, 'D', -3);
+  });
 });

@@ -561,6 +561,15 @@ export function Prototype() {
                     <span className="proto-breakdown-pts">+{points}</span>
                   </div>
                 ))}
+                {scoringResult.payments.some(p => p.dealerBonus > 0) && (() => {
+                  const bonus = scoringResult.payments[0].dealerBonus;
+                  return (
+                    <div className="proto-breakdown-dealer">
+                      <span>Dealer</span>
+                      <span className="proto-breakdown-dealer-pts">+{bonus} per payment</span>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}
