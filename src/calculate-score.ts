@@ -397,7 +397,7 @@ function stolenKong(_hand: Hand, { method }: Win): number {
 
 function allFromOthers(hand: Hand): number {
   const s = sets(hand);
-  return s.length > 0 && s.every(({ concealed, winTile }) => !concealed && !winTile) ? 1 : 0;
+  return s.length > 0 && s.every(({ concealed }) => !concealed) ? 1 : 0;
 }
 
 function cleanDoorstep(hand: Hand): number {
