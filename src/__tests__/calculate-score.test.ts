@@ -228,10 +228,9 @@ describe('calculateScore', () => {
       { name: 'pairOf258', points: 1 },
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'stolenKong', points: 1 },
-      { name: 'allFromOthers', points: 1 },
     ]);
-    expect(result.handValue).toBe(5);
-    expect(result.scores).toEqual({ A: -6, B: 6, C: 0, D: 0 });
+    expect(result.handValue).toBe(4);
+    expect(result.scores).toEqual({ A: -5, B: 5, C: 0, D: 0 });
   });
 
   it('Hand 8 — flower, wind pong, dealer discard win (3 pts)', () => {
@@ -397,12 +396,11 @@ describe('calculateScore', () => {
       { name: 'pairOf258', points: 1 },
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'only2Suits', points: 1 },
-      { name: 'allFromOthers', points: 1 },
       { name: 'threeConsecutivePongs', points: 4 },
       { name: 'noTerminalsNoHonors', points: 3 },
     ]);
-    expect(result.handValue).toBe(11);
-    expect(result.scores).toEqual({ A: 0, B: 0, C: 11, D: -11 });
+    expect(result.handValue).toBe(10);
+    expect(result.scores).toEqual({ A: 0, B: 0, C: 10, D: -10 });
   });
 
   it('Hand 13 — terminals & honors, all pongs, dealer discard win (10 pts)', () => {
@@ -864,12 +862,11 @@ describe('calculateScore', () => {
 
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
-      { name: 'allFromOthers', points: 1 },
       { name: 'twoKongMahjong', points: 6 },
       { name: 'noTerminalsNoHonors', points: 3 },
     ]);
-    expect(result.handValue).toBe(11);
-    expect(result.scores).toEqual({ A: 11, B: -11, C: 0, D: 0 });
+    expect(result.handValue).toBe(10);
+    expect(result.scores).toEqual({ A: 10, B: -10, C: 0, D: 0 });
   });
 
   it('Hand 23 — two double chows (16 pts)', () => {
