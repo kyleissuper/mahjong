@@ -1,38 +1,14 @@
 import { useState, useMemo } from 'react';
 import type { Tile, MeldType, Meld, Win, ScoreResult } from '../src/types.js';
-import { calculateScore } from '../src/calculate-score.js';
+import { calculateScore, getRuleReference } from '../src/calculate-score.js';
 import { isHandReady } from '../src/validate-hand.js';
 import { TileImage } from './TileImage.tsx';
 import { ScoringReference } from './ScoringReference.tsx';
 import './prototype.css';
 
-const RULE_LABELS: Record<string, string> = {
-  flower: 'Flower', dragonPong: 'Dragon pong', windPong: 'Wind pong',
-  pairOf258: '2/5/8 pair', canOnlyWinWithOne: 'Only one you can win with',
-  allChows: 'All chows', allPongs: 'All pongs', selfPick: 'Self-pick',
-  only2Suits: 'Only 2 suits', noTerminalsWithHonors: 'No 1s/9s (w/ honors)',
-  threeSuitsWithWindAndDragon: '3 suits + wind + dragon',
-  splitKong: 'Split kong', lastWallTile: 'Last wall tile',
-  lastDiscard: 'Last discard', winFromButt: 'Win from butt',
-  hiddenKong: 'Hidden kong', stolenKong: 'Stolen kong',
-  allFromOthers: 'All from others', cleanDoorstep: 'Clean doorstep',
-  cleanDoorstepAndSelfPick: 'Concealed self-pick',
-  threeHiddenPongs: '3 hidden pongs', doubleChow: 'Double chow',
-  threeSuitChow: '3 suit chow', threeConsecutivePongs: '3 consec. pongs',
-  noFlowersNoHonors: 'No flowers/honors', oneToNineChain: '1-9 chain',
-  twoKongMahjong: '2 kong mahjong', twoDoubleChows: '2 double chows',
-  littleDragons: 'Little dragons', littleWinds: 'Little winds',
-  bigDragons: 'Big dragons', bigWinds: 'Big winds', semiPure: 'Semi-pure',
-  fourConsecutivePongs: '4 consec. pongs', allSetsHave19WithHonors: 'All sets have 1/9 (w/ honors)',
-  allSetsHave19: 'All sets have 1/9', all19WithHonors: 'All 1s/9s (w/ honors)',
-  pure: 'Pure', fourHiddenPongs: '4 hidden pongs',
-  noTerminalsNoHonors: 'No 1s/9s, no honors', allKongs: 'All kongs',
-  all19: 'All 1s/9s', threeSuitPongs: '3 suit pongs',
-  allPairs: 'All pairs', allHonors: 'All honors',
-  prodigyHand: 'Prodigy', heavenlyHand: 'Heavenly hand',
-  earthlyHand: 'Earthly hand', heavenlyGates: 'Heavenly gates',
-  thirteenOrphans: '13 orphans', jadeDragon: 'Jade Dragon',
-};
+const RULE_LABELS: Record<string, string> = Object.fromEntries(
+  getRuleReference().map(r => [r.name, r.label])
+);
 
 // --- Tile grid ---
 

@@ -214,7 +214,7 @@ describe('App', () => {
       await setWin(user, { method: 'self-pick', winner: 'B', dealer: 'D' });
 
       expectScore(13);
-      expectRules(['All pairs', 'Self-pick']);
+      expectRules(['All pairs (7 pairs)', 'Self-pick']);
     });
   });
 
