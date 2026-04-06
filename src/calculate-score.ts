@@ -397,12 +397,14 @@ function stolenKong(_hand: Hand, { method }: Win): number {
 
 function allFromOthers(hand: Hand): number {
   const s = sets(hand);
-  return s.length > 0 && s.every(({ concealed }) => !concealed) ? 1 : 0;
+  const nonFlower = hand.melds.filter(m => m.type !== 'flower');
+  return s.length > 0 && nonFlower.every(({ concealed }) => !concealed) ? 1 : 0;
 }
 
 function cleanDoorstep(hand: Hand): number {
   const s = sets(hand);
-  return s.length > 0 && s.every(({ concealed }) => concealed) ? 1 : 0;
+  const nonFlower = hand.melds.filter(m => m.type !== 'flower');
+  return s.length > 0 && nonFlower.every(({ concealed }) => concealed) ? 1 : 0;
 }
 
 function cleanDoorstepAndSelfPick(hand: Hand, win: Win): number {
