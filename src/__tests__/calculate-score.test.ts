@@ -864,12 +864,11 @@ describe('calculateScore', () => {
 
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
-      { name: 'allFromOthers', points: 1 },
       { name: 'twoKongMahjong', points: 6 },
       { name: 'noTerminalsNoHonors', points: 3 },
     ]);
-    expect(result.handValue).toBe(11);
-    expect(result.scores).toEqual({ A: 11, B: -11, C: 0, D: 0 });
+    expect(result.handValue).toBe(10);
+    expect(result.scores).toEqual({ A: 10, B: -10, C: 0, D: 0 });
   });
 
   it('Hand 23 — two double chows (16 pts)', () => {
