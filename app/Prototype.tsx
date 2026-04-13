@@ -4,6 +4,7 @@ import { calculateScore, getRuleReference } from '../src/calculate-score.js';
 import { isHandReady } from '../src/validate-hand.js';
 import { TileImage } from './TileImage.tsx';
 import { ScoringReference } from './ScoringReference.tsx';
+import { useZoom } from './useZoom.ts';
 import './prototype.css';
 
 const RULE_LABELS: Record<string, string> = Object.fromEntries(
@@ -145,6 +146,23 @@ function toScoringHand(state: State): Meld[] {
   return melds;
 }
 
+// --- Zoom controls ---
+
+const ZOOM_STEP = 0.1;
+const ZOOM_MIN = 0.8;
+const ZOOM_MAX = 2;
+
+function ZoomControls({ zoom, onChange }: { zoom: number; onChange: (z: number) => void }) {
+  const clamp = (z: number) => Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.round(z * 100) / 100));
+  return (
+    <div className="zoom-controls" aria-label="Zoom">
+      <button className="zoom-btn" aria-label="Zoom out" onClick={() => onChange(clamp(zoom - ZOOM_STEP))}>−</button>
+      <button className="zoom-btn zoom-value" aria-label="Reset zoom" onClick={() => onChange(1)}>{Math.round(zoom * 100)}%</button>
+      <button className="zoom-btn" aria-label="Zoom in" onClick={() => onChange(clamp(zoom + ZOOM_STEP))}>+</button>
+    </div>
+  );
+}
+
 // --- Main component ---
 
 export function Prototype() {
@@ -157,6 +175,7 @@ export function Prototype() {
     winTile: null,
   });
   const [showReference, setShowReference] = useState(false);
+  const [zoom, setZoom] = useZoom();
 
   const { melds, flowers, active, phase, winMeld, winTile } = state;
 
@@ -332,7 +351,7 @@ export function Prototype() {
   }
 
   return (
-    <div className={`proto ${isEntering ? 'proto-entering' : ''}`}>
+    <div className={`proto ${isEntering ? 'proto-entering' : ''}`} style={{ zoom }}>
       <div className="proto-appbar">
         <div className="proto-appbar-left">
           {!isEntering && (
@@ -341,7 +360,9 @@ export function Prototype() {
             </button>
           )}
         </div>
-        <div className="proto-appbar-title"></div>
+        <div className="proto-appbar-title">
+          <ZoomControls zoom={zoom} onChange={setZoom} />
+        </div>
         <div className="proto-appbar-right">
           <button className="proto-appbar-text-btn proto-appbar-text-secondary" onClick={() => setShowReference(true)}>Rules</button>
           <button className="proto-appbar-text-btn" onClick={reset}>New</button>

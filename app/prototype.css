@@ -770,3 +770,38 @@
 .ref-footer a:active {
   opacity: 0.7;
 }
+
+/* === Zoom controls (larger screens only) === */
+
+.zoom-controls {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .zoom-btn {
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 6px 8px;
+    min-width: 32px;
+    border-radius: 6px;
+  }
+
+  .zoom-btn:hover { background: var(--bg); }
+  .zoom-btn:active { opacity: 0.6; }
+
+  .zoom-value {
+    min-width: 44px;
+    font-variant-numeric: tabular-nums;
+  }
+}
