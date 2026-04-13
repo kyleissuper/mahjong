@@ -1683,4 +1683,23 @@ describe('calculateScore', () => {
     const result = calculateScore(hand, win);
     expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeUndefined();
   });
+
+  it('4 flowers should not trigger splitKong', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'flower', tiles: ['F', 'F', 'F', 'F'], concealed: false },
+        { type: 'pong', tiles: ['Nw', 'Nw', 'Nw'], concealed: true },
+        { type: 'chow', tiles: ['2c', '3c', '4c'], concealed: true },
+        { type: 'chow', tiles: ['5b', '6b', '7b'], concealed: true },
+        { type: 'chow', tiles: ['6d', '7d', '8d'], concealed: true, winTile: '6d' },
+        { type: 'pair', tiles: ['8d', '8d'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'self-pick',
+      dealer: 'B', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'splitKong')).toBeUndefined();
+  });
 });

@@ -390,7 +390,7 @@ function lastDiscard(_hand: Hand, { method, special }: Win): number {
 }
 
 function splitKong({ melds }: Hand): number {
-  const tiles = melds.filter(({ type }) => type !== 'kong').flatMap(({ tiles }) => tiles);
+  const tiles = melds.filter(({ type }) => type !== 'kong' && type !== 'flower').flatMap(({ tiles }) => tiles);
   const counts = Map.groupBy(tiles, t => t);
   return [...counts.values()].filter(group => group.length >= 4).length;
 }
