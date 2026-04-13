@@ -2,20 +2,20 @@ import type { Hand, Meld, Win, RoundScore, Tile, Player, ScoreResult, AppliedRul
 import { isDragon, isWind, isHonor, isNumberTile, isTerminal, is258, numValue, suit } from './tiles.js';
 
 export function calculateScore(hand: Hand, win: Win): ScoreResult {
-  const normalized = normalizeHand(hand);
+  const normalized = normalizeHand(hand, win);
   const appliedRules = getAppliedRules(normalized, win);
   const handValue = appliedRules.reduce((sum, r) => sum + r.points, 0);
   const { scores, payments } = resolvePayments(handValue, win);
   return { scores, handValue, appliedRules, payments };
 }
 
-function normalizeHand(hand: Hand): Hand {
+function normalizeHand(hand: Hand, win: Win): Hand {
   return {
-    melds: hand.melds.map(meld =>
-      meld.type === 'chow'
-        ? { ...meld, tiles: [...meld.tiles].sort() }
-        : meld
-    ),
+    melds: hand.melds.map(meld => ({
+      ...meld,
+      tiles: meld.type === 'chow' ? [...meld.tiles].sort() : meld.tiles,
+      concealed: win.method !== 'self-pick' && meld.winTile ? false : meld.concealed,
+    })),
   };
 }
 
