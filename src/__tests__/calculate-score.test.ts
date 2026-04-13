@@ -862,11 +862,12 @@ describe('calculateScore', () => {
 
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
+      { name: 'exposedKong', points: 2 },
       { name: 'twoKongMahjong', points: 6 },
       { name: 'noTerminalsNoHonors', points: 3 },
     ]);
-    expect(result.handValue).toBe(10);
-    expect(result.scores).toEqual({ A: 10, B: -10, C: 0, D: 0 });
+    expect(result.handValue).toBe(12);
+    expect(result.scores).toEqual({ A: 12, B: -12, C: 0, D: 0 });
   });
 
   it('Hand 23 — two double chows (16 pts)', () => {
@@ -1082,12 +1083,13 @@ describe('calculateScore', () => {
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'selfPick', points: 1 },
       { name: 'winFromButt', points: 1 },
+      { name: 'exposedKong', points: 3 },
       { name: 'hiddenKong', points: 2 },
       { name: 'noFlowersNoHonors', points: 3 },
       { name: 'allKongs', points: 14 },
     ]);
-    expect(result.handValue).toBe(23);
-    expect(result.scores).toEqual({ A: -24, B: 70, C: -23, D: -23 });
+    expect(result.handValue).toBe(26);
+    expect(result.scores).toEqual({ A: -27, B: 79, C: -26, D: -26 });
   });
 
   it('Hand 30 — prodigy hand, clean doorstep (15 pts)', () => {
@@ -1701,5 +1703,25 @@ describe('calculateScore', () => {
     };
     const result = calculateScore(hand, win);
     expect(result.appliedRules.find(r => r.name === 'splitKong')).toBeUndefined();
+  });
+
+  it('exposed kong scores 1 pt each', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'kong', tiles: ['3b', '3b', '3b', '3b'], concealed: false },
+        { type: 'pong', tiles: ['7c', '7c', '7c'], concealed: false },
+        { type: 'chow', tiles: ['4d', '5d', '6d'], concealed: false, winTile: '6d' },
+        { type: 'pong', tiles: ['2d', '2d', '2d'], concealed: false },
+        { type: 'pair', tiles: ['8b', '8b'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard',
+      from: 'B', dealer: 'C', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'exposedKong')).toEqual(
+      { name: 'exposedKong', points: 1 },
+    );
   });
 });

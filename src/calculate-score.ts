@@ -73,6 +73,7 @@ const rules: Rule[] = [
   { name: 'lastDiscard', label: 'Last discard', pts: '1', score: lastDiscard },
   { name: 'splitKong', label: 'Split kong', pts: '1 ea.', score: splitKong },
   { name: 'winFromButt', label: 'Win from butt (replacement draw)', pts: '1', score: winFromButt },
+  { name: 'exposedKong', label: 'Exposed kong', pts: '1 ea.', score: exposedKong },
   { name: 'hiddenKong', label: 'Hidden kong', pts: '2 ea.', score: hiddenKong },
   { name: 'stolenKong', label: 'Stolen kong', pts: '1', score: stolenKong },
   { name: 'allFromOthers', label: 'All from others', pts: '1', score: allFromOthers },
@@ -397,6 +398,10 @@ function splitKong({ melds }: Hand): number {
 
 function winFromButt(_hand: Hand, { special }: Win): number {
   return special.includes('fromButt') ? 1 : 0;
+}
+
+function exposedKong({ melds }: Hand): number {
+  return melds.filter(({ type, concealed }) => type === 'kong' && !concealed).length;
 }
 
 function hiddenKong({ melds }: Hand): number {
