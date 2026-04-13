@@ -1739,4 +1739,25 @@ describe('calculateScore', () => {
     // The winning chow came from a discard, so the hand is NOT all concealed
     expect(result.appliedRules.find(r => r.name === 'cleanDoorstep')).toBeUndefined();
   });
+
+  it('wind kong fires windKong, not windPong', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'kong', tiles: ['Nw', 'Nw', 'Nw', 'Nw'], concealed: false },
+        { type: 'pong', tiles: ['Rd', 'Rd', 'Rd'], concealed: false },
+        { type: 'pong', tiles: ['Gd', 'Gd', 'Gd'], concealed: false },
+        { type: 'pong', tiles: ['Wd', 'Wd', 'Wd'], concealed: false },
+        { type: 'pair', tiles: ['8d', '8d'], concealed: true, winTile: '8d' },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'discard',
+      from: 'C', dealer: 'B', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'windKong')).toEqual(
+      { name: 'windKong', points: 1 },
+    );
+    expect(result.appliedRules.find(r => r.name === 'windPong')).toBeUndefined();
+  });
 });
