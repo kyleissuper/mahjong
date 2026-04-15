@@ -60,6 +60,7 @@ function resolveAbsorption(all: FiredRule[], survivors: FiredRule[] = all): Appl
 const rules: Rule[] = [
   { name: 'flower', label: 'Flower', pts: '1 ea.', score: flower },
   { name: 'dragonPong', label: 'Dragon pong', pts: '1 ea.', score: dragonPong },
+  { name: 'dragonKong', label: 'Dragon kong', pts: '1 ea.', score: dragonKong },
   { name: 'windPong', label: 'Wind pong', pts: '1 ea.', score: windPong },
   { name: 'windKong', label: 'Wind kong', pts: '1 ea.', score: windKong },
   { name: 'pairOf258', label: '2/5/8 pair', pts: '1', score: pairOf258 },
@@ -88,9 +89,9 @@ const rules: Rule[] = [
   { name: 'oneToNineChain', label: '1-9 chain (same suit)', pts: '3', score: oneToNineChain },
   { name: 'twoKongMahjong', label: '2 kong mahjong', pts: '6', score: twoKongMahjong },
   { name: 'twoDoubleChows', label: '2 double chows', pts: '12', score: twoDoubleChows, absorbs: ['doubleChow'] },
-  { name: 'littleDragons', label: 'Little dragons (2 pongs + pair)', pts: '8', score: littleDragons, absorbs: ['dragonPong'] },
+  { name: 'littleDragons', label: 'Little dragons (2 pongs + pair)', pts: '8', score: littleDragons, absorbs: ['dragonPong', 'dragonKong'] },
   { name: 'littleWinds', label: 'Little winds (3 pongs + pair)', pts: '12', score: littleWinds, absorbs: ['windPong', 'windKong'] },
-  { name: 'bigDragons', label: 'Big dragons (3 pongs)', pts: '12', score: bigDragons, absorbs: ['littleDragons', 'dragonPong'] },
+  { name: 'bigDragons', label: 'Big dragons (3 pongs)', pts: '12', score: bigDragons, absorbs: ['littleDragons', 'dragonPong', 'dragonKong'] },
   { name: 'bigWinds', label: 'Big winds (4 pongs)', pts: '18', score: bigWinds, absorbs: ['littleWinds', 'windPong', 'windKong', 'allPongs', 'noTerminalsWithHonors', 'semiPure', 'only2Suits', 'allSetsHave19WithHonors'] },
   { name: 'semiPure', label: 'Semi-pure (1 suit + honors)', pts: '4', score: semiPure, absorbs: ['only2Suits'] },
   { name: 'fourConsecutivePongs', label: '4 consec. pongs (same suit)', pts: '8', score: fourConsecutivePongs, absorbs: ['allPongs', 'threeConsecutivePongs'] },
@@ -104,7 +105,7 @@ const rules: Rule[] = [
   { name: 'all19', label: 'All 1s/9s', pts: '16', score: all19, absorbs: ['allSetsHave19WithHonors', 'allSetsHave19', 'all19WithHonors', 'noFlowersNoHonors'] },
   { name: 'threeSuitPongs', label: '3 suit pongs (same value, 3 suits)', pts: '4', score: threeSuitPongs },
   { name: 'allPairs', label: 'All pairs (7 pairs)', pts: '12', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258'] },
-  { name: 'allHonors', label: 'All honors', pts: '12', score: allHonors, absorbs: ['allPongs', 'windPong', 'windKong', 'dragonPong', 'allSetsHave19WithHonors', 'all19WithHonors', 'noTerminalsWithHonors', 'only2Suits'] },
+  { name: 'allHonors', label: 'All honors', pts: '12', score: allHonors, absorbs: ['allPongs', 'windPong', 'windKong', 'dragonPong', 'dragonKong', 'allSetsHave19WithHonors', 'all19WithHonors', 'noTerminalsWithHonors', 'only2Suits'] },
   { name: 'prodigyHand', label: 'Prodigy (ready in first 4 draws)', pts: '12', score: prodigyHand },
   { name: 'heavenlyHand', label: 'Heavenly hand (dealer wins on deal)', pts: '20', score: heavenlyHand, absorbs: [
     'selfPick', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'noFlowersNoHonors',
@@ -118,12 +119,12 @@ const rules: Rule[] = [
   ] },
   { name: 'thirteenOrphans', label: '13 orphans', pts: '14', score: thirteenOrphans, absorbs: [
     'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allSetsHave19WithHonors', 'all19WithHonors',
-    'allPongs', 'windPong', 'windKong', 'dragonPong', 'noTerminalsWithHonors',
+    'allPongs', 'windPong', 'windKong', 'dragonPong', 'dragonKong', 'noTerminalsWithHonors',
     'threeSuitsWithWindAndDragon',
   ] },
-  { name: 'jadeDragon', label: 'Jade Dragon (all bamboo + green dragon)', pts: '14', score: jadeDragon, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
-  { name: 'rubyDragon', label: 'Ruby Dragon (all characters + red dragon)', pts: '14', score: rubyDragon, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
-  { name: 'pearlDragon', label: 'Pearl Dragon (all dots + white dragon)', pts: '14', score: pearlDragon, absorbs: ['dragonPong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
+  { name: 'jadeDragon', label: 'Jade Dragon (all bamboo + green dragon)', pts: '14', score: jadeDragon, absorbs: ['dragonPong', 'dragonKong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
+  { name: 'rubyDragon', label: 'Ruby Dragon (all characters + red dragon)', pts: '14', score: rubyDragon, absorbs: ['dragonPong', 'dragonKong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
+  { name: 'pearlDragon', label: 'Pearl Dragon (all dots + white dragon)', pts: '14', score: pearlDragon, absorbs: ['dragonPong', 'dragonKong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
 ];
 
 function flower({ melds }: Hand): number {
@@ -131,7 +132,11 @@ function flower({ melds }: Hand): number {
 }
 
 function dragonPong({ melds }: Hand): number {
-  return melds.filter(({ type, tiles: [first] }) => (type === 'pong' || type === 'kong') && isDragon(first)).length;
+  return melds.filter(({ type, tiles: [first] }) => type === 'pong' && isDragon(first)).length;
+}
+
+function dragonKong({ melds }: Hand): number {
+  return melds.filter(({ type, tiles: [first] }) => type === 'kong' && isDragon(first)).length;
 }
 
 function pairOf258({ melds }: Hand): number {

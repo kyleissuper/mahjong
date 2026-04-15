@@ -1760,4 +1760,25 @@ describe('calculateScore', () => {
     );
     expect(result.appliedRules.find(r => r.name === 'windPong')).toBeUndefined();
   });
+
+  it('dragon kong fires dragonKong, not dragonPong', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'kong', tiles: ['Rd', 'Rd', 'Rd', 'Rd'], concealed: false },
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: true },
+        { type: 'chow', tiles: ['4b', '5b', '6b'], concealed: true },
+        { type: 'chow', tiles: ['7d', '8d', '9d'], concealed: true, winTile: '8d' },
+        { type: 'pair', tiles: ['5b', '5b'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'self-pick',
+      dealer: 'B', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'dragonKong')).toEqual(
+      { name: 'dragonKong', points: 1 },
+    );
+    expect(result.appliedRules.find(r => r.name === 'dragonPong')).toBeUndefined();
+  });
 });
