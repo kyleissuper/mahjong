@@ -295,8 +295,9 @@ function allSetsHave19({ melds }: Hand): number {
 }
 
 function pure(hand: Hand): number {
-  const suits = new Set(allTiles(hand).map(suit));
-  return suits.size === 1 && isNumberTile(hand.melds[0].tiles[0]) ? 8 : 0;
+  const tiles = allTiles(hand);
+  const suits = new Set(tiles.map(suit));
+  return suits.size === 1 && tiles.length > 0 && isNumberTile(tiles[0]) ? 8 : 0;
 }
 
 function fourHiddenPongs({ melds }: Hand): number {
@@ -482,7 +483,7 @@ function oneToNineChain(hand: Hand): number {
 }
 
 function noTerminalsNoHonors(hand: Hand): number {
-  const tiles = allTilesExcludingFlowers(hand);
+  const tiles = allTiles(hand);
   return tiles.every(t => isNumberTile(t) && !isTerminal(t)) ? 3 : 0;
 }
 
@@ -519,8 +520,7 @@ function resolvePayments(points: number, win: Win): { scores: RoundScore; paymen
 }
 
 // --- Helpers ---
-function allTiles(hand: Hand): Tile[] { return hand.melds.flatMap(m => m.tiles); }
-function allTilesExcludingFlowers(hand: Hand): Tile[] { return hand.melds.filter(m => m.type !== 'flower').flatMap(m => m.tiles); }
+function allTiles(hand: Hand): Tile[] { return hand.melds.filter(m => m.type !== 'flower').flatMap(m => m.tiles); }
 function sets(hand: Hand): Meld[] { return hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower' && m.type !== 'orphans'); }
 function winningMeld(hand: Hand): Meld | undefined { return hand.melds.find(m => m.winTile !== undefined); }
 function hasAll3NumberSuits(melds: Meld[]): boolean {
