@@ -4,6 +4,7 @@ import { calculateScore, getRuleReference } from '../src/calculate-score.js';
 import { isHandReady } from '../src/validate-hand.js';
 import { TileImage } from './TileImage.tsx';
 import { ScoringReference } from './ScoringReference.tsx';
+import { useZoom } from './useZoom.ts';
 import './prototype.css';
 
 const RULE_LABELS: Record<string, string> = Object.fromEntries(
@@ -145,6 +146,27 @@ function toScoringHand(state: State): Meld[] {
   return melds;
 }
 
+// --- Zoom controls ---
+
+const ZOOM_STEPS = [0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5];
+
+function ZoomControls({ zoom, onChange }: { zoom: number; onChange: (z: number) => void }) {
+  const stepTo = (delta: 1 | -1) => {
+    const sorted = [...ZOOM_STEPS].sort((a, b) => a - b);
+    const next = delta > 0
+      ? sorted.find(s => s > zoom + 0.001)
+      : [...sorted].reverse().find(s => s < zoom - 0.001);
+    if (next != null) onChange(next);
+  };
+  return (
+    <div className="zoom-controls" role="group" aria-label="Zoom">
+      <button className="zoom-btn" aria-label="Zoom out" onClick={() => stepTo(-1)} disabled={zoom <= ZOOM_STEPS[0]}>−</button>
+      <button className="zoom-btn zoom-value" aria-label="Reset zoom to 100%" onClick={() => onChange(1)}>{Math.round(zoom * 100)}%</button>
+      <button className="zoom-btn" aria-label="Zoom in" onClick={() => stepTo(1)} disabled={zoom >= ZOOM_STEPS[ZOOM_STEPS.length - 1]}>+</button>
+    </div>
+  );
+}
+
 // --- Main component ---
 
 export function Prototype() {
@@ -157,6 +179,7 @@ export function Prototype() {
     winTile: null,
   });
   const [showReference, setShowReference] = useState(false);
+  const [zoom, setZoom] = useZoom();
 
   const { melds, flowers, active, phase, winMeld, winTile } = state;
 
@@ -332,7 +355,9 @@ export function Prototype() {
   }
 
   return (
-    <div className={`proto ${isEntering ? 'proto-entering' : ''}`}>
+    <>
+      <ZoomControls zoom={zoom} onChange={setZoom} />
+      <div className={`proto ${isEntering ? 'proto-entering' : ''}`} style={{ zoom }}>
       <div className="proto-appbar">
         <div className="proto-appbar-left">
           {!isEntering && (
@@ -544,6 +569,7 @@ export function Prototype() {
           )}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

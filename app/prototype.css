@@ -770,3 +770,54 @@
 .ref-footer a:active {
   opacity: 0.7;
 }
+
+/* === Zoom controls — floating pill, only visible when there's room === */
+
+.zoom-controls {
+  display: none;
+}
+
+/* Show whenever the viewport is wider than the app's natural width */
+@media (min-width: 600px) {
+  .zoom-controls {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: inline-flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    padding: 4px;
+  }
+
+  .zoom-btn {
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .zoom-btn:hover:not(:disabled) { background: var(--bg); }
+  .zoom-btn:active:not(:disabled) { opacity: 0.6; }
+  .zoom-btn:disabled { color: var(--border); cursor: default; }
+
+  .zoom-value {
+    min-width: 56px;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+}
