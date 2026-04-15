@@ -148,17 +148,21 @@ function toScoringHand(state: State): Meld[] {
 
 // --- Zoom controls ---
 
-const ZOOM_STEP = 0.1;
-const ZOOM_MIN = 0.8;
-const ZOOM_MAX = 2;
+const ZOOM_STEPS = [0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5];
 
 function ZoomControls({ zoom, onChange }: { zoom: number; onChange: (z: number) => void }) {
-  const clamp = (z: number) => Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.round(z * 100) / 100));
+  const stepTo = (delta: 1 | -1) => {
+    const sorted = [...ZOOM_STEPS].sort((a, b) => a - b);
+    const next = delta > 0
+      ? sorted.find(s => s > zoom + 0.001)
+      : [...sorted].reverse().find(s => s < zoom - 0.001);
+    if (next != null) onChange(next);
+  };
   return (
-    <div className="zoom-controls" aria-label="Zoom">
-      <button className="zoom-btn" aria-label="Zoom out" onClick={() => onChange(clamp(zoom - ZOOM_STEP))}>−</button>
-      <button className="zoom-btn zoom-value" aria-label="Reset zoom" onClick={() => onChange(1)}>{Math.round(zoom * 100)}%</button>
-      <button className="zoom-btn" aria-label="Zoom in" onClick={() => onChange(clamp(zoom + ZOOM_STEP))}>+</button>
+    <div className="zoom-controls" role="group" aria-label="Zoom">
+      <button className="zoom-btn" aria-label="Zoom out" onClick={() => stepTo(-1)} disabled={zoom <= ZOOM_STEPS[0]}>−</button>
+      <button className="zoom-btn zoom-value" aria-label="Reset zoom to 100%" onClick={() => onChange(1)}>{Math.round(zoom * 100)}%</button>
+      <button className="zoom-btn" aria-label="Zoom in" onClick={() => stepTo(1)} disabled={zoom >= ZOOM_STEPS[ZOOM_STEPS.length - 1]}>+</button>
     </div>
   );
 }
@@ -351,7 +355,9 @@ export function Prototype() {
   }
 
   return (
-    <div className={`proto ${isEntering ? 'proto-entering' : ''}`} style={{ zoom }}>
+    <>
+      <ZoomControls zoom={zoom} onChange={setZoom} />
+      <div className={`proto ${isEntering ? 'proto-entering' : ''}`} style={{ zoom }}>
       <div className="proto-appbar">
         <div className="proto-appbar-left">
           {!isEntering && (
@@ -360,9 +366,7 @@ export function Prototype() {
             </button>
           )}
         </div>
-        <div className="proto-appbar-title">
-          <ZoomControls zoom={zoom} onChange={setZoom} />
-        </div>
+        <div className="proto-appbar-title"></div>
         <div className="proto-appbar-right">
           <button className="proto-appbar-text-btn proto-appbar-text-secondary" onClick={() => setShowReference(true)}>Rules</button>
           <button className="proto-appbar-text-btn" onClick={reset}>New</button>
@@ -565,6 +569,7 @@ export function Prototype() {
           )}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
