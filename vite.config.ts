@@ -9,6 +9,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'app/index.html',
+        score: 'app/score/index.html',
         v1: 'app/v1.html',
       },
     },

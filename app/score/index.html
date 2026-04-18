@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f0e8" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🀄</text></svg>" />
+  <title>Mahjong Scoring Helper</title>
+</head>
+<body>
+  <div id="result"></div>
+  <main id="instructions">
+    <h1>Mahjong Scoring Helper — Hong Kong style</h1>
+
+    <p>You (the chatbot) have been asked to help someone score a Hong Kong mahjong hand. Your job is to transcribe the hand, gather the win context, then produce a clickable URL that renders the scoring result. <strong>Do not fetch the URL yourself</strong> — output it as a link and the user clicks it to see the score in their browser.</p>
+
+    <h2>Workflow</h2>
+    <ol>
+      <li>Ask the user for a photo (or description) of their winning hand.</li>
+      <li>Identify each tile using the encoding below.</li>
+      <li>Group tiles into melds. A standard winning hand is <strong>5 melds</strong>: 4 sets (chow / pong / kong) plus 1 pair. Flowers/seasons go in a separate <code>flower</code> meld counting them. Special shapes: 13 orphans (one <code>orphans</code> meld), or 7 pairs (seven <code>pair</code> melds).</li>
+      <li>Ask the user for the win context you can't see in the photo: who won, who's dealer, self-pick vs discard (and who discarded), how many consecutive rounds the dealer has won, and any special conditions.</li>
+      <li>Assemble the JSON payload (shape below).</li>
+      <li>URL-safe base64 encode the JSON (base64url: <code>-</code> and <code>_</code> instead of <code>+</code> and <code>/</code>; strip <code>=</code> padding).</li>
+      <li>Tell the user: <strong>"Click this link to see the score: &lt;origin-of-this-page&gt;/score?d=&lt;BASE64&gt;"</strong></li>
+    </ol>
+
+    <h2>Tile encoding</h2>
+    <table>
+      <thead><tr><th>Category</th><th>Shorthand</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Bamboo</td><td><code>1b</code>–<code>9b</code></td><td>Green bars (<code>1b</code> is often a bird)</td></tr>
+        <tr><td>Dots</td><td><code>1d</code>–<code>9d</code></td><td>Circles</td></tr>
+        <tr><td>Characters</td><td><code>1c</code>–<code>9c</code></td><td>Chinese numeral + 萬</td></tr>
+        <tr><td>Winds</td><td><code>Ew</code> <code>Sw</code> <code>Ww</code> <code>Nw</code></td><td>東 南 西 北</td></tr>
+        <tr><td>Dragons</td><td><code>Rd</code> <code>Gd</code> <code>Wd</code></td><td>中 (red), 發 (green), blank (white)</td></tr>
+        <tr><td>Flower</td><td><code>F</code></td><td>Any flower/season; count only</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Meld schema</h2>
+    <pre><code>type MeldType = 'chow' | 'pong' | 'kong' | 'pair' | 'flower' | 'orphans';
+
+interface Meld {
+  type: MeldType;
+  tiles: Tile[];       // chow=3 consecutive same-suit, pong=3 identical,
+                       // kong=4 identical, pair=2 identical,
+                       // flower=N copies of 'F' (N = flower count),
+                       // orphans=14 tiles (13 terminals/honors + the paired one)
+  concealed: boolean;  // true = hidden in hand, false = exposed on table.
+                       // flowers are always exposed; set false.
+  winTile?: Tile;      // the tile that completed the hand, if in this meld
+}</code></pre>
+
+    <h2>Win schema</h2>
+    <pre><code>interface Win {
+  players: [string, string, string, string];  // four player names/labels
+  winner: string;                              // one of players
+  dealer: string;                              // one of players
+  method: 'self-pick' | 'discard' | 'stolen-kong';
+  from?: string;                               // required unless self-pick
+  dealerRounds: number;                        // consecutive rounds dealer has won (>=1)
+  special: ('fromButt' | 'lastTile' | 'firstTurn' | 'prodigy')[];
+}</code></pre>
+
+    <h2>Payload shape</h2>
+    <pre><code>{
+  "hand": { "melds": [ /* Meld[] */ ] },
+  "win":  { /* Win */ }
+}</code></pre>
+
+    <h2>Worked example</h2>
+    <p>Chow 1-2-3 bamboo, chow 4-5-6 bamboo, chow 7-8-9 dots (won on 8d), exposed red dragon pong, pair of 5 bamboo. Player A won; B is dealer; D discarded the winning tile.</p>
+
+    <pre><code>{
+  "hand": {
+    "melds": [
+      { "type": "chow", "tiles": ["1b","2b","3b"], "concealed": true },
+      { "type": "chow", "tiles": ["4b","5b","6b"], "concealed": true },
+      { "type": "chow", "tiles": ["7d","8d","9d"], "concealed": true, "winTile": "8d" },
+      { "type": "pong", "tiles": ["Rd","Rd","Rd"], "concealed": false },
+      { "type": "pair", "tiles": ["5b","5b"], "concealed": true }
+    ]
+  },
+  "win": {
+    "players": ["A","B","C","D"],
+    "winner": "A", "dealer": "B",
+    "method": "discard", "from": "D",
+    "dealerRounds": 1, "special": []
+  }
+}</code></pre>
+
+    <p>Base64url-encoded and embedded in a score URL (click to see the result):</p>
+    <p><a href="?d=eyJoYW5kIjp7Im1lbGRzIjpbeyJ0eXBlIjoiY2hvdyIsInRpbGVzIjpbIjFiIiwiMmIiLCIzYiJdLCJjb25jZWFsZWQiOnRydWV9LHsidHlwZSI6ImNob3ciLCJ0aWxlcyI6WyI0YiIsIjViIiwiNmIiXSwiY29uY2VhbGVkIjp0cnVlfSx7InR5cGUiOiJjaG93IiwidGlsZXMiOlsiN2QiLCI4ZCIsIjlkIl0sImNvbmNlYWxlZCI6dHJ1ZSwid2luVGlsZSI6IjhkIn0seyJ0eXBlIjoicG9uZyIsInRpbGVzIjpbIlJkIiwiUmQiLCJSZCJdLCJjb25jZWFsZWQiOmZhbHNlfSx7InR5cGUiOiJwYWlyIiwidGlsZXMiOlsiNWIiLCI1YiJdLCJjb25jZWFsZWQiOnRydWV9XX0sIndpbiI6eyJwbGF5ZXJzIjpbIkEiLCJCIiwiQyIsIkQiXSwid2lubmVyIjoiQSIsImRlYWxlciI6IkIiLCJtZXRob2QiOiJkaXNjYXJkIiwiZnJvbSI6IkQiLCJkZWFsZXJSb3VuZHMiOjEsInNwZWNpYWwiOltdfX0"><code>./score?d=eyJoYW5kIjp7...</code></a></p>
+
+    <h2>Notes for AI callers</h2>
+    <ul>
+      <li><strong>Do not fetch this URL yourself.</strong> Output it as a link for the user to click.</li>
+      <li>Tile shorthand: lowercase suit letter, uppercase honor letter. Don't invent variants.</li>
+      <li>If a tile is ambiguous, ask the user to describe it or send a clearer photo.</li>
+      <li>If win context is missing (winner, dealer, method), ask the user — don't guess.</li>
+    </ul>
+  </main>
+  <script type="module" src="./main.tsx"></script>
+</body>
+</html>

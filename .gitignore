@@ -1,3 +1,6 @@
 node_modules
 dist
 dist-app
+.wrangler
+.DS_Store
+experiments
