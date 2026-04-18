@@ -2,6 +2,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "mahjong",
   "compatibility_date": "2025-09-27",
+  "build": {
+    "command": "npm run build"
+  },
   "assets": {
     "directory": "./dist-app",
     "not_found_handling": "single-page-application"
