@@ -57,6 +57,12 @@ function resolveAbsorption(all: FiredRule[], survivors: FiredRule[] = all): Appl
 
 // --- Rules ---
 
+// Per-meld honor scoring components. Any rule that subsumes an all-honor
+// or honor-heavy hand absorbs these so per-meld bonuses don't leak through.
+export const DRAGON_COMPONENTS = ['dragonPong', 'dragonKong'] as const;
+export const WIND_COMPONENTS = ['windPong', 'windKong'] as const;
+export const HONOR_COMPONENTS = [...DRAGON_COMPONENTS, ...WIND_COMPONENTS] as const;
+
 const rules: Rule[] = [
   { name: 'flower', label: 'Flower', pts: '1 ea.', score: flower },
   { name: 'dragonPong', label: 'Dragon pong', pts: '1 ea.', score: dragonPong },
@@ -89,10 +95,10 @@ const rules: Rule[] = [
   { name: 'oneToNineChain', label: '1-9 chain (same suit)', pts: '3', score: oneToNineChain },
   { name: 'twoKongMahjong', label: '2 kong mahjong', pts: '6', score: twoKongMahjong },
   { name: 'twoDoubleChows', label: '2 double chows', pts: '12', score: twoDoubleChows, absorbs: ['doubleChow'] },
-  { name: 'littleDragons', label: 'Little dragons (2 pongs + pair)', pts: '8', score: littleDragons, absorbs: ['dragonPong', 'dragonKong'] },
-  { name: 'littleWinds', label: 'Little winds (3 pongs + pair)', pts: '12', score: littleWinds, absorbs: ['windPong', 'windKong'] },
-  { name: 'bigDragons', label: 'Big dragons (3 pongs)', pts: '12', score: bigDragons, absorbs: ['littleDragons', 'dragonPong', 'dragonKong'] },
-  { name: 'bigWinds', label: 'Big winds (4 pongs)', pts: '18', score: bigWinds, absorbs: ['littleWinds', 'windPong', 'windKong', 'allPongs', 'noTerminalsWithHonors', 'semiPure', 'only2Suits', 'allSetsHave19WithHonors'] },
+  { name: 'littleDragons', label: 'Little dragons (2 pongs + pair)', pts: '8', score: littleDragons, absorbs: [...DRAGON_COMPONENTS] },
+  { name: 'littleWinds', label: 'Little winds (3 pongs + pair)', pts: '12', score: littleWinds, absorbs: [...WIND_COMPONENTS] },
+  { name: 'bigDragons', label: 'Big dragons (3 pongs)', pts: '12', score: bigDragons, absorbs: ['littleDragons', ...DRAGON_COMPONENTS] },
+  { name: 'bigWinds', label: 'Big winds (4 pongs)', pts: '18', score: bigWinds, absorbs: ['littleWinds', ...WIND_COMPONENTS, 'allPongs', 'noTerminalsWithHonors', 'semiPure', 'only2Suits', 'allSetsHave19WithHonors'] },
   { name: 'semiPure', label: 'Semi-pure (1 suit + honors)', pts: '4', score: semiPure, absorbs: ['only2Suits'] },
   { name: 'fourConsecutivePongs', label: '4 consec. pongs (same suit)', pts: '8', score: fourConsecutivePongs, absorbs: ['allPongs', 'threeConsecutivePongs'] },
   { name: 'allSetsHave19WithHonors', label: 'All sets have 1/9 (has honors)', pts: '4', score: allSetsHave19WithHonors },
@@ -105,7 +111,7 @@ const rules: Rule[] = [
   { name: 'all19', label: 'All 1s/9s', pts: '16', score: all19, absorbs: ['allSetsHave19WithHonors', 'allSetsHave19', 'all19WithHonors', 'noFlowersNoHonors'] },
   { name: 'threeSuitPongs', label: '3 suit pongs (same value, 3 suits)', pts: '4', score: threeSuitPongs },
   { name: 'allPairs', label: 'All pairs (7 pairs)', pts: '12', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258'] },
-  { name: 'allHonors', label: 'All honors', pts: '12', score: allHonors, absorbs: ['allPongs', 'windPong', 'windKong', 'dragonPong', 'dragonKong', 'allSetsHave19WithHonors', 'all19WithHonors', 'noTerminalsWithHonors', 'only2Suits'] },
+  { name: 'allHonors', label: 'All honors', pts: '12', score: allHonors, absorbs: ['allPongs', ...HONOR_COMPONENTS, 'allSetsHave19WithHonors', 'all19WithHonors', 'noTerminalsWithHonors', 'only2Suits'] },
   { name: 'prodigyHand', label: 'Prodigy (ready in first 4 draws)', pts: '12', score: prodigyHand },
   { name: 'heavenlyHand', label: 'Heavenly hand (dealer wins on deal)', pts: '20', score: heavenlyHand, absorbs: [
     'selfPick', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'noFlowersNoHonors',
@@ -119,12 +125,12 @@ const rules: Rule[] = [
   ] },
   { name: 'thirteenOrphans', label: '13 orphans', pts: '14', score: thirteenOrphans, absorbs: [
     'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allSetsHave19WithHonors', 'all19WithHonors',
-    'allPongs', 'windPong', 'windKong', 'dragonPong', 'dragonKong', 'noTerminalsWithHonors',
+    'allPongs', ...HONOR_COMPONENTS, 'noTerminalsWithHonors',
     'threeSuitsWithWindAndDragon',
   ] },
-  { name: 'jadeDragon', label: 'Jade Dragon (all bamboo + green dragon)', pts: '14', score: jadeDragon, absorbs: ['dragonPong', 'dragonKong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
-  { name: 'rubyDragon', label: 'Ruby Dragon (all characters + red dragon)', pts: '14', score: rubyDragon, absorbs: ['dragonPong', 'dragonKong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
-  { name: 'pearlDragon', label: 'Pearl Dragon (all dots + white dragon)', pts: '14', score: pearlDragon, absorbs: ['dragonPong', 'dragonKong', 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
+  { name: 'jadeDragon', label: 'Jade Dragon (all bamboo + green dragon)', pts: '14', score: jadeDragon, absorbs: [...DRAGON_COMPONENTS, 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
+  { name: 'rubyDragon', label: 'Ruby Dragon (all characters + red dragon)', pts: '14', score: rubyDragon, absorbs: [...DRAGON_COMPONENTS, 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
+  { name: 'pearlDragon', label: 'Pearl Dragon (all dots + white dragon)', pts: '14', score: pearlDragon, absorbs: [...DRAGON_COMPONENTS, 'noTerminalsWithHonors', 'only2Suits', 'semiPure'] },
 ];
 
 function flower({ melds }: Hand): number {
@@ -154,12 +160,12 @@ function canOnlyWinWithOne(hand: Hand): number {
 }
 
 // Pair waits are single-wait only if no other tile also completes the hand.
-function pairIsOnlyWait({ melds }: Hand, pairMeld: Meld): boolean {
+function pairIsOnlyWait(hand: Hand, pairMeld: Meld): boolean {
   const winTile = pairMeld.winTile!;
   if (!isNumberTile(winTile)) return true; // honor pairs can't form chows
 
-  const exposedSets = melds.filter(m => !m.concealed && m.type !== 'flower' && m.type !== 'pair').length;
-  const freeTiles = melds.filter(m => m.concealed || m === pairMeld).flatMap(m => m.tiles);
+  const exposedSets = handMelds(hand).filter(m => !m.concealed && m.type !== 'pair').length;
+  const freeTiles = hand.melds.filter(m => m.concealed || m === pairMeld).flatMap(m => m.tiles);
   const withoutWinningTile = freeTiles.toSpliced(freeTiles.indexOf(winTile), 1);
   const setsNeeded = 4 - exposedSets;
 
@@ -173,8 +179,8 @@ function pairIsOnlyWait({ melds }: Hand, pairMeld: Meld): boolean {
   return true;
 
   // Backtracking: can these tiles be grouped into sets + 1 pair?
-  function canFormHand(handTiles: Tile[], setsNeeded: number): boolean {
-    return solve([...handTiles].sort(), setsNeeded, false);
+  function canFormHand(freeTiles: Tile[], setsNeeded: number): boolean {
+    return solve([...freeTiles].sort(), setsNeeded, false);
 
     function solve(tiles: Tile[], setsLeft: number, hasPair: boolean): boolean {
       if (tiles.length === 0) return setsLeft === 0 && hasPair;
@@ -222,7 +228,7 @@ function selfPick(_hand: Hand, { method }: Win): number {
 }
 
 function only2Suits(hand: Hand): number {
-  return new Set(allTiles(hand).map(suit)).size === 2 ? 1 : 0;
+  return new Set(handTiles(hand).map(suit)).size === 2 ? 1 : 0;
 }
 
 function allPongs(hand: Hand): number {
@@ -252,7 +258,7 @@ function bigWinds({ melds }: Hand): number {
 }
 
 function semiPure(hand: Hand): number {
-  const suits = new Set(allTiles(hand).map(suit));
+  const suits = new Set(handTiles(hand).map(suit));
   const numberSuits = [...suits].filter(s => s === 'b' || s === 'd' || s === 'c');
   return numberSuits.length === 1 && (suits.has('dragon') || suits.has('wind')) ? 4 : 0;
 }
@@ -277,25 +283,25 @@ function bigDragons({ melds }: Hand): number {
   return melds.filter(({ type, tiles: [first] }) => (type === 'pong' || type === 'kong') && isDragon(first)).length === 3 ? 12 : 0;
 }
 
-function allSetsHave19WithHonors({ melds }: Hand): number {
-  return melds.filter(({ type }) => type !== 'flower').every(({ tiles }) =>
+function allSetsHave19WithHonors(hand: Hand): number {
+  return handMelds(hand).every(({ tiles }) =>
     tiles.some(t => isHonor(t) || isTerminal(t))
   ) ? 4 : 0;
 }
 
 function all19WithHonors(hand: Hand): number {
-  return allTiles(hand).every(t => isTerminal(t) || isHonor(t)) ? 8 : 0;
+  return handTiles(hand).every(t => isTerminal(t) || isHonor(t)) ? 8 : 0;
 }
 
-function allSetsHave19({ melds }: Hand): number {
-  const nonFlower = melds.filter(({ type }) => type !== 'flower');
-  return nonFlower.every(({ tiles }) => tiles.some(isTerminal))
-    && nonFlower.every(({ tiles }) => tiles.every(isNumberTile))
+function allSetsHave19(hand: Hand): number {
+  const playing = handMelds(hand);
+  return playing.every(({ tiles }) => tiles.some(isTerminal))
+    && playing.every(({ tiles }) => tiles.every(isNumberTile))
     ? 4 : 0;
 }
 
 function pure(hand: Hand): number {
-  const suits = new Set(allTiles(hand).map(suit));
+  const suits = new Set(handTiles(hand).map(suit));
   return suits.size === 1 && isNumberTile(hand.melds[0].tiles[0]) ? 8 : 0;
 }
 
@@ -310,7 +316,7 @@ function allKongs(hand: Hand): number {
 }
 
 function all19(hand: Hand): number {
-  return allTiles(hand).every(isTerminal) ? 16 : 0;
+  return handTiles(hand).every(isTerminal) ? 16 : 0;
 }
 
 function threeSuitPongs({ melds }: Hand): number {
@@ -337,7 +343,7 @@ function earthlyHand(_hand: Hand, { method, winner, dealer, special }: Win): num
 }
 
 function heavenlyGates(hand: Hand): number {
-  const tiles = allTiles(hand);
+  const tiles = handTiles(hand);
   if (tiles.length !== 14) return 0;
   const suits = new Set(tiles.map(suit));
   if (suits.size !== 1 || !isNumberTile(tiles[0])) return 0;
@@ -350,14 +356,14 @@ function heavenlyGates(hand: Hand): number {
 }
 
 function threeSuitsWithWindAndDragon(hand: Hand): number {
-  const suits = new Set(allTiles(hand).map(suit));
+  const suits = new Set(handTiles(hand).map(suit));
   const has3NumberSuits = ['b', 'd', 'c'].every(s => suits.has(s));
   return has3NumberSuits && suits.has('wind') && suits.has('dragon') ? 1 : 0;
 }
 
 function thirteenOrphans(hand: Hand): number {
   if (hand.melds.some(({ type }) => type === 'orphans')) return 14;
-  const tiles = allTiles(hand);
+  const tiles = handTiles(hand);
   if (tiles.length !== 14) return 0;
   const required = ['1b','9b','1d','9d','1c','9c','Ew','Sw','Ww','Nw','Rd','Gd','Wd'];
   const counts = new Map<string, number>();
@@ -368,25 +374,25 @@ function thirteenOrphans(hand: Hand): number {
 }
 
 function allHonors(hand: Hand): number {
-  return allTiles(hand).every(isHonor) ? 12 : 0;
+  return handTiles(hand).every(isHonor) ? 12 : 0;
 }
 
 function pearlDragon(hand: Hand): number {
-  const tiles = allTiles(hand);
+  const tiles = handTiles(hand);
   const allDotsOrWhite = tiles.every(t => suit(t) === 'd' || t === 'Wd');
   const hasWhiteDragon = tiles.some(t => t === 'Wd');
   return allDotsOrWhite && hasWhiteDragon ? 14 : 0;
 }
 
 function rubyDragon(hand: Hand): number {
-  const tiles = allTiles(hand);
+  const tiles = handTiles(hand);
   const allCharsOrRed = tiles.every(t => suit(t) === 'c' || t === 'Rd');
   const hasRedDragon = tiles.some(t => t === 'Rd');
   return allCharsOrRed && hasRedDragon ? 14 : 0;
 }
 
 function jadeDragon(hand: Hand): number {
-  const tiles = allTiles(hand);
+  const tiles = handTiles(hand);
   const allBambooOrGreen = tiles.every(t => suit(t) === 'b' || t === 'Gd');
   const hasGreenDragon = tiles.some(t => t === 'Gd');
   return allBambooOrGreen && hasGreenDragon ? 14 : 0;
@@ -400,8 +406,8 @@ function lastDiscard(_hand: Hand, { method, special }: Win): number {
   return method === 'discard' && special.includes('lastTile') ? 1 : 0;
 }
 
-function splitKong({ melds }: Hand): number {
-  const tiles = melds.filter(({ type }) => type !== 'kong' && type !== 'flower').flatMap(({ tiles }) => tiles);
+function splitKong(hand: Hand): number {
+  const tiles = handMelds(hand).filter(({ type }) => type !== 'kong').flatMap(({ tiles }) => tiles);
   const counts = Map.groupBy(tiles, t => t);
   return [...counts.values()].filter(group => group.length >= 4).length;
 }
@@ -424,14 +430,12 @@ function stolenKong(_hand: Hand, { method }: Win): number {
 
 function allFromOthers(hand: Hand): number {
   const s = sets(hand);
-  const nonFlower = hand.melds.filter(m => m.type !== 'flower');
-  return s.length > 0 && nonFlower.every(({ concealed }) => !concealed) ? 1 : 0;
+  return s.length > 0 && handMelds(hand).every(({ concealed }) => !concealed) ? 1 : 0;
 }
 
 function cleanDoorstep(hand: Hand): number {
   const s = sets(hand);
-  const nonFlower = hand.melds.filter(m => m.type !== 'flower');
-  return s.length > 0 && nonFlower.every(({ concealed }) => concealed) ? 1 : 0;
+  return s.length > 0 && handMelds(hand).every(({ concealed }) => concealed) ? 1 : 0;
 }
 
 function cleanDoorstepAndSelfPick(hand: Hand, win: Win): number {
@@ -466,7 +470,7 @@ function threeConsecutivePongs(hand: Hand): number {
 }
 
 function noFlowersNoHonors(hand: Hand): number {
-  const tiles = allTiles(hand);
+  const tiles = handTiles(hand);
   const hasHonors = tiles.some(t => isHonor(t));
   const hasFlowers = hand.melds.some(m => m.type === 'flower');
   return !hasHonors && !hasFlowers ? 3 : 0;
@@ -482,12 +486,12 @@ function oneToNineChain(hand: Hand): number {
 }
 
 function noTerminalsNoHonors(hand: Hand): number {
-  const tiles = allTilesExcludingFlowers(hand);
+  const tiles = handTiles(hand);
   return tiles.every(t => isNumberTile(t) && !isTerminal(t)) ? 3 : 0;
 }
 
 function noTerminalsWithHonors(hand: Hand): number {
-  const tiles = allTiles(hand);
+  const tiles = handTiles(hand);
   const hasHonors = tiles.some(t => isHonor(t));
   const noTerminals = tiles.filter(isNumberTile).every(t => !isTerminal(t));
   return hasHonors && noTerminals ? 1 : 0;
@@ -519,9 +523,11 @@ function resolvePayments(points: number, win: Win): { scores: RoundScore; paymen
 }
 
 // --- Helpers ---
-function allTiles(hand: Hand): Tile[] { return hand.melds.flatMap(m => m.tiles); }
-function allTilesExcludingFlowers(hand: Hand): Tile[] { return hand.melds.filter(m => m.type !== 'flower').flatMap(m => m.tiles); }
-function sets(hand: Hand): Meld[] { return hand.melds.filter(m => m.type !== 'pair' && m.type !== 'flower' && m.type !== 'orphans'); }
+// Flowers are bonus tiles that don't contribute to the 14-tile hand structure,
+// so almost every rule should work on the "playing" melds/tiles only.
+function handMelds(hand: Hand): Meld[] { return hand.melds.filter(m => m.type !== 'flower'); }
+function handTiles(hand: Hand): Tile[] { return handMelds(hand).flatMap(m => m.tiles); }
+function sets(hand: Hand): Meld[] { return handMelds(hand).filter(m => m.type !== 'pair' && m.type !== 'orphans'); }
 function winningMeld(hand: Hand): Meld | undefined { return hand.melds.find(m => m.winTile !== undefined); }
 function hasAll3NumberSuits(melds: Meld[]): boolean {
   const s = new Set(melds.map(m => suit(m.tiles[0])));

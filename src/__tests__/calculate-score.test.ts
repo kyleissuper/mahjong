@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateScore } from '../calculate-score.js';
+import { calculateScore, DRAGON_COMPONENTS, WIND_COMPONENTS, HONOR_COMPONENTS } from '../calculate-score.js';
 import type { Hand, Win } from '../types.js';
 
 describe('calculateScore', () => {
@@ -664,6 +664,34 @@ describe('calculateScore', () => {
     ]);
     expect(result.handValue).toBe(13);
     expect(result.scores).toEqual({ A: 0, B: 0, C: 13, D: -13 });
+  });
+
+  it('all honors with a flower — allHonors still fires, absorbs set-level variants', () => {
+    // Regression: a bonus flower meld must not prevent allHonors from firing,
+    // otherwise allSetsHave19WithHonors / noTerminalsWithHonors / windPong /
+    // allPongs all leak into the breakdown (see screenshot: 4 honor pongs +
+    // dragon pair + flower showed the individual rules instead of allHonors).
+    const hand: Hand = {
+      melds: [
+        { type: 'flower', tiles: ['F'], concealed: false },
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'pong', tiles: ['Gd', 'Gd', 'Gd'], concealed: false },
+        { type: 'pong', tiles: ['Sw', 'Sw', 'Sw'], concealed: true },
+        { type: 'pong', tiles: ['Rd', 'Rd', 'Rd'], concealed: true },
+        { type: 'pair', tiles: ['Wd', 'Wd'], concealed: true, winTile: 'Wd' },
+      ],
+    };
+
+    const result = calculateScore(hand, discardWin);
+    const fired = (n: string) => result.appliedRules.find(r => r.name === n);
+
+    expect(fired('allHonors')).toEqual({ name: 'allHonors', points: 12 });
+    expect(fired('flower')).toEqual({ name: 'flower', points: 1 });
+    expect(fired('littleDragons')).toEqual({ name: 'littleDragons', points: 8 });
+    // allHonors absorbs these
+    for (const absorbed of ['allPongs', 'windPong', 'dragonPong', 'allSetsHave19WithHonors', 'noTerminalsWithHonors', 'only2Suits']) {
+      expect(fired(absorbed)).toBeUndefined();
+    }
   });
 
   it('Hand 21 — all pairs, self-pick (13 pts)', () => {
@@ -1630,5 +1658,19 @@ describe('calculateScore', () => {
       { name: 'dragonKong', points: 1 },
     );
     expect(result.appliedRules.find(r => r.name === 'dragonPong')).toBeUndefined();
+  });
+});
+
+describe('honor component constants', () => {
+  it('DRAGON_COMPONENTS covers the per-meld dragon rules', () => {
+    expect(DRAGON_COMPONENTS).toEqual(['dragonPong', 'dragonKong']);
+  });
+
+  it('WIND_COMPONENTS covers the per-meld wind rules', () => {
+    expect(WIND_COMPONENTS).toEqual(['windPong', 'windKong']);
+  });
+
+  it('HONOR_COMPONENTS is the union of dragon + wind components', () => {
+    expect(HONOR_COMPONENTS).toEqual([...DRAGON_COMPONENTS, ...WIND_COMPONENTS]);
   });
 });
