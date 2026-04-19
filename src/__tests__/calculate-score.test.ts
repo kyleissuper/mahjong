@@ -1618,7 +1618,7 @@ describe('calculateScore', () => {
     expect(result.appliedRules.find(r => r.name === 'cleanDoorstep')).toBeUndefined();
   });
 
-  it('wind kong fires windKong, not windPong', () => {
+  it('exposed wind kong fires windKongExposed (2 pts) without stacking generic kong bonus', () => {
     const hand: Hand = {
       melds: [
         { type: 'kong', tiles: ['Nw', 'Nw', 'Nw', 'Nw'], concealed: false },
@@ -1633,13 +1633,15 @@ describe('calculateScore', () => {
       from: 'C', dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = calculateScore(hand, win);
-    expect(result.appliedRules.find(r => r.name === 'windKong')).toEqual(
-      { name: 'windKong', points: 1 },
+    expect(result.appliedRules.find(r => r.name === 'windKongExposed')).toEqual(
+      { name: 'windKongExposed', points: 2 },
     );
+    expect(result.appliedRules.find(r => r.name === 'windKongHidden')).toBeUndefined();
     expect(result.appliedRules.find(r => r.name === 'windPong')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'exposedKong')).toBeUndefined();
   });
 
-  it('dragon kong fires dragonKong, not dragonPong', () => {
+  it('exposed dragon kong fires dragonKongExposed (2 pts) without stacking generic kong bonus', () => {
     const hand: Hand = {
       melds: [
         { type: 'kong', tiles: ['Rd', 'Rd', 'Rd', 'Rd'], concealed: false },
@@ -1654,20 +1656,43 @@ describe('calculateScore', () => {
       dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = calculateScore(hand, win);
-    expect(result.appliedRules.find(r => r.name === 'dragonKong')).toEqual(
-      { name: 'dragonKong', points: 1 },
+    expect(result.appliedRules.find(r => r.name === 'dragonKongExposed')).toEqual(
+      { name: 'dragonKongExposed', points: 2 },
     );
+    expect(result.appliedRules.find(r => r.name === 'dragonKongHidden')).toBeUndefined();
     expect(result.appliedRules.find(r => r.name === 'dragonPong')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'exposedKong')).toBeUndefined();
+  });
+
+  it('hidden dragon kong fires dragonKongHidden (3 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'kong', tiles: ['Gd', 'Gd', 'Gd', 'Gd'], concealed: true },
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: true },
+        { type: 'chow', tiles: ['4b', '5b', '6b'], concealed: true },
+        { type: 'chow', tiles: ['7d', '8d', '9d'], concealed: true, winTile: '8d' },
+        { type: 'pair', tiles: ['5b', '5b'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'self-pick',
+      dealer: 'B', dealerRounds: 1, special: [],
+    };
+    const result = calculateScore(hand, win);
+    expect(result.appliedRules.find(r => r.name === 'dragonKongHidden')).toEqual(
+      { name: 'dragonKongHidden', points: 3 },
+    );
+    expect(result.appliedRules.find(r => r.name === 'hiddenKong')).toBeUndefined();
   });
 });
 
 describe('honor component constants', () => {
   it('DRAGON_COMPONENTS covers the per-meld dragon rules', () => {
-    expect(DRAGON_COMPONENTS).toEqual(['dragonPong', 'dragonKong']);
+    expect(DRAGON_COMPONENTS).toEqual(['dragonPong', 'dragonKongExposed', 'dragonKongHidden']);
   });
 
   it('WIND_COMPONENTS covers the per-meld wind rules', () => {
-    expect(WIND_COMPONENTS).toEqual(['windPong', 'windKong']);
+    expect(WIND_COMPONENTS).toEqual(['windPong', 'windKongExposed', 'windKongHidden']);
   });
 
   it('HONOR_COMPONENTS is the union of dragon + wind components', () => {

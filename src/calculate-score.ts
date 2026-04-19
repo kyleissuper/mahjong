@@ -59,16 +59,18 @@ function resolveAbsorption(all: FiredRule[], survivors: FiredRule[] = all): Appl
 
 // Per-meld honor scoring components. Any rule that subsumes an all-honor
 // or honor-heavy hand absorbs these so per-meld bonuses don't leak through.
-export const DRAGON_COMPONENTS = ['dragonPong', 'dragonKong'] as const;
-export const WIND_COMPONENTS = ['windPong', 'windKong'] as const;
+export const DRAGON_COMPONENTS = ['dragonPong', 'dragonKongExposed', 'dragonKongHidden'] as const;
+export const WIND_COMPONENTS = ['windPong', 'windKongExposed', 'windKongHidden'] as const;
 export const HONOR_COMPONENTS = [...DRAGON_COMPONENTS, ...WIND_COMPONENTS] as const;
 
 const rules: Rule[] = [
   { name: 'flower', label: 'Flower', pts: '1 ea.', score: flower },
   { name: 'dragonPong', label: 'Dragon pong', pts: '1 ea.', score: dragonPong },
-  { name: 'dragonKong', label: 'Dragon kong', pts: '1 ea.', score: dragonKong },
+  { name: 'dragonKongExposed', label: 'Dragon kong (exposed)', pts: '2 ea.', score: dragonKongExposed },
+  { name: 'dragonKongHidden', label: 'Dragon kong (hidden)', pts: '3 ea.', score: dragonKongHidden },
   { name: 'windPong', label: 'Wind pong', pts: '1 ea.', score: windPong },
-  { name: 'windKong', label: 'Wind kong', pts: '1 ea.', score: windKong },
+  { name: 'windKongExposed', label: 'Wind kong (exposed)', pts: '2 ea.', score: windKongExposed },
+  { name: 'windKongHidden', label: 'Wind kong (hidden)', pts: '3 ea.', score: windKongHidden },
   { name: 'pairOf258', label: '2/5/8 pair', pts: '1', score: pairOf258 },
   { name: 'canOnlyWinWithOne', label: 'Only one you can win with', pts: '1', score: canOnlyWinWithOne },
   { name: 'allChows', label: 'All chows', pts: '1', score: allChows },
@@ -141,8 +143,14 @@ function dragonPong({ melds }: Hand): number {
   return melds.filter(({ type, tiles: [first] }) => type === 'pong' && isDragon(first)).length;
 }
 
-function dragonKong({ melds }: Hand): number {
-  return melds.filter(({ type, tiles: [first] }) => type === 'kong' && isDragon(first)).length;
+function dragonKongExposed({ melds }: Hand): number {
+  return melds.filter(({ type, concealed, tiles: [first] }) =>
+    type === 'kong' && !concealed && isDragon(first)).length * 2;
+}
+
+function dragonKongHidden({ melds }: Hand): number {
+  return melds.filter(({ type, concealed, tiles: [first] }) =>
+    type === 'kong' && concealed && isDragon(first)).length * 3;
 }
 
 function pairOf258({ melds }: Hand): number {
@@ -214,8 +222,14 @@ function windPong({ melds }: Hand): number {
   return melds.filter(({ type, tiles: [first] }) => type === 'pong' && isWind(first)).length;
 }
 
-function windKong({ melds }: Hand): number {
-  return melds.filter(({ type, tiles: [first] }) => type === 'kong' && isWind(first)).length;
+function windKongExposed({ melds }: Hand): number {
+  return melds.filter(({ type, concealed, tiles: [first] }) =>
+    type === 'kong' && !concealed && isWind(first)).length * 2;
+}
+
+function windKongHidden({ melds }: Hand): number {
+  return melds.filter(({ type, concealed, tiles: [first] }) =>
+    type === 'kong' && concealed && isWind(first)).length * 3;
 }
 
 function allChows(hand: Hand): number {
@@ -417,11 +431,13 @@ function winFromButt(_hand: Hand, { special }: Win): number {
 }
 
 function exposedKong({ melds }: Hand): number {
-  return melds.filter(({ type, concealed }) => type === 'kong' && !concealed).length;
+  return melds.filter(({ type, concealed, tiles: [first] }) =>
+    type === 'kong' && !concealed && !isHonor(first)).length;
 }
 
 function hiddenKong({ melds }: Hand): number {
-  return melds.filter(({ type, concealed }) => type === 'kong' && concealed).length * 2;
+  return melds.filter(({ type, concealed, tiles: [first] }) =>
+    type === 'kong' && concealed && !isHonor(first)).length * 2;
 }
 
 function stolenKong(_hand: Hand, { method }: Win): number {

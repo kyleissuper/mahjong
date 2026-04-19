@@ -9,7 +9,7 @@ function buildCategories(rules: RuleInfo[]) {
     byPts.get(key)!.push(r);
   }
 
-  const order = ['1', '3', '4', '6', '8', '12', '14', '16', '18', '20'];
+  const order = ['1', '2', '3', '4', '6', '8', '12', '14', '16', '18', '20'];
   return order
     .filter(k => byPts.has(k))
     .map(k => ({ pts: k, rules: byPts.get(k)! }));

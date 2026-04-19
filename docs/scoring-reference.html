@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mahjong Scoring Reference</title>
+<style>
+@page { size: letter landscape; margin: 0.4in; }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  color: #111;
+  background: #fff;
+  padding: 0.4in;
+  font-size: 9pt;
+  line-height: 1.2;
+}
+
+@media print {
+  body { padding: 0; }
+}
+
+.page {
+  max-width: 10.2in;
+  margin: 0 auto;
+}
+
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1.25px solid #111;
+  padding-bottom: 3px;
+  margin-bottom: 6px;
+}
+
+h1 {
+  font-size: 13pt;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  font-size: 8pt;
+  color: #555;
+}
+
+.columns {
+  column-count: 2;
+  column-gap: 0.35in;
+  column-rule: 1px solid #ddd;
+}
+
+.category {
+  break-inside: avoid;
+  margin-bottom: 5px;
+}
+
+.category-title {
+  font-size: 7.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #888;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 1px;
+  margin-bottom: 2px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.category-title .pts {
+  color: #111;
+  letter-spacing: 0;
+}
+
+.rule {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.5px 0;
+  font-size: 8.5pt;
+}
+
+.rule-name {
+  flex: 1;
+  padding-right: 8px;
+}
+
+.rule-pts {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #444;
+  white-space: nowrap;
+}
+
+.payments {
+  break-inside: avoid;
+  margin-top: 2px;
+  padding: 5px 8px;
+  background: #f4f4f4;
+  border-left: 2.5px solid #111;
+  font-size: 8pt;
+  line-height: 1.4;
+}
+
+.payments strong { font-weight: 700; }
+
+footer {
+  margin-top: 6px;
+  padding-top: 3px;
+  border-top: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  font-size: 7pt;
+  color: #888;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <h1>Mahjong Scoring Reference</h1>
+  <div class="subtitle">Hand-value table &middot; "ea." = per occurrence</div>
+</header>
+
+<div class="columns">
+
+  <div class="category">
+    <div class="category-title"><span>Ones</span><span class="pts">1 pt</span></div>
+    <div class="rule"><span class="rule-name">Flower</span><span class="rule-pts">1 ea.</span></div>
+    <div class="rule"><span class="rule-name">Dragon pong</span><span class="rule-pts">1 ea.</span></div>
+    <div class="rule"><span class="rule-name">Wind pong</span><span class="rule-pts">1 ea.</span></div>
+    <div class="rule"><span class="rule-name">Exposed kong (number suit)</span><span class="rule-pts">1 ea.</span></div>
+    <div class="rule"><span class="rule-name">Split kong</span><span class="rule-pts">1 ea.</span></div>
+    <div class="rule"><span class="rule-name">Double chow (2 identical)</span><span class="rule-pts">1 ea.</span></div>
+    <div class="rule"><span class="rule-name">2 / 5 / 8 pair</span><span class="rule-pts">1</span></div>
+    <div class="rule"><span class="rule-name">Only one you can win with</span><span class="rule-pts">1</span></div>
+    <div class="rule"><span class="rule-name">All chows</span><span class="rule-pts">1</span></div>
+    <div class="rule"><span class="rule-name">Only 2 suits</span><span class="rule-pts">1</span></div>
+    <div class="rule"><span class="rule-name">No 1s / 9s (has honors)</span><span class="rule-pts">1</span></div>
+    <div class="rule"><span class="rule-name">3 suits + wind + dragon</span><span class="rule-pts">1</span></div>
+    <div class="rule"><span class="rule-name">Self-pick</span><span class="rule-pts">1</span></div>
+    <div class="rule"><span class="rule-name">Last wall tile</span><span class="rule-pts">1</span></div>
+    <div class="rule"><span class="rule-name">Last discard</span><span class="rule-pts">1</span></div>
+    <div class="rule"><span class="rule-name">Win from butt (replacement draw)</span><span class="rule-pts">1</span></div>
+    <div class="rule"><span class="rule-name">Stolen kong</span><span class="rule-pts">1</span></div>
+    <div class="rule"><span class="rule-name">All from others</span><span class="rule-pts">1</span></div>
+    <div class="rule"><span class="rule-name">Clean doorstep (all concealed)</span><span class="rule-pts">1</span></div>
+  </div>
+
+  <div class="category">
+    <div class="category-title"><span>Twos</span><span class="pts">2 pts</span></div>
+    <div class="rule"><span class="rule-name">Hidden kong (number suit)</span><span class="rule-pts">2 ea.</span></div>
+    <div class="rule"><span class="rule-name">Dragon kong (exposed)</span><span class="rule-pts">2 ea.</span></div>
+    <div class="rule"><span class="rule-name">Wind kong (exposed)</span><span class="rule-pts">2 ea.</span></div>
+  </div>
+
+  <div class="category">
+    <div class="category-title"><span>Threes</span><span class="pts">3 pts</span></div>
+    <div class="rule"><span class="rule-name">All concealed self-pick</span><span class="rule-pts">3</span></div>
+    <div class="rule"><span class="rule-name">No flowers / honors</span><span class="rule-pts">3</span></div>
+    <div class="rule"><span class="rule-name">No 1s / 9s, no honors</span><span class="rule-pts">3</span></div>
+    <div class="rule"><span class="rule-name">1&ndash;9 chain (same suit)</span><span class="rule-pts">3</span></div>
+    <div class="rule"><span class="rule-name">Dragon kong (hidden)</span><span class="rule-pts">3 ea.</span></div>
+    <div class="rule"><span class="rule-name">Wind kong (hidden)</span><span class="rule-pts">3 ea.</span></div>
+  </div>
+
+  <div class="category">
+    <div class="category-title"><span>Fours</span><span class="pts">4 pts</span></div>
+    <div class="rule"><span class="rule-name">All pongs</span><span class="rule-pts">4</span></div>
+    <div class="rule"><span class="rule-name">3 hidden pongs</span><span class="rule-pts">4</span></div>
+    <div class="rule"><span class="rule-name">3 consec. pongs (same suit)</span><span class="rule-pts">4</span></div>
+    <div class="rule"><span class="rule-name">3 suit chow (same rank, 3 suits)</span><span class="rule-pts">4</span></div>
+    <div class="rule"><span class="rule-name">3 suit pongs (same value, 3 suits)</span><span class="rule-pts">4</span></div>
+    <div class="rule"><span class="rule-name">Semi-pure (1 suit + honors)</span><span class="rule-pts">4</span></div>
+    <div class="rule"><span class="rule-name">All sets have 1 / 9 (has honors)</span><span class="rule-pts">4</span></div>
+    <div class="rule"><span class="rule-name">All sets have 1 / 9 (no honors)</span><span class="rule-pts">4</span></div>
+  </div>
+
+  <div class="category">
+    <div class="category-title"><span>Sixes</span><span class="pts">6 pts</span></div>
+    <div class="rule"><span class="rule-name">2 kong mahjong</span><span class="rule-pts">6</span></div>
+  </div>
+
+  <div class="category">
+    <div class="category-title"><span>Eights</span><span class="pts">8 pts</span></div>
+    <div class="rule"><span class="rule-name">Little dragons (2 pongs + pair)</span><span class="rule-pts">8</span></div>
+    <div class="rule"><span class="rule-name">4 consec. pongs (same suit)</span><span class="rule-pts">8</span></div>
+    <div class="rule"><span class="rule-name">All 1s / 9s (has honors)</span><span class="rule-pts">8</span></div>
+    <div class="rule"><span class="rule-name">Pure (1 suit, no honors)</span><span class="rule-pts">8</span></div>
+  </div>
+
+  <div class="category">
+    <div class="category-title"><span>Twelves</span><span class="pts">12 pts</span></div>
+    <div class="rule"><span class="rule-name">2 double chows</span><span class="rule-pts">12</span></div>
+    <div class="rule"><span class="rule-name">Little winds (3 pongs + pair)</span><span class="rule-pts">12</span></div>
+    <div class="rule"><span class="rule-name">Big dragons (3 pongs)</span><span class="rule-pts">12</span></div>
+    <div class="rule"><span class="rule-name">4 hidden pongs</span><span class="rule-pts">12</span></div>
+    <div class="rule"><span class="rule-name">All pairs (7 pairs)</span><span class="rule-pts">12</span></div>
+    <div class="rule"><span class="rule-name">All honors</span><span class="rule-pts">12</span></div>
+    <div class="rule"><span class="rule-name">Prodigy (ready in first 4 draws)</span><span class="rule-pts">12</span></div>
+  </div>
+
+  <div class="category">
+    <div class="category-title"><span>Fourteens</span><span class="pts">14 pts</span></div>
+    <div class="rule"><span class="rule-name">All kongs</span><span class="rule-pts">14</span></div>
+    <div class="rule"><span class="rule-name">13 orphans</span><span class="rule-pts">14</span></div>
+    <div class="rule"><span class="rule-name">Jade Dragon (all bamboo + green dragon)</span><span class="rule-pts">14</span></div>
+    <div class="rule"><span class="rule-name">Ruby Dragon (all characters + red dragon)</span><span class="rule-pts">14</span></div>
+    <div class="rule"><span class="rule-name">Pearl Dragon (all dots + white dragon)</span><span class="rule-pts">14</span></div>
+  </div>
+
+  <div class="category">
+    <div class="category-title"><span>Sixteens</span><span class="pts">16 pts</span></div>
+    <div class="rule"><span class="rule-name">All 1s / 9s</span><span class="rule-pts">16</span></div>
+    <div class="rule"><span class="rule-name">Earthly hand (win on first discard)</span><span class="rule-pts">16</span></div>
+    <div class="rule"><span class="rule-name">Heavenly gates (1112345678999 + any)</span><span class="rule-pts">16</span></div>
+  </div>
+
+  <div class="category">
+    <div class="category-title"><span>Eighteens</span><span class="pts">18 pts</span></div>
+    <div class="rule"><span class="rule-name">Big winds (4 pongs)</span><span class="rule-pts">18</span></div>
+  </div>
+
+  <div class="category">
+    <div class="category-title"><span>Twenties</span><span class="pts">20 pts</span></div>
+    <div class="rule"><span class="rule-name">Heavenly hand (dealer wins on deal)</span><span class="rule-pts">20</span></div>
+  </div>
+
+  <div class="payments">
+    <strong>Payments.</strong> Loser pays winner the hand value. Dealer involvement adds +1 (+2 per extra round). On self-pick, all non-winners pay.
+  </div>
+
+</div>
+
+<footer>
+  <span>Mahjong Scorer &middot; github.com/kyleissuper/mahjong</span>
+</footer>
+
+</div>
+</body>
+</html>
