@@ -6,6 +6,11 @@
   <meta name="theme-color" content="#f5f0e8" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🀄</text></svg>" />
   <title>Mahjong Scoring Helper</title>
+  <script>
+    // Chatbots sometimes build /score/?d=... because that's the URL they fetched.
+    // Forward to the main app at /?d=... so the hand loads wherever they put it.
+    if (location.search) location.replace('/' + location.search);
+  </script>
   <style>
     body { font-family: -apple-system, system-ui, sans-serif; max-width: 42rem; margin: 0 auto; padding: 2rem 1rem 4rem; color: #222; line-height: 1.5; }
     h1 { margin-bottom: 0.5rem; }
