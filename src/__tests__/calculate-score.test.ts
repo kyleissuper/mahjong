@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateScore } from '../calculate-score.js';
+import { calculateScore, DRAGON_COMPONENTS, WIND_COMPONENTS, HONOR_COMPONENTS } from '../calculate-score.js';
 import type { Hand, Win } from '../types.js';
 
 describe('calculateScore', () => {
@@ -1658,5 +1658,19 @@ describe('calculateScore', () => {
       { name: 'dragonKong', points: 1 },
     );
     expect(result.appliedRules.find(r => r.name === 'dragonPong')).toBeUndefined();
+  });
+});
+
+describe('honor component constants', () => {
+  it('DRAGON_COMPONENTS covers the per-meld dragon rules', () => {
+    expect(DRAGON_COMPONENTS).toEqual(['dragonPong', 'dragonKong']);
+  });
+
+  it('WIND_COMPONENTS covers the per-meld wind rules', () => {
+    expect(WIND_COMPONENTS).toEqual(['windPong', 'windKong']);
+  });
+
+  it('HONOR_COMPONENTS is the union of dragon + wind components', () => {
+    expect(HONOR_COMPONENTS).toEqual([...DRAGON_COMPONENTS, ...WIND_COMPONENTS]);
   });
 });
