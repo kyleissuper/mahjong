@@ -666,6 +666,34 @@ describe('calculateScore', () => {
     expect(result.scores).toEqual({ A: 0, B: 0, C: 13, D: -13 });
   });
 
+  it('all honors with a flower — allHonors still fires, absorbs set-level variants', () => {
+    // Regression: a bonus flower meld must not prevent allHonors from firing,
+    // otherwise allSetsHave19WithHonors / noTerminalsWithHonors / windPong /
+    // allPongs all leak into the breakdown (see screenshot: 4 honor pongs +
+    // dragon pair + flower showed the individual rules instead of allHonors).
+    const hand: Hand = {
+      melds: [
+        { type: 'flower', tiles: ['F'], concealed: false },
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'pong', tiles: ['Gd', 'Gd', 'Gd'], concealed: false },
+        { type: 'pong', tiles: ['Sw', 'Sw', 'Sw'], concealed: true },
+        { type: 'pong', tiles: ['Rd', 'Rd', 'Rd'], concealed: true },
+        { type: 'pair', tiles: ['Wd', 'Wd'], concealed: true, winTile: 'Wd' },
+      ],
+    };
+
+    const result = calculateScore(hand, discardWin);
+    const fired = (n: string) => result.appliedRules.find(r => r.name === n);
+
+    expect(fired('allHonors')).toEqual({ name: 'allHonors', points: 12 });
+    expect(fired('flower')).toEqual({ name: 'flower', points: 1 });
+    expect(fired('littleDragons')).toEqual({ name: 'littleDragons', points: 8 });
+    // allHonors absorbs these
+    for (const absorbed of ['allPongs', 'windPong', 'dragonPong', 'allSetsHave19WithHonors', 'noTerminalsWithHonors', 'only2Suits']) {
+      expect(fired(absorbed)).toBeUndefined();
+    }
+  });
+
   it('Hand 21 — all pairs, self-pick (13 pts)', () => {
     const hand: Hand = {
       melds: [
