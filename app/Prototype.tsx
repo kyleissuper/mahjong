@@ -3,6 +3,7 @@ import type { Tile, MeldType, Meld, Hand, Win, ScoreResult } from '../src/types.
 import { calculateScore } from '../src/calculate-score.js';
 import { isHandReady } from '../src/validate-hand.js';
 import { scoreFromParam } from '../src/decode-score-param.js';
+import { normalizePlayers } from './normalize-players.js';
 import { TileImage } from './TileImage.tsx';
 import { ScoringReference } from './ScoringReference.tsx';
 import './prototype.css';
@@ -598,7 +599,7 @@ function readInitialFromUrl(): InitialFromUrl {
   const decoded = scoreFromParam(d);
   if (!decoded.ok) return { state: DEFAULT_STATE, win: DEFAULT_WIN, error: decoded.error };
 
-  return { state: stateFromHand(decoded.hand), win: decoded.win, error: null };
+  return { state: stateFromHand(decoded.hand), win: normalizePlayers(decoded.win), error: null };
 }
 
 function stateFromHand(hand: Hand): State {
