@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import type { Tile, MeldType, Meld, Win, ScoreResult } from '../src/types.js';
+import type { Tile, MeldType, Meld, Hand, Win, ScoreResult } from '../src/types.js';
 import { calculateScore } from '../src/calculate-score.js';
 import { isHandReady } from '../src/validate-hand.js';
+import { scoreFromParam } from '../src/decode-score-param.js';
 import { TileImage } from './TileImage.tsx';
 import { ScoringReference } from './ScoringReference.tsx';
 import './prototype.css';
@@ -172,23 +173,15 @@ function toScoringHand(state: State): Meld[] {
 // --- Main component ---
 
 export function Prototype() {
-  const [state, setState] = useState<State>({
-    melds: [],
-    flowers: 0,
-    active: null,
-    phase: 'entering',
-    winMeld: null,
-    winTile: null,
-  });
+  const initial = useMemo(readInitialFromUrl, []);
+
+  const [state, setState] = useState<State>(initial.state);
   const [showReference, setShowReference] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(initial.error);
 
   const { melds, flowers, active, phase, winMeld, winTile } = state;
 
-  const [win, setWin] = useState<Partial<Win>>({
-    method: 'discard',
-    dealerRounds: 1,
-    special: [],
-  });
+  const [win, setWin] = useState<Partial<Win>>(initial.win);
 
   const scoringMelds = useMemo(() => toScoringMelds(state), [melds, flowers]);
   const handReady = isHandReady({ melds: scoringMelds });
@@ -295,6 +288,11 @@ export function Prototype() {
   function reset() {
     setState({ melds: [], flowers: 0, active: null, phase: 'entering', winMeld: null, winTile: null });
     setWin({ method: 'discard', dealerRounds: 1, special: [], winner: undefined, dealer: undefined, from: undefined });
+    setLoadError(null);
+    // Drop the ?d= param so a refresh doesn't resurrect the prior hand.
+    if (window.location.search) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }
 
   const isEntering = phase === 'entering';
@@ -373,6 +371,13 @@ export function Prototype() {
       </div>
 
       {showReference && <ScoringReference onClose={() => setShowReference(false)} />}
+
+      {loadError && (
+        <div className="proto-load-error">
+          <span>{loadError}</span>
+          <button onClick={() => setLoadError(null)} aria-label="Dismiss">×</button>
+        </div>
+      )}
 
       {/* Hand display */}
       <div className="proto-hand">
@@ -570,4 +575,47 @@ export function Prototype() {
       )}
     </div>
   );
+}
+
+// --- Initial state from URL (?d=<base64url-json>) ---
+
+const DEFAULT_STATE: State = {
+  melds: [], flowers: 0, active: null, phase: 'entering',
+  winMeld: null, winTile: null,
+};
+const DEFAULT_WIN: Partial<Win> = { method: 'discard', dealerRounds: 1, special: [] };
+
+interface InitialFromUrl {
+  state: State;
+  win: Partial<Win>;
+  error: string | null;
+}
+
+function readInitialFromUrl(): InitialFromUrl {
+  const d = new URLSearchParams(window.location.search).get('d');
+  if (!d) return { state: DEFAULT_STATE, win: DEFAULT_WIN, error: null };
+
+  const decoded = scoreFromParam(d);
+  if (!decoded.ok) return { state: DEFAULT_STATE, win: DEFAULT_WIN, error: decoded.error };
+
+  return { state: stateFromHand(decoded.hand), win: decoded.win, error: null };
+}
+
+function stateFromHand(hand: Hand): State {
+  const melds: EditableMeld[] = [];
+  let flowers = 0;
+  let winMeld: number | null = null;
+  let winTile: number | null = null;
+
+  for (const m of hand.melds) {
+    if (m.type === 'flower') { flowers = m.tiles.length; continue; }
+    const editIdx = melds.length;
+    melds.push({ tiles: m.tiles, concealed: m.concealed });
+    if (m.winTile) {
+      const tileIdx = m.tiles.indexOf(m.winTile);
+      if (tileIdx >= 0) { winMeld = editIdx; winTile = tileIdx; }
+    }
+  }
+
+  return { melds, flowers, active: null, phase: 'done', winMeld, winTile };
 }

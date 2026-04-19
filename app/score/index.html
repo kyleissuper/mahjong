@@ -6,10 +6,21 @@
   <meta name="theme-color" content="#f5f0e8" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🀄</text></svg>" />
   <title>Mahjong Scoring Helper</title>
+  <style>
+    body { font-family: -apple-system, system-ui, sans-serif; max-width: 42rem; margin: 0 auto; padding: 2rem 1rem 4rem; color: #222; line-height: 1.5; }
+    h1 { margin-bottom: 0.5rem; }
+    h2 { margin: 1.75rem 0 0.5rem; border-bottom: 1px solid #ddd; padding-bottom: 0.25rem; }
+    code { font-family: ui-monospace, monospace; font-size: 0.9em; background: #f0f0f0; padding: 0.05em 0.3em; border-radius: 3px; }
+    pre { background: #fafafa; border: 1px solid #ddd; border-radius: 4px; padding: 0.75rem; overflow-x: auto; }
+    pre code { background: transparent; padding: 0; }
+    table { border-collapse: collapse; margin: 0.5rem 0; }
+    th, td { text-align: left; padding: 0.25rem 0.75rem 0.25rem 0; border-bottom: 1px solid #eee; }
+    a { color: #2a7f3e; word-break: break-all; }
+    @media (prefers-color-scheme: dark) { body { background: #111; color: #ddd; } code, pre { background: #1e1e1e; border-color: #333; } h2 { border-color: #333; } th, td { border-color: #2a2a2a; } }
+  </style>
 </head>
 <body>
-  <div id="result"></div>
-  <main id="instructions">
+  <main>
     <h1>Mahjong Scoring Helper — Hong Kong style</h1>
 
     <p>You (the chatbot) have been asked to help someone score a Hong Kong mahjong hand. Your job is to transcribe the hand, gather the win context, then produce a clickable URL that renders the scoring result. <strong>Do not fetch the URL yourself</strong> — output it as a link and the user clicks it to see the score in their browser.</p>
@@ -22,7 +33,7 @@
       <li>Ask the user for the win context you can't see in the photo: who won, who's dealer, self-pick vs discard (and who discarded), how many consecutive rounds the dealer has won, and any special conditions.</li>
       <li>Assemble the JSON payload (shape below).</li>
       <li>URL-safe base64 encode the JSON (base64url: <code>-</code> and <code>_</code> instead of <code>+</code> and <code>/</code>; strip <code>=</code> padding).</li>
-      <li>Tell the user: <strong>"Click this link to see the score: &lt;origin-of-this-page&gt;/score?d=&lt;BASE64&gt;"</strong></li>
+      <li>Tell the user: <strong>"Click this link to see the score: &lt;origin&gt;/?d=&lt;BASE64&gt;"</strong> — note this points to the app root (<code>/</code>), not <code>/score</code>. The URL opens the Mahjong Scorer app with the hand pre-loaded, ready to show the score (and editable if the user spots a mistake).</li>
     </ol>
 
     <h2>Tile encoding</h2>
@@ -90,8 +101,8 @@ interface Meld {
   }
 }</code></pre>
 
-    <p>Base64url-encoded and embedded in a score URL (click to see the result):</p>
-    <p><a href="?d=eyJoYW5kIjp7Im1lbGRzIjpbeyJ0eXBlIjoiY2hvdyIsInRpbGVzIjpbIjFiIiwiMmIiLCIzYiJdLCJjb25jZWFsZWQiOnRydWV9LHsidHlwZSI6ImNob3ciLCJ0aWxlcyI6WyI0YiIsIjViIiwiNmIiXSwiY29uY2VhbGVkIjp0cnVlfSx7InR5cGUiOiJjaG93IiwidGlsZXMiOlsiN2QiLCI4ZCIsIjlkIl0sImNvbmNlYWxlZCI6dHJ1ZSwid2luVGlsZSI6IjhkIn0seyJ0eXBlIjoicG9uZyIsInRpbGVzIjpbIlJkIiwiUmQiLCJSZCJdLCJjb25jZWFsZWQiOmZhbHNlfSx7InR5cGUiOiJwYWlyIiwidGlsZXMiOlsiNWIiLCI1YiJdLCJjb25jZWFsZWQiOnRydWV9XX0sIndpbiI6eyJwbGF5ZXJzIjpbIkEiLCJCIiwiQyIsIkQiXSwid2lubmVyIjoiQSIsImRlYWxlciI6IkIiLCJtZXRob2QiOiJkaXNjYXJkIiwiZnJvbSI6IkQiLCJkZWFsZXJSb3VuZHMiOjEsInNwZWNpYWwiOltdfX0"><code>./score?d=eyJoYW5kIjp7...</code></a></p>
+    <p>Base64url-encoded into a URL (click to open the Mahjong Scorer with this hand pre-loaded):</p>
+    <p><a href="/?d=eyJoYW5kIjp7Im1lbGRzIjpbeyJ0eXBlIjoiY2hvdyIsInRpbGVzIjpbIjFiIiwiMmIiLCIzYiJdLCJjb25jZWFsZWQiOnRydWV9LHsidHlwZSI6ImNob3ciLCJ0aWxlcyI6WyI0YiIsIjViIiwiNmIiXSwiY29uY2VhbGVkIjp0cnVlfSx7InR5cGUiOiJjaG93IiwidGlsZXMiOlsiN2QiLCI4ZCIsIjlkIl0sImNvbmNlYWxlZCI6dHJ1ZSwid2luVGlsZSI6IjhkIn0seyJ0eXBlIjoicG9uZyIsInRpbGVzIjpbIlJkIiwiUmQiLCJSZCJdLCJjb25jZWFsZWQiOmZhbHNlfSx7InR5cGUiOiJwYWlyIiwidGlsZXMiOlsiNWIiLCI1YiJdLCJjb25jZWFsZWQiOnRydWV9XX0sIndpbiI6eyJwbGF5ZXJzIjpbIkEiLCJCIiwiQyIsIkQiXSwid2lubmVyIjoiQSIsImRlYWxlciI6IkIiLCJtZXRob2QiOiJkaXNjYXJkIiwiZnJvbSI6IkQiLCJkZWFsZXJSb3VuZHMiOjEsInNwZWNpYWwiOltdfX0"><code>/?d=eyJoYW5kIjp7...</code></a></p>
 
     <h2>Notes for AI callers</h2>
     <ul>
@@ -101,6 +112,5 @@ interface Meld {
       <li>If win context is missing (winner, dealer, method), ask the user — don't guess.</li>
     </ul>
   </main>
-  <script type="module" src="./main.tsx"></script>
 </body>
 </html>
