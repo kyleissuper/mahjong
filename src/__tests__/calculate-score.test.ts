@@ -140,7 +140,7 @@ describe('calculateScore', () => {
     expect(result.scores).toEqual({ A: 60, B: -20, C: -20, D: -20 });
   });
 
-  it('Hand 5 — 1-9 chain, discard win (4 pts)', () => {
+  it('Hand 5 — 1-9 chain, clean doorstep, discard win (5 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'chow', tiles: ['1d', '2d', '3d'], concealed: true },
@@ -165,10 +165,11 @@ describe('calculateScore', () => {
 
     expect(result.appliedRules).toEqual([
       { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'cleanDoorstep', points: 1 },
       { name: 'oneToNineChain', points: 3 },
     ]);
-    expect(result.handValue).toBe(4);
-    expect(result.scores).toEqual({ A: 0, B: 0, C: 4, D: -4 });
+    expect(result.handValue).toBe(5);
+    expect(result.scores).toEqual({ A: 0, B: 0, C: 5, D: -5 });
   });
 
   it('Hand 6 — clean doorstep & self-pick, three hidden pongs, dealer extra round (12 pts)', () => {
@@ -339,7 +340,7 @@ describe('calculateScore', () => {
     expect(result.scores).toEqual({ A: -27, B: 79, C: -26, D: -26 });
   });
 
-  it('Hand 11 — 1-9 chain, split kong (9 pts)', () => {
+  it('Hand 11 — 1-9 chain, split kong, clean doorstep (10 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: true },
@@ -366,11 +367,12 @@ describe('calculateScore', () => {
       { name: 'pairOf258', points: 1 },
       { name: 'only2Suits', points: 1 },
       { name: 'splitKong', points: 1 },
+      { name: 'cleanDoorstep', points: 1 },
       { name: 'noFlowersNoHonors', points: 3 },
       { name: 'oneToNineChain', points: 3 },
     ]);
-    expect(result.handValue).toBe(9);
-    expect(result.scores).toEqual({ A: -9, B: 0, C: 0, D: 9 });
+    expect(result.handValue).toBe(10);
+    expect(result.scores).toEqual({ A: -10, B: 0, C: 0, D: 10 });
   });
 
   it('Hand 12 — three consecutive pongs, no terminals/honors (11 pts)', () => {
@@ -471,7 +473,7 @@ describe('calculateScore', () => {
     expect(result.scores).toEqual({ A: 8, B: -8, C: 0, D: 0 });
   });
 
-  it('Hand 15 — three suit chow, double chow, all chows (10 pts)', () => {
+  it('Hand 15 — three suit chow, double chow, all chows, clean doorstep (11 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'chow', tiles: ['3b', '4b', '5b'], concealed: true },
@@ -497,12 +499,13 @@ describe('calculateScore', () => {
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
       { name: 'allChows', points: 1 },
+      { name: 'cleanDoorstep', points: 1 },
       { name: 'doubleChow', points: 1 },
       { name: 'threeSuitChow', points: 4 },
       { name: 'noTerminalsNoHonors', points: 3 },
     ]);
-    expect(result.handValue).toBe(10);
-    expect(result.scores).toEqual({ A: 11, B: 0, C: 0, D: -11 });
+    expect(result.handValue).toBe(11);
+    expect(result.scores).toEqual({ A: 12, B: 0, C: 0, D: -12 });
   });
 
   it('Hand 16 — all 1s/9s, three suit pongs, dealer extra round 4 (26 pts)', () => {
@@ -874,7 +877,7 @@ describe('calculateScore', () => {
     expect(result.scores).toEqual({ A: 12, B: -12, C: 0, D: 0 });
   });
 
-  it('Hand 23 — two double chows (18 pts)', () => {
+  it('Hand 23 — two double chows, clean doorstep (19 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'chow', tiles: ['2b', '3b', '4b'], concealed: true },
@@ -901,11 +904,12 @@ describe('calculateScore', () => {
       { name: 'pairOf258', points: 1 },
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'allChows', points: 1 },
+      { name: 'cleanDoorstep', points: 1 },
       { name: 'noFlowersNoHonors', points: 3 },
       { name: 'twoDoubleChows', points: 12 },
     ]);
-    expect(result.handValue).toBe(18);
-    expect(result.scores).toEqual({ A: 0, B: 0, C: -18, D: 18 });
+    expect(result.handValue).toBe(19);
+    expect(result.scores).toEqual({ A: 0, B: 0, C: -19, D: 19 });
   });
 
   it('Hand 25 — heavenly gates (17 pts)', () => {
@@ -1095,7 +1099,7 @@ describe('calculateScore', () => {
     expect(result.scores).toEqual({ A: -27, B: 79, C: -26, D: -26 });
   });
 
-  it('Hand 30 — prodigy hand (17 pts)', () => {
+  it('Hand 30 — prodigy hand, clean doorstep (18 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'chow', tiles: ['4b', '5b', '6b'], concealed: true, winTile: '5b' },
@@ -1121,11 +1125,12 @@ describe('calculateScore', () => {
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
       { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'cleanDoorstep', points: 1 },
       { name: 'noFlowersNoHonors', points: 3 },
       { name: 'prodigyHand', points: 12 },
     ]);
-    expect(result.handValue).toBe(17);
-    expect(result.scores).toEqual({ A: 0, B: 0, C: 17, D: -17 });
+    expect(result.handValue).toBe(18);
+    expect(result.scores).toEqual({ A: 0, B: 0, C: 18, D: -18 });
   });
 
   it('Hand 31 — three suits w/ wind and dragon (2 pts)', () => {
@@ -1420,11 +1425,12 @@ describe('calculateScore', () => {
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
       { name: 'allChows', points: 1 },
+      { name: 'cleanDoorstep', points: 1 },
       { name: 'doubleChow', points: 1 },
       { name: 'threeSuitChow', points: 4 },
       { name: 'noTerminalsNoHonors', points: 3 },
     ]);
-    expect(result.handValue).toBe(10);
+    expect(result.handValue).toBe(11);
   });
 
   // --- Edge case battery ---
@@ -1599,14 +1605,15 @@ describe('calculateScore', () => {
     );
   });
 
-  it('discard win treats the winning meld as exposed even if entered as concealed', () => {
+  it('discard win keeps clean doorstep but exposes the winning meld for hidden-pong scoring', () => {
     const hand: Hand = {
       melds: [
-        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: true },
-        { type: 'chow', tiles: ['4b', '5b', '6b'], concealed: true },
-        { type: 'chow', tiles: ['7d', '8d', '9d'], concealed: true, winTile: '8d' },
-        { type: 'pong', tiles: ['Rd', 'Rd', 'Rd'], concealed: true },
-        { type: 'pair', tiles: ['5b', '5b'], concealed: true },
+        // Winning pong completed by the discard: NOT a hidden pong, but the door stays clean.
+        { type: 'pong', tiles: ['2d', '2d', '2d'], concealed: true, winTile: '2d' },
+        { type: 'pong', tiles: ['6d', '6d', '6d'], concealed: true },
+        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: true },
+        { type: 'chow', tiles: ['4c', '5c', '6c'], concealed: true },
+        { type: 'pair', tiles: ['8c', '8c'], concealed: true },
       ],
     };
     const win: Win = {
@@ -1614,8 +1621,12 @@ describe('calculateScore', () => {
       from: 'D', dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = calculateScore(hand, win);
-    // The winning chow came from a discard, so the hand is NOT all concealed
-    expect(result.appliedRules.find(r => r.name === 'cleanDoorstep')).toBeUndefined();
+    // 門前清 still holds — taking the discard that *completes* the hand doesn't dirty the door.
+    expect(result.appliedRules.find(r => r.name === 'cleanDoorstep')).toEqual(
+      { name: 'cleanDoorstep', points: 1 },
+    );
+    // ...but the pong finished by that discard counts as exposed, so only two pongs are hidden.
+    expect(result.appliedRules.find(r => r.name === 'threeHiddenPongs')).toBeUndefined();
   });
 
   it('exposed wind kong fires windKongExposed (2 pts) without stacking generic kong bonus', () => {

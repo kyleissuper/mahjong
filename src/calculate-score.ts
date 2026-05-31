@@ -451,7 +451,10 @@ function allFromOthers(hand: Hand): number {
 
 function cleanDoorstep(hand: Hand): number {
   const s = sets(hand);
-  return s.length > 0 && handMelds(hand).every(({ concealed }) => concealed) ? 1 : 0;
+  // A hand stays "clean" (門前清) even on a discard win: only claiming discards to
+  // *build* sets breaks it, not taking the discard that completes the hand. The
+  // winning meld (winTile set) was concealed until that final tile, so it still counts.
+  return s.length > 0 && handMelds(hand).every(m => m.concealed || m.winTile !== undefined) ? 1 : 0;
 }
 
 function cleanDoorstepAndSelfPick(hand: Hand, win: Win): number {
