@@ -451,10 +451,7 @@ function allFromOthers(hand: Hand): number {
 
 function cleanDoorstep(hand: Hand): number {
   const s = sets(hand);
-  // Clean doorstep (門前清) allows the winning tile to come from a discard — only
-  // claiming discards to *build* sets breaks it. normalizeHand has already flipped
-  // the winning meld to `concealed: false` (needed for hidden-triplet and
-  // all-from-others scoring), so re-include it here via winTile.
+  // Clean doorstep (門前清) allows the winning tile to come from a discard.
   return s.length > 0 && handMelds(hand).every(m => m.concealed || m.winTile !== undefined) ? 1 : 0;
 }
 
