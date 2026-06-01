@@ -452,7 +452,7 @@ function allFromOthers(hand: Hand): number {
 function cleanDoorstep(hand: Hand): number {
   const s = sets(hand);
   // Clean doorstep (門前清) allows the winning tile to come from a discard.
-  return s.length > 0 && handMelds(hand).every(m => m.concealed || m.winTile !== undefined) ? 1 : 0;
+  return s.length > 0 && handMelds(hand).every(m => m.concealed || m.winTile) ? 1 : 0;
 }
 
 function cleanDoorstepAndSelfPick(hand: Hand, win: Win): number {
