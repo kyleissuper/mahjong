@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 import type { Meld } from '../src/types.js';
 
 // Cap the captured frame at 2048px on the long edge — well above what tile
@@ -147,7 +148,9 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[]) => void; o
     img.src = url;
   }
 
-  return (
+  // Portal to <body> so the overlay escapes the app's nested stacking contexts
+  // (the bottom sheet and sticky app bar) and truly covers the viewport.
+  return createPortal(
     <div style={overlayStyle}>
       <button aria-label="Close" onClick={onClose} style={closeStyle}>✕</button>
 
@@ -184,12 +187,13 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[]) => void; o
           </button>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
 const overlayStyle: CSSProperties = {
-  position: 'fixed', inset: 0, zIndex: 1000, background: '#000',
+  position: 'fixed', inset: 0, zIndex: 2000, background: '#000',
   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
 };
 const videoStyle: CSSProperties = {
