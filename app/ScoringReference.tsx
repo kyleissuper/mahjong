@@ -19,9 +19,11 @@ const categories = buildCategories(getRuleReference());
 
 interface Props {
   onClose: () => void;
+  scanEnabled: boolean;
+  onToggleScan: () => void;
 }
 
-export function ScoringReference({ onClose }: Props) {
+export function ScoringReference({ onClose, scanEnabled, onToggleScan }: Props) {
   return (
     <div className="ref-overlay">
       <div className="ref-sheet">
@@ -50,6 +52,22 @@ export function ScoringReference({ onClose }: Props) {
           <div className="ref-footer">
             <div className="ref-footer-name">Mahjong Scorer <span className="ref-footer-badge">beta</span></div>
             <a href="https://github.com/kyleissuper/mahjong" target="_blank" rel="noopener noreferrer">Open source on GitHub</a>
+            <button
+              onClick={onToggleScan}
+              style={{
+                marginTop: 12,
+                background: 'none',
+                border: 'none',
+                padding: 4,
+                cursor: 'pointer',
+                fontSize: '0.7rem',
+                color: scanEnabled ? '#287d62' : '#b0a89a',
+              }}
+            >
+              {scanEnabled
+                ? '✓ Photo scan enabled (experimental) — tap to turn off'
+                : 'Enable photo scan (experimental)'}
+            </button>
           </div>
         </div>
       </div>

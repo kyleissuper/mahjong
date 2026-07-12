@@ -4,6 +4,7 @@ import { calculateScore, getRuleReference } from '../src/calculate-score.js';
 import { isHandReady } from '../src/validate-hand.js';
 import { TileImage } from './TileImage.tsx';
 import { ScoringReference } from './ScoringReference.tsx';
+import { ScanHand } from './ScanHand.tsx';
 import { useZoom } from './useZoom.ts';
 import './prototype.css';
 
@@ -167,6 +168,18 @@ function ZoomControls({ zoom, onChange }: { zoom: number; onChange: (z: number) 
   );
 }
 
+// --- Experimental feature flag (photo scan) ---
+
+const SCAN_FLAG = 'mj_scan_experimental';
+
+function readScanFlag(): boolean {
+  try {
+    return localStorage.getItem(SCAN_FLAG) === '1';
+  } catch {
+    return false;
+  }
+}
+
 // --- Main component ---
 
 export function Prototype() {
@@ -179,7 +192,21 @@ export function Prototype() {
     winTile: null,
   });
   const [showReference, setShowReference] = useState(false);
+  const [scanned, setScanned] = useState(false);
+  const [scanEnabled, setScanEnabled] = useState(readScanFlag);
   const [zoom, setZoom] = useZoom();
+
+  function toggleScan() {
+    setScanEnabled(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem(SCAN_FLAG, next ? '1' : '0');
+      } catch {
+        /* ignore storage failures */
+      }
+      return next;
+    });
+  }
 
   const { melds, flowers, active, phase, winMeld, winTile } = state;
 
@@ -294,6 +321,33 @@ export function Prototype() {
   function reset() {
     setState({ melds: [], flowers: 0, active: null, phase: 'entering', winMeld: null, winTile: null });
     setWin({ method: 'discard', dealerRounds: 1, special: [], winner: undefined, dealer: undefined, from: undefined });
+    setScanned(false);
+  }
+
+  // Load a scanned hand into the editable state. Flowers become the flower count;
+  // every other meld becomes a tile slot with its concealed flag. Meld type and
+  // the winning tile are left for the user to confirm (types are re-derived from
+  // the tiles, and the winning tile is picked in the scoring step).
+  function handleScan(scannedMelds: Meld[]) {
+    const editable: EditableMeld[] = [];
+    let flowerCount = 0;
+    for (const m of scannedMelds) {
+      if (m.type === 'flower') {
+        flowerCount += m.tiles.length;
+        continue;
+      }
+      const tiles = m.tiles.filter(t => t !== 'F');
+      if (tiles.length > 0) editable.push({ tiles, concealed: m.concealed });
+    }
+    setState({
+      melds: editable,
+      flowers: flowerCount,
+      active: null,
+      phase: 'entering',
+      winMeld: null,
+      winTile: null,
+    });
+    setScanned(true);
   }
 
   const isEntering = phase === 'entering';
@@ -373,10 +427,21 @@ export function Prototype() {
         </div>
       </div>
 
-      {showReference && <ScoringReference onClose={() => setShowReference(false)} />}
+      {showReference && (
+        <ScoringReference
+          onClose={() => setShowReference(false)}
+          scanEnabled={scanEnabled}
+          onToggleScan={toggleScan}
+        />
+      )}
 
       {/* Hand display */}
       <div className="proto-hand">
+        {isEntering && scanned && (
+          <p style={{ textAlign: 'center', fontSize: '0.75rem', color: '#287d62', margin: '0 0 6px' }}>
+            Scanned — check each set and the winning tile before scoring.
+          </p>
+        )}
         {isEntering && melds.length === 0 && flowers === 0 && (
           <div className="proto-onboarding">
             <span className="proto-onboarding-title">Mahjong Scorer</span>
@@ -453,6 +518,11 @@ export function Prototype() {
               </div>
             )}
           </div>
+          {scanEnabled && (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '2px 0 10px' }}>
+              <ScanHand onScan={handleScan} />
+            </div>
+          )}
           <div className="proto-grid">
             {ALL_SUITS.map(({ name, tiles }) => (
               <div key={name} className="proto-suit">
