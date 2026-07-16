@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties } from 'react';
+import { useRef, useState, type ChangeEvent, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
+import Webcam from 'react-webcam';
 import type { Meld } from '../src/types.js';
 
-// Cap the captured frame at 2048px on the long edge — well above what tile
-// recognition needs, small enough to POST quickly.
-const MAX_EDGE = 2048;
-const JPEG_QUALITY = 0.92;
+// Downscale the captured frame before upload. 1280px on the long edge keeps tiles
+// readable while cutting the model's image tokens (and latency) vs a larger frame.
+const MAX_EDGE = 1280;
+const JPEG_QUALITY = 0.9;
 
 async function recognize(dataUrl: string): Promise<Meld[]> {
   const resp = await fetch('/api/recognize', {
@@ -19,14 +20,37 @@ async function recognize(dataUrl: string): Promise<Meld[]> {
   return data.melds;
 }
 
-function frameToDataUrl(source: HTMLVideoElement | HTMLImageElement, w: number, h: number): string {
-  const scale = Math.min(1, MAX_EDGE / Math.max(w, h));
+// Crop to the region a viewport-filling object-fit:cover element actually shows,
+// scaled so the long edge is MAX_EDGE — so the on-screen framing matches the
+// image the model receives.
+function coverCrop(video: HTMLVideoElement): string {
+  const sw = video.videoWidth;
+  const sh = video.videoHeight;
+  const cw = video.clientWidth || sw;
+  const ch = video.clientHeight || sh;
+  const coverScale = Math.max(cw / sw, ch / sh);
+  const visW = cw / coverScale;
+  const visH = ch / coverScale;
+  const sx = (sw - visW) / 2;
+  const sy = (sh - visH) / 2;
+  const outScale = Math.min(1, MAX_EDGE / Math.max(visW, visH));
   const canvas = document.createElement('canvas');
-  canvas.width = Math.round(w * scale);
-  canvas.height = Math.round(h * scale);
+  canvas.width = Math.round(visW * outScale);
+  canvas.height = Math.round(visH * outScale);
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas not supported');
-  ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(video, sx, sy, visW, visH, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+}
+
+function downscaleImage(img: HTMLImageElement): string {
+  const scale = Math.min(1, MAX_EDGE / Math.max(img.width, img.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(img.width * scale);
+  canvas.height = Math.round(img.height * scale);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas not supported');
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
   return canvas.toDataURL('image/jpeg', JPEG_QUALITY);
 }
 
@@ -42,89 +66,37 @@ const buttonStyle: CSSProperties = {
   cursor: 'pointer',
 };
 
-// --- Full-screen live camera ---
+// --- Full-screen camera capture ---
 
 function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[]) => void; onClose: () => void }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const webcamRef = useRef<Webcam>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<'starting' | 'ready' | 'working'>('starting');
   const [error, setError] = useState<string | null>(null);
   const [noCamera, setNoCamera] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: 'environment' },
-            width: { ideal: 2560 },
-            height: { ideal: 1440 },
-          },
-        });
-        if (cancelled) {
-          stream.getTracks().forEach(t => t.stop());
-          return;
-        }
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play().catch(() => {});
-        }
-        setPhase('ready');
-      } catch {
-        // No camera / permission denied / insecure context — offer photo fallback.
-        setNoCamera(true);
-        setError('Camera unavailable. Choose a photo instead.');
-      }
-    })();
-    return () => {
-      cancelled = true;
-      streamRef.current?.getTracks().forEach(t => t.stop());
-    };
-  }, []);
+  const [frozen, setFrozen] = useState<string | null>(null);
 
   async function submit(dataUrl: string) {
+    // Freeze on the captured still and drop the live camera during recognition,
+    // so it doesn't feel like the user has to keep holding the shot.
+    setFrozen(dataUrl);
     setPhase('working');
     setError(null);
     try {
       const melds = await recognize(dataUrl);
-      streamRef.current?.getTracks().forEach(t => t.stop());
       onScan(melds);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Scan failed');
+      setFrozen(null);
       setPhase('ready');
     }
   }
 
   function capture() {
-    const v = videoRef.current;
-    if (!v || !v.videoWidth) return;
-    // The video is object-fit: cover, so it's cropped to fill the screen. Capture
-    // exactly that visible region (not the full sensor frame) so the on-screen
-    // top/bottom guide lines up with what the model actually receives.
-    const vw = v.videoWidth;
-    const vh = v.videoHeight;
-    const cw = v.clientWidth || vw;
-    const ch = v.clientHeight || vh;
-    const coverScale = Math.max(cw / vw, ch / vh);
-    const visW = cw / coverScale;
-    const visH = ch / coverScale;
-    const sx = (vw - visW) / 2;
-    const sy = (vh - visH) / 2;
-    const outScale = Math.min(1, MAX_EDGE / Math.max(visW, visH));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.round(visW * outScale);
-    canvas.height = Math.round(visH * outScale);
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      setError('Canvas not supported');
-      return;
-    }
-    ctx.drawImage(v, sx, sy, visW, visH, 0, 0, canvas.width, canvas.height);
-    submit(canvas.toDataURL('image/jpeg', JPEG_QUALITY));
+    const video = webcamRef.current?.video;
+    if (!video || !video.videoWidth) return;
+    submit(coverCrop(video));
   }
 
   function onPickFile(e: ChangeEvent<HTMLInputElement>) {
@@ -136,7 +108,7 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[]) => void; o
     img.onload = () => {
       URL.revokeObjectURL(url);
       try {
-        submit(frameToDataUrl(img, img.width, img.height));
+        submit(downscaleImage(img));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Could not read image');
       }
@@ -148,17 +120,34 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[]) => void; o
     img.src = url;
   }
 
+  const showLiveCamera = !noCamera && phase !== 'working';
+
   // Portal to <body> so the overlay escapes the app's nested stacking contexts
   // (the bottom sheet and sticky app bar) and truly covers the viewport.
   return createPortal(
     <div style={overlayStyle}>
       <button aria-label="Close" onClick={onClose} style={closeStyle}>✕</button>
 
-      {!noCamera && (
-        <video ref={videoRef} playsInline autoPlay muted style={videoStyle} />
+      {showLiveCamera && (
+        <Webcam
+          ref={webcamRef}
+          audio={false}
+          screenshotFormat="image/jpeg"
+          videoConstraints={{
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 2560 },
+            height: { ideal: 1440 },
+          }}
+          onUserMedia={() => setPhase('ready')}
+          onUserMediaError={() => {
+            setNoCamera(true);
+            setError('Camera unavailable. Choose a photo instead.');
+          }}
+          style={videoStyle}
+        />
       )}
 
-      {!noCamera && phase !== 'starting' && (
+      {showLiveCamera && phase === 'ready' && (
         <>
           <div style={guideLineStyle} />
           <div style={{ ...guidePillStyle, top: '20%' }}>Exposed · top half</div>
@@ -166,26 +155,30 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[]) => void; o
         </>
       )}
 
-      {phase === 'working' && (
-        <div style={statusStyle}>Reading tiles…</div>
+      {phase === 'working' && frozen && (
+        <>
+          <img src={frozen} alt="" style={videoStyle} />
+          <div style={processingStyle}>Reading tiles…</div>
+        </>
       )}
+
       {error && <div style={{ ...statusStyle, bottom: 120, color: '#ffb4a2' }}>{error}</div>}
 
       <input ref={fileRef} type="file" accept="image/*" capture="environment" hidden onChange={onPickFile} />
 
       <div style={controlsStyle}>
-        {!noCamera ? (
+        {noCamera ? (
+          <button onClick={() => fileRef.current?.click()} style={{ ...buttonStyle, padding: '14px 22px' }}>
+            Choose a photo
+          </button>
+        ) : phase !== 'working' ? (
           <button
             aria-label="Take photo"
             onClick={capture}
             disabled={phase !== 'ready'}
             style={{ ...shutterStyle, opacity: phase === 'ready' ? 1 : 0.5 }}
           />
-        ) : (
-          <button onClick={() => fileRef.current?.click()} style={{ ...buttonStyle, padding: '14px 22px' }}>
-            Choose a photo
-          </button>
-        )}
+        ) : null}
       </div>
     </div>,
     document.body,
@@ -224,6 +217,11 @@ const guidePillStyle: CSSProperties = {
 const statusStyle: CSSProperties = {
   position: 'absolute', bottom: 140, zIndex: 2, color: '#fff',
   background: 'rgba(0,0,0,0.55)', padding: '8px 14px', borderRadius: 8, fontSize: '0.85rem',
+};
+const processingStyle: CSSProperties = {
+  position: 'absolute', inset: 0, zIndex: 2, background: 'rgba(0,0,0,0.45)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  color: '#fff', fontSize: '1rem', fontWeight: 600,
 };
 
 // --- Trigger button (host places this; the camera overlay is fixed-position) ---
