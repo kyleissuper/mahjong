@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import Webcam from 'react-webcam';
 import type { Meld } from '../src/types.js';
@@ -75,6 +75,16 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[]) => void; o
   const [error, setError] = useState<string | null>(null);
   const [noCamera, setNoCamera] = useState(false);
   const [frozen, setFrozen] = useState<string | null>(null);
+  const [landscape, setLandscape] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(orientation: landscape)').matches,
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(orientation: landscape)');
+    const onChange = () => setLandscape(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
 
   async function submit(dataUrl: string) {
     // Freeze on the captured still and drop the live camera during recognition,
@@ -166,7 +176,7 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[]) => void; o
 
       <input ref={fileRef} type="file" accept="image/*" capture="environment" hidden onChange={onPickFile} />
 
-      <div style={controlsStyle}>
+      <div style={landscape ? controlsLandscapeStyle : controlsStyle}>
         {noCamera ? (
           <button onClick={() => fileRef.current?.click()} style={{ ...buttonStyle, padding: '14px 22px' }}>
             Choose a photo
@@ -199,6 +209,11 @@ const closeStyle: CSSProperties = {
 };
 const controlsStyle: CSSProperties = {
   position: 'absolute', bottom: 40, zIndex: 2, display: 'flex', justifyContent: 'center', width: '100%',
+};
+// Landscape: shutter on the right edge, vertically centered (clears the labels).
+const controlsLandscapeStyle: CSSProperties = {
+  position: 'absolute', top: 0, bottom: 0, right: 28, zIndex: 2,
+  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
 };
 const shutterStyle: CSSProperties = {
   width: 72, height: 72, borderRadius: 36, background: '#fff',
