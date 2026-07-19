@@ -17,13 +17,7 @@ function buildCategories(rules: RuleInfo[]) {
 
 const categories = buildCategories(getRuleReference());
 
-interface Props {
-  onClose: () => void;
-  scanEnabled: boolean;
-  onToggleScan: () => void;
-}
-
-export function ScoringReference({ onClose, scanEnabled, onToggleScan }: Props) {
+export function ScoringReference({ onClose }: { onClose: () => void }) {
   return (
     <div className="ref-overlay">
       <div className="ref-sheet">
@@ -52,56 +46,6 @@ export function ScoringReference({ onClose, scanEnabled, onToggleScan }: Props) 
           <div className="ref-footer">
             <div className="ref-footer-name">Mahjong Scorer <span className="ref-footer-badge">beta</span></div>
             <a href="https://github.com/kyleissuper/mahjong" target="_blank" rel="noopener noreferrer">Open source on GitHub</a>
-            <div
-              style={{
-                width: '100%',
-                marginTop: 16,
-                paddingTop: 14,
-                borderTop: '1px solid #e8e2d6',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 6,
-              }}
-            >
-              <button
-                onClick={onToggleScan}
-                aria-pressed={scanEnabled}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 10,
-                  padding: '10px 14px',
-                  borderRadius: 10,
-                  border: `1.5px solid ${scanEnabled ? '#5bc5a7' : '#d8d0c0'}`,
-                  background: scanEnabled ? 'rgba(91,197,167,0.10)' : '#fff',
-                  color: '#333',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                <span>
-                  🧪 Photo scan <span style={{ fontWeight: 400, opacity: 0.55 }}>experimental</span>
-                </span>
-                <span
-                  style={{
-                    padding: '2px 9px',
-                    borderRadius: 10,
-                    fontSize: '0.68rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.05em',
-                    color: '#fff',
-                    background: scanEnabled ? '#4aab90' : '#bcb4a6',
-                  }}
-                >
-                  {scanEnabled ? 'ON' : 'OFF'}
-                </span>
-              </button>
-              <span style={{ fontSize: '0.68rem', color: '#9a9284', textAlign: 'center' }}>
-                Snap a photo of your hand to auto-fill the tiles.
-              </span>
-            </div>
           </div>
         </div>
       </div>

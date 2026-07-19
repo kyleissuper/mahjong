@@ -168,18 +168,6 @@ function ZoomControls({ zoom, onChange }: { zoom: number; onChange: (z: number) 
   );
 }
 
-// --- Experimental feature flag (photo scan) ---
-
-const SCAN_FLAG = 'mj_scan_experimental';
-
-function readScanFlag(): boolean {
-  try {
-    return localStorage.getItem(SCAN_FLAG) === '1';
-  } catch {
-    return false;
-  }
-}
-
 // --- Main component ---
 
 export function Prototype() {
@@ -193,20 +181,7 @@ export function Prototype() {
   });
   const [showReference, setShowReference] = useState(false);
   const [scanned, setScanned] = useState(false);
-  const [scanEnabled, setScanEnabled] = useState(readScanFlag);
   const [zoom, setZoom] = useZoom();
-
-  function toggleScan() {
-    setScanEnabled(prev => {
-      const next = !prev;
-      try {
-        localStorage.setItem(SCAN_FLAG, next ? '1' : '0');
-      } catch {
-        /* ignore storage failures */
-      }
-      return next;
-    });
-  }
 
   const { melds, flowers, active, phase, winMeld, winTile } = state;
 
@@ -430,8 +405,6 @@ export function Prototype() {
       {showReference && (
         <ScoringReference
           onClose={() => setShowReference(false)}
-          scanEnabled={scanEnabled}
-          onToggleScan={toggleScan}
         />
       )}
 
@@ -518,11 +491,9 @@ export function Prototype() {
               </div>
             )}
           </div>
-          {scanEnabled && (
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '2px 0 10px' }}>
-              <ScanHand onScan={handleScan} />
-            </div>
-          )}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '2px 0 10px' }}>
+            <ScanHand onScan={handleScan} />
+          </div>
           <div className="proto-grid">
             {ALL_SUITS.map(({ name, tiles }) => (
               <div key={name} className="proto-suit">
