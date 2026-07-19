@@ -18,7 +18,7 @@ function addButton() {
 
 function winField(label: string) {
   const labelEl = screen.getByText(label, { selector: '.win-label' });
-  return labelEl.closest('.win-row')!;
+  return labelEl.closest('.win-row')! as HTMLElement;
 }
 
 // Tile name mapping for winning tile buttons (use img alt text)
@@ -79,7 +79,7 @@ async function setWin(
 }
 
 function expectScore(value: number) {
-  const header = screen.getByText('points').closest('.score-header')!;
+  const header = screen.getByText('points').closest('.score-header')! as HTMLElement;
   expect(within(header).getByText(String(value))).toBeInTheDocument();
 }
 
@@ -90,9 +90,9 @@ function expectRules(rules: string[]) {
 }
 
 function expectPayments(payments: Record<string, number>) {
-  const paymentsRow = screen.getByText('points').closest('.score-section')!;
+  const paymentsRow = screen.getByText('points').closest('.score-section')! as HTMLElement;
   for (const [player, delta] of Object.entries(payments)) {
-    const item = within(paymentsRow).getByText(player, { selector: '.payment-player' }).closest('.payment-item')!;
+    const item = within(paymentsRow).getByText(player, { selector: '.payment-player' }).closest('.payment-item')! as HTMLElement;
     const expected = delta > 0 ? `+${delta}` : String(delta);
     expect(within(item).getByText(expected)).toBeInTheDocument();
   }
