@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400">
+  <!-- White dragon: blue rectangle border (白板 style for HK mahjong) -->
+  <rect x="65" y="90" width="170" height="220" rx="8" fill="none" stroke="#2962b0" stroke-width="14"/>
+</svg>
