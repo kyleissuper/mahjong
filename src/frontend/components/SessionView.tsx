@@ -172,7 +172,6 @@ function Drawer({ open, closing, onClose, code, currentView, onNavigate, onLeave
       <div className={`drawer-backdrop ${closing ? 'drawer-backdrop-out' : ''}`} onClick={onClose} />
       <nav className={`drawer ${closing ? 'drawer-out' : ''}`}>
         <div className="drawer-header">
-          <span className="drawer-title">Mahjong Scorer</span>
           <CopyableCode label="Session Code" code={code} />
         </div>
         <div className="drawer-items">

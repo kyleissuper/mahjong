@@ -1181,6 +1181,13 @@
   cursor: pointer;
 }
 
+.drawer-header .copyable-code {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.08em;
+}
+
 .copyable-code:active {
   opacity: 0.6;
 }
