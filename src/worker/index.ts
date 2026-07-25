@@ -210,8 +210,9 @@ async function routeAdmin(app: any, request: Request, pathname: string): Promise
 // --- Vision ---
 
 async function recognize(request: Request, env: Env): Promise<Response> {
-  return tracing.enterSpan('recognize', async () => {
+  return tracing.enterSpan('recognize', async (span) => {
     if (!env.OPENROUTER_API_KEY) {
+      span.setAttribute('error', true);
       return json({ error: 'Server is missing OPENROUTER_API_KEY' }, 500);
     }
     let body: { image?: unknown };
@@ -223,11 +224,18 @@ async function recognize(request: Request, env: Env): Promise<Response> {
     if (typeof body.image !== 'string' || !body.image.startsWith('data:image/')) {
       return json({ error: 'image must be a data URL' }, 400);
     }
+    const imageBytes = Math.round((body.image.length * 3) / 4);
+    span.setAttribute('image.bytes', imageBytes);
     const vision = new OpenRouterVision(env.OPENROUTER_API_KEY);
     try {
-      const melds = await tracing.enterSpan('visionApi', () => vision.recognize(body.image as string));
+      const melds = await tracing.enterSpan('visionApi', (s) => {
+        s.setAttribute('model', 'google/gemini-3.6-flash');
+        return vision.recognize(body.image as string);
+      });
+      span.setAttribute('melds.count', melds.length);
       return json({ melds });
     } catch (err) {
+      span.setAttribute('error', true);
       return json({ error: err instanceof Error ? err.message : 'Scan failed' }, 502);
     }
   });
