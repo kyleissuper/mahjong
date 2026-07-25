@@ -4,3 +4,5 @@ dist-app
 .dev.vars
 .wrangler
 .envrc
+.claude
+test-results

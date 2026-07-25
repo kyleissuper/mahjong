@@ -1,16 +1,15 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { cloudflare } from '@cloudflare/vite-plugin';
+import path from 'path';
 
 export default defineConfig({
-  plugins: [react()],
-  root: 'app',
+  plugins: [
+    react(),
+    cloudflare({ configPath: path.resolve(__dirname, 'wrangler.jsonc') }),
+  ],
+  root: 'src/frontend',
   build: {
-    outDir: '../dist-app',
-    rollupOptions: {
-      input: {
-        main: 'app/index.html',
-        v1: 'app/v1.html',
-      },
-    },
+    outDir: '../../dist-app',
   },
 });
