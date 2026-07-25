@@ -5,7 +5,7 @@ import '../styles/scorer.css';
 
 export function Landing() {
   const { join } = useSession();
-  const [view, setView] = useState<'main' | 'join' | 'admin'>('main');
+  const [showAdmin, setShowAdmin] = useState(false);
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -47,18 +47,7 @@ export function Landing() {
         <h1 className="landing-title">Mahjong Scorer</h1>
         <span className="ref-footer-badge">beta</span>
 
-        {view === 'main' && (
-          <div className="landing-actions">
-            <button className="scorer-btn scorer-btn-primary landing-btn" onClick={() => setView('join')}>
-              Join a session
-            </button>
-            <button className="scorer-btn landing-btn" onClick={() => setView('admin')}>
-              Admin
-            </button>
-          </div>
-        )}
-
-        {view === 'join' && (
+        {!showAdmin ? (
           <form className="landing-form" onSubmit={handleJoin}>
             <input className="landing-input" type="text" placeholder="Session code"
               value={code} onChange={e => setCode(e.target.value.toUpperCase())}
@@ -67,11 +56,10 @@ export function Landing() {
             <button className="scorer-btn scorer-btn-primary landing-btn" type="submit" disabled={loading}>
               {loading ? 'Joining...' : 'Join'}
             </button>
-            <button className="scorer-btn-text" type="button" onClick={() => { setView('main'); setError(null); }}>Back</button>
+            <div className="landing-divider" />
+            <button className="landing-admin-link" type="button" onClick={() => { setShowAdmin(true); setError(null); }}>Admin</button>
           </form>
-        )}
-
-        {view === 'admin' && (
+        ) : (
           <form className="landing-form" onSubmit={handleAdminLogin}>
             <input className="landing-input" type="password" placeholder="Admin password"
               value={password} onChange={e => setPassword(e.target.value)} autoFocus />
@@ -79,7 +67,7 @@ export function Landing() {
             <button className="scorer-btn scorer-btn-primary landing-btn" type="submit" disabled={loading}>
               {loading ? 'Logging in...' : 'Log in'}
             </button>
-            <button className="scorer-btn-text" type="button" onClick={() => { setView('main'); setError(null); }}>Back</button>
+            <button className="scorer-btn-text" type="button" onClick={() => { setShowAdmin(false); setError(null); }}>Back</button>
           </form>
         )}
       </div>

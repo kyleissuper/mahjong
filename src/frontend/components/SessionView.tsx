@@ -260,7 +260,7 @@ function HandsTab({ hands, roster, playerFilter, onPlayerFilterChange, dateFilte
 
       <div className="history-list" ref={scrollRef}>
         {hands.slice(0, visibleCount).map((hand, i) => (
-          <div key={i} className={`hcard ${highlightIdx === i ? 'hcard-highlight' : ''}`} onClick={() => setExpanded(expanded === i ? null : i)}>
+          <div key={i} className={`hcard ${expanded === i ? 'hcard-expanded' : ''} ${highlightIdx === i ? 'hcard-highlight' : ''}`} onClick={() => setExpanded(expanded === i ? null : i)}>
             {highlightIdx === i && (
               <div className="hcard-shine-mask"><div className="hcard-shine-glow" /></div>
             )}
