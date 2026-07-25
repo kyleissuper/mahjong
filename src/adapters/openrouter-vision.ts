@@ -66,6 +66,9 @@ export class OpenRouterVision implements VisionModel {
   async recognize(image: string): Promise<Meld[]> {
     const body = tracing.enterSpan('serializeRequest', () => JSON.stringify({
       model: MODEL,
+      temperature: 0,
+      max_tokens: 1024,
+      provider: { sort: 'latency', allow_fallbacks: true },
       response_format: {
         type: 'json_schema',
         json_schema: { name: 'mahjong_hand', strict: true, schema: RESPONSE_SCHEMA },
