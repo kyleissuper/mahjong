@@ -1,3 +1,4 @@
+import { tracing } from 'cloudflare:workers';
 import type { Meld } from '../mahjong/types.ts';
 
 interface VisionModel {
@@ -63,6 +64,23 @@ export class OpenRouterVision implements VisionModel {
   constructor(private apiKey: string) {}
 
   async recognize(image: string): Promise<Meld[]> {
+    const body = tracing.enterSpan('serializeRequest', () => JSON.stringify({
+      model: MODEL,
+      response_format: {
+        type: 'json_schema',
+        json_schema: { name: 'mahjong_hand', strict: true, schema: RESPONSE_SCHEMA },
+      },
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: PROMPT },
+            { type: 'image_url', image_url: { url: image } },
+          ],
+        },
+      ],
+    }));
+
     let resp: Response;
     try {
       resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -72,22 +90,7 @@ export class OpenRouterVision implements VisionModel {
           'content-type': 'application/json',
           'x-title': 'Mahjong Scorer',
         },
-        body: JSON.stringify({
-          model: MODEL,
-          response_format: {
-            type: 'json_schema',
-            json_schema: { name: 'mahjong_hand', strict: true, schema: RESPONSE_SCHEMA },
-          },
-          messages: [
-            {
-              role: 'user',
-              content: [
-                { type: 'text', text: PROMPT },
-                { type: 'image_url', image_url: { url: image } },
-              ],
-            },
-          ],
-        }),
+        body,
       });
     } catch {
       throw new Error('Could not reach the model provider');
@@ -98,7 +101,9 @@ export class OpenRouterVision implements VisionModel {
       throw new Error(`Model provider error (${resp.status})${detail ? `: ${detail}` : ''}`);
     }
 
-    const data = (await resp.json()) as { choices?: { message?: { content?: string } }[] };
+    const data = await tracing.enterSpan('readResponseBody', () =>
+      resp.json() as Promise<{ choices?: { message?: { content?: string } }[] }>
+    );
     const content = data.choices?.[0]?.message?.content;
     if (!content) throw new Error('Empty response from model');
 
