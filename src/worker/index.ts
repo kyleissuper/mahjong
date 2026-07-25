@@ -1,3 +1,4 @@
+import { tracing } from 'cloudflare:workers';
 import { OpenRouterVision } from '../adapters/openrouter-vision.ts';
 import type { Hand, Win } from '../mahjong/types.ts';
 
@@ -209,25 +210,27 @@ async function routeAdmin(app: any, request: Request, pathname: string): Promise
 // --- Vision ---
 
 async function recognize(request: Request, env: Env): Promise<Response> {
-  if (!env.OPENROUTER_API_KEY) {
-    return json({ error: 'Server is missing OPENROUTER_API_KEY' }, 500);
-  }
-  let body: { image?: unknown };
-  try {
-    body = (await request.json()) as { image?: unknown };
-  } catch {
-    return json({ error: 'Body must be JSON: { image: "data:image/...;base64,..." }' }, 400);
-  }
-  if (typeof body.image !== 'string' || !body.image.startsWith('data:image/')) {
-    return json({ error: 'image must be a data URL' }, 400);
-  }
-  const vision = new OpenRouterVision(env.OPENROUTER_API_KEY);
-  try {
-    const melds = await vision.recognize(body.image);
-    return json({ melds });
-  } catch (err) {
-    return json({ error: err instanceof Error ? err.message : 'Scan failed' }, 502);
-  }
+  return tracing.enterSpan('recognize', async () => {
+    if (!env.OPENROUTER_API_KEY) {
+      return json({ error: 'Server is missing OPENROUTER_API_KEY' }, 500);
+    }
+    let body: { image?: unknown };
+    try {
+      body = await tracing.enterSpan('parseBody', () => request.json()) as { image?: unknown };
+    } catch {
+      return json({ error: 'Body must be JSON: { image: "data:image/...;base64,..." }' }, 400);
+    }
+    if (typeof body.image !== 'string' || !body.image.startsWith('data:image/')) {
+      return json({ error: 'image must be a data URL' }, 400);
+    }
+    const vision = new OpenRouterVision(env.OPENROUTER_API_KEY);
+    try {
+      const melds = await tracing.enterSpan('visionApi', () => vision.recognize(body.image as string));
+      return json({ melds });
+    } catch (err) {
+      return json({ error: err instanceof Error ? err.message : 'Scan failed' }, 502);
+    }
+  });
 }
 
 // --- Helpers ---

@@ -67,10 +67,21 @@ const statusStyle: CSSProperties = {
   position: 'absolute', bottom: 140, zIndex: 2, color: '#fff',
   background: 'rgba(0,0,0,0.55)', padding: '8px 14px', borderRadius: 8, fontSize: '0.85rem',
 };
-const processingStyle: CSSProperties = {
-  position: 'absolute', inset: 0, zIndex: 2, background: 'rgba(0,0,0,0.45)',
+const processingOverlayStyle: CSSProperties = {
+  position: 'absolute', inset: 0, zIndex: 2,
+  background: 'rgba(0,0,0,0.25)',
+  backdropFilter: 'blur(6px) saturate(1.2)',
+  WebkitBackdropFilter: 'blur(6px) saturate(1.2)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  color: '#fff', fontSize: '1rem', fontWeight: 600,
+};
+const glassCardStyle: CSSProperties = {
+  background: 'rgba(30,30,30,0.65)',
+  backdropFilter: 'blur(20px)',
+  WebkitBackdropFilter: 'blur(20px)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  borderRadius: 16, padding: '24px 32px',
+  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
+  minWidth: 180,
 };
 
 // --- Full-screen camera capture ---
@@ -94,12 +105,17 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[]) => void; o
   }, []);
 
   async function submit(dataUrl: string) {
+    performance.mark('scan:start');
     setFrozen(dataUrl);
     setPhase('working');
     setError(null);
     try {
       const melds = await recognize(dataUrl);
+      performance.mark('scan:apply-start');
       onScan(melds);
+      performance.mark('scan:end');
+      performance.measure('scan:total', 'scan:start', 'scan:end');
+      performance.measure('scan:apply', 'scan:apply-start', 'scan:end');
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Scan failed');
@@ -111,7 +127,11 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[]) => void; o
   function capture() {
     const video = webcamRef.current?.video;
     if (!video || !video.videoWidth) return;
-    submit(coverCrop(video));
+    performance.mark('scan:image-prep-start');
+    const dataUrl = coverCrop(video);
+    performance.mark('scan:image-prep-end');
+    performance.measure('scan:image-prep', 'scan:image-prep-start', 'scan:image-prep-end');
+    submit(dataUrl);
   }
 
   function onPickFile(e: ChangeEvent<HTMLInputElement>) {
@@ -123,7 +143,11 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[]) => void; o
     img.onload = () => {
       URL.revokeObjectURL(url);
       try {
-        submit(downscaleImage(img));
+        performance.mark('scan:image-prep-start');
+        const dataUrl = downscaleImage(img);
+        performance.mark('scan:image-prep-end');
+        performance.measure('scan:image-prep', 'scan:image-prep-start', 'scan:image-prep-end');
+        submit(dataUrl);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Could not read image');
       }
@@ -171,7 +195,17 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[]) => void; o
       {phase === 'working' && frozen && (
         <>
           <img src={frozen} alt="" style={videoStyle} />
-          <div style={processingStyle}>Reading tiles…</div>
+          <div style={processingOverlayStyle}>
+            <div style={glassCardStyle}>
+              <span className="scan-icon">🀄</span>
+              <span style={{ color: '#fff', fontSize: '0.82rem', fontWeight: 600, letterSpacing: '0.02em' }}>
+                Reading tiles…
+              </span>
+              <div className="scan-progress-track">
+                <div className="scan-progress-fill" />
+              </div>
+            </div>
+          </div>
         </>
       )}
 
@@ -201,12 +235,15 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[]) => void; o
 // --- Helpers ---
 
 async function recognize(dataUrl: string): Promise<Meld[]> {
+  performance.mark('scan:fetch-start');
   const resp = await fetch('/api/recognize', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ image: dataUrl }),
   });
   const data = (await resp.json()) as { melds?: Meld[]; error?: string };
+  performance.mark('scan:fetch-end');
+  performance.measure('scan:fetch', 'scan:fetch-start', 'scan:fetch-end');
   if (!resp.ok) throw new Error(data.error ?? `Request failed (${resp.status})`);
   if (!data.melds?.length) throw new Error('No tiles found — try a clearer photo.');
   return data.melds;
