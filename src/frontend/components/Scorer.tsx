@@ -63,6 +63,22 @@ export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, o
     special: [],
   });
 
+  useEffect(() => {
+    (window as any).__fillHand = () => {
+      setState({
+        melds: [
+          { tiles: ['1b', '2b', '3b'], concealed: true },
+          { tiles: ['4d', '5d', '6d'], concealed: true },
+          { tiles: ['Rd', 'Rd', 'Rd'], concealed: false },
+          { tiles: ['Ew', 'Ew', 'Ew'], concealed: true },
+          { tiles: ['9c', '9c'], concealed: true },
+        ],
+        flowers: 0, active: null, phase: 'entering', winMeld: null, winTile: null,
+      });
+    };
+    return () => { delete (window as any).__fillHand; };
+  }, []);
+
   const scoringMelds = useMemo(() => toScoringMelds(state), [melds, flowers]);
   const handReady = isHandReady({ melds: scoringMelds });
 

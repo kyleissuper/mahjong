@@ -37,7 +37,7 @@ export function SessionView() {
   }, []);
 
   useEffect(() => {
-    (window as any).__onDemoScored = async (timestamp: string) => {
+    (window as any).__onScoreDemoComplete = async (timestamp: string) => {
       const { hands } = await api.getAllHands();
       setAllHands(hands);
       setPlayerFilter(null);
@@ -45,7 +45,7 @@ export function SessionView() {
       setExpandHandTimestamp(timestamp);
       setView('hands');
     };
-    return () => { delete (window as any).__onDemoScored; };
+    return () => { delete (window as any).__onScoreDemoComplete; };
   }, []);
 
   function refreshHands() {

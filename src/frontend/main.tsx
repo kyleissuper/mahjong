@@ -5,7 +5,7 @@ import { HttpBackend } from './lib/http-backend.ts';
 
 setBackend(new HttpBackend());
 
-(window as any).__demoHand = async () => {
+(window as any).__scoreDemo = async () => {
   try {
     const code = localStorage.getItem('mj-code');
     if (!code) { console.error('No session. mj-code =', code); return; }
@@ -29,7 +29,7 @@ setBackend(new HttpBackend());
     console.log('Scoring hand...');
     const res = await new HttpBackend().scoreHand(code, hand, win);
     console.log('Done! Hand value:', res.hand.handValue);
-    (window as any).__onDemoScored?.(res.hand.timestamp);
+    (window as any).__onScoreDemoComplete?.(res.hand.timestamp);
   } catch (e: any) {
     console.error('__demoHand failed:', e.message);
   }
