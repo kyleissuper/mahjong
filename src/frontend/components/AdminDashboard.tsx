@@ -123,7 +123,7 @@ function SessionCard({ entry, onRefresh }: { entry: any; onRefresh: () => void }
               <span className="admin-sub-label">{hands.length} hand{hands.length !== 1 ? 's' : ''}</span>
               {hands.map((h: any) => (
                 <div key={h.id ?? h.timestamp} className="admin-hand-row">
-                  <span>{h.winner} won · {h.handValue} pts</span>
+                  <span>{h.winner} won · {h.scores?.[h.winner] > 0 ? '+' : ''}{h.scores?.[h.winner] ?? h.handValue} pts</span>
                   <button className="scorer-btn-text admin-delete" onClick={async () => {
                     if (h.id) await admin.deleteHand(h.id);
                     const { hands: updated } = await api.getSessionHands(entry.code);
