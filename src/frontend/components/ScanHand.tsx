@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import Webcam from 'react-webcam';
 import type { Meld } from '../../mahjong/types.ts';
 
-const MAX_EDGE = 1280;
+const MAX_EDGE = 800;
 const JPEG_QUALITY = 0.9;
 
 const buttonStyle: CSSProperties = {
