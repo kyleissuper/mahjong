@@ -39,6 +39,7 @@ export class AppDO extends DurableObject<Env> {
         melds TEXT NOT NULL,
         scores TEXT NOT NULL
       )`);
+      try { ctx.storage.sql.exec(`ALTER TABLE hands ADD COLUMN timing TEXT`); } catch {}
     });
   }
 
@@ -93,7 +94,7 @@ export class AppDO extends DurableObject<Env> {
 
   // --- Hands ---
 
-  async scoreHand(code: string, hand: Hand, win: Win): Promise<ScoredHand> {
+  async scoreHand(code: string, hand: Hand, win: Win, timing?: any): Promise<ScoredHand> {
     await this.getSession(code);
     const scored = computeScoredHand(hand, win);
     await this.db.insert(schema.hands).values({
@@ -106,6 +107,7 @@ export class AppDO extends DurableObject<Env> {
       dealerBonus: scored.dealerBonus,
       melds: scored.melds as any,
       scores: scored.scores as any,
+      timing: timing ?? null,
     });
     return scored;
   }

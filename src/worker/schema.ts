@@ -24,4 +24,5 @@ export const hands = sqliteTable('hands', {
   dealerBonus: real('dealer_bonus').notNull().default(0),
   melds: text('melds', { mode: 'json' }).notNull(),
   scores: text('scores', { mode: 'json' }).notNull(),
+  timing: text('timing', { mode: 'json' }),
 });

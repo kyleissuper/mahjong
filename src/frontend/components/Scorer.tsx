@@ -38,6 +38,41 @@ interface State {
 
 const ZOOM_STEPS = [0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5];
 
+interface TimingData {
+  firstInteraction: number | null;
+  scoreClicked: number | null;
+  winTilePicked: number | null;
+  winContextComplete: number | null;
+  confirmed: number | null;
+  undoCount: number;
+  clearCount: number;
+  deleteCount: number;
+  backCount: number;
+  usedScan: boolean;
+}
+
+function emptyTiming(): TimingData {
+  return { firstInteraction: null, scoreClicked: null, winTilePicked: null, winContextComplete: null, confirmed: null, undoCount: 0, clearCount: 0, deleteCount: 0, backCount: 0, usedScan: false };
+}
+
+function buildTimingPayload(t: TimingData) {
+  const start = t.firstInteraction;
+  if (!start) return null;
+  const ms = (v: number | null) => v ? Math.round(v - start) : null;
+  return {
+    handEntryMs: ms(t.scoreClicked),
+    winTileMs: t.scoreClicked && t.winTilePicked ? Math.round(t.winTilePicked - t.scoreClicked) : null,
+    winContextMs: t.winTilePicked && t.winContextComplete ? Math.round(t.winContextComplete - t.winTilePicked) : null,
+    reviewMs: t.winContextComplete && t.confirmed ? Math.round(t.confirmed - t.winContextComplete) : null,
+    totalMs: ms(t.confirmed),
+    undoCount: t.undoCount,
+    clearCount: t.clearCount,
+    deleteCount: t.deleteCount,
+    backCount: t.backCount,
+    usedScan: t.usedScan,
+  };
+}
+
 export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, onAddPlayer, hideAppBar, onPhaseChange, onConfirmed, onBackRef }: {
   roster?: string[]; sessionCode?: string; onScored?: () => void;
   onAddPlayer?: (name: string) => Promise<void>; hideAppBar?: boolean;
@@ -55,6 +90,8 @@ export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, o
   });
   const [scanned, setScanned] = useState(false);
   const [zoom, setZoom] = useZoom();
+  const timing = useRef<TimingData>(emptyTiming());
+  const markFirstInteraction = () => { if (!timing.current.firstInteraction) timing.current.firstInteraction = performance.now(); };
 
   const { melds, flowers, active, phase, winMeld, winTile } = state;
 
@@ -106,6 +143,8 @@ export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, o
 
   function confirmScore() {
     if (!scoringResult || !sessionCode) return;
+    timing.current.confirmed = performance.now();
+    const timingPayload = buildTimingPayload(timing.current);
     const { winner, dealer, method = 'discard', dealerRounds = 1, special = [] } = win;
     const winObj = buildWin({
       method, winner: winner!, from: win.from,
@@ -114,13 +153,14 @@ export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, o
       dealerRounds, special,
     });
     const hand = { melds: toScoringHand(state) };
-    api.scoreHand(sessionCode, hand, winObj)
+    api.scoreHand(sessionCode, hand, winObj, timingPayload)
       .then(({ hand: scored }) => {
         onScored?.();
         onConfirmed?.(scored.timestamp);
         setState({ melds: [], flowers: 0, active: null, phase: 'entering', winMeld: null, winTile: null });
         setWin({ method: 'discard', dealerRounds: 1, special: [], winner: undefined, dealer: undefined, dealerAnswered: false, from: undefined, otherPlayers: undefined });
         setScanned(false);
+        timing.current = emptyTiming();
       })
       .catch(() => {});
   }
@@ -128,8 +168,17 @@ export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, o
   useEffect(() => { onPhaseChange?.(phase); }, [phase]);
 
   useEffect(() => {
+    if (scoringResult && !timing.current.winContextComplete) {
+      timing.current.winContextComplete = performance.now();
+    }
+  }, [scoringResult]);
+
+  useEffect(() => {
     if (onBackRef) {
-      onBackRef.current = () => setState(s => ({ ...s, phase: 'entering', winMeld: null, winTile: null, active: null }));
+      onBackRef.current = () => {
+        timing.current.backCount++;
+        setState(s => ({ ...s, phase: 'entering', winMeld: null, winTile: null, active: null }));
+      };
     }
     return () => { if (onBackRef) onBackRef.current = null; };
   }, [onBackRef]);
@@ -169,6 +218,7 @@ export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, o
         scanned={scanned}
         onSelectMeld={(index) => {
           if (!isEntering) return;
+          markFirstInteraction();
           setState(s => {
             if (s.active?.type === 'meld' && s.active.index === index) return { ...s, active: null };
             const cleaned = s.melds.filter((m, i) => m.tiles.length > 0 || i === index);
@@ -184,7 +234,7 @@ export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, o
             return { ...s, melds: newMelds, active: { type: 'meld', index: newMelds.length - 1 } };
           });
         }}
-        onPickWinTile={(meldIdx, tileIdx) => setState(s => ({ ...s, winMeld: meldIdx, winTile: tileIdx }))}
+        onPickWinTile={(meldIdx, tileIdx) => { timing.current.winTilePicked = performance.now(); setState(s => ({ ...s, winMeld: meldIdx, winTile: tileIdx })); }}
         onToggleFlowers={() => setState(s => ({ ...s, active: isFlowersActive ? null : { type: 'flowers' } }))}
       />
 
@@ -195,8 +245,9 @@ export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, o
           active={active}
           activeSlotTiles={activeSlotTiles}
           isFlowersActive={isFlowersActive}
-          onScore={() => setState(s => ({ ...s, phase: 'done', active: null }))}
+          onScore={() => { timing.current.scoreClicked = performance.now(); setState(s => ({ ...s, phase: 'done', active: null })); }}
           onUndo={() => {
+            timing.current.undoCount++;
             setState(s => {
               if (!s.active) return s;
               if (s.active.type === 'flowers') {
@@ -209,6 +260,7 @@ export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, o
             });
           }}
           onClear={() => {
+            timing.current.clearCount++;
             setState(s => {
               if (!s.active) return s;
               if (s.active.type === 'flowers') return { ...s, flowers: 0, active: null };
@@ -217,6 +269,7 @@ export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, o
             });
           }}
           onDelete={() => {
+            timing.current.deleteCount++;
             setState(s => {
               if (!s.active) return s;
               if (s.active.type === 'flowers') return { ...s, flowers: 0, active: null };
@@ -226,6 +279,7 @@ export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, o
           }}
           onTapTile={(tile) => {
             if (phase !== 'entering') return;
+            markFirstInteraction();
             if (tile === 'F') {
               setState(s => ({ ...s, flowers: s.flowers + 1, active: { type: 'flowers' } }));
               return;
@@ -240,6 +294,8 @@ export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, o
             });
           }}
           onScan={(scannedMelds) => {
+            markFirstInteraction();
+            timing.current.usedScan = true;
             const editable: EditableMeld[] = [];
             let flowerCount = 0;
             for (const m of scannedMelds) {
@@ -519,6 +575,7 @@ function WinContextPanel({ roster, win, onChangeWin, onAddPlayer }: {
             : [win.winner!, win.from!]}
           showNeither={!isSelfPick}
           value={win.dealer}
+          answered={win.dealerAnswered}
           onChange={p => onChangeWin(w => ({ ...w, dealer: p, dealerRounds: 1, dealerAnswered: true }))}
         />
       )}
@@ -651,10 +708,10 @@ function PlayerSelect({ label, value, options, onChange, onAddPlayer }: {
   );
 }
 
-function DealerPicker({ players, showNeither, value, onChange }: {
-  players: string[]; showNeither?: boolean; value?: string; onChange: (p: string | undefined) => void;
+function DealerPicker({ players, showNeither, value, answered, onChange }: {
+  players: string[]; showNeither?: boolean; value?: string; answered?: boolean; onChange: (p: string | undefined) => void;
 }) {
-  const isNeither = value === undefined && players.length > 0;
+  const isNeither = answered && value === undefined;
   return (
     <div className="scorer-dealer-picker">
       <span className="scorer-field-label">Dealer this round?</span>

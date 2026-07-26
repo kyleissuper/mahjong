@@ -17,8 +17,8 @@ export class HttpBackend implements Backend {
     return this.get<Session>(`/api/sessions/${code}`);
   }
 
-  async scoreHand(code: string, hand: Hand, win: Win): Promise<{ hand: any }> {
-    return this.post<{ hand: any }>(`/api/sessions/${code}/hands`, { hand, win });
+  async scoreHand(code: string, hand: Hand, win: Win, timing?: any): Promise<{ hand: any }> {
+    return this.post<{ hand: any }>(`/api/sessions/${code}/hands`, { hand, win, timing });
   }
 
   async getAllHands(): Promise<{ hands: any[] }> {

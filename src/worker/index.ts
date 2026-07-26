@@ -95,8 +95,8 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
       }
 
       if (sub === '/hands' && request.method === 'POST') {
-        const { hand, win } = await request.json() as { hand: Hand; win: Win };
-        const scored = await app.scoreHand(code, hand, win);
+        const { hand, win, timing } = await request.json() as { hand: Hand; win: Win; timing?: any };
+        const scored = await app.scoreHand(code, hand, win, timing);
         return json({ hand: scored }, 201);
       }
 

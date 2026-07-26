@@ -6,7 +6,7 @@ export interface Backend {
   authenticate(password: string): Promise<string>;
   createSession(): Promise<{ code: string }>;
   getSession(code: string): Promise<Session>;
-  scoreHand(code: string, hand: Hand, win: Win): Promise<{ hand: ScoredHand }>;
+  scoreHand(code: string, hand: Hand, win: Win, timing?: any): Promise<{ hand: ScoredHand }>;
   getAllHands(): Promise<{ hands: ScoredHand[] }>;
   getSessionHands(code: string): Promise<{ hands: ScoredHand[] }>;
   getPlayers(): Promise<{ players: RegisteredPlayer[] }>;
