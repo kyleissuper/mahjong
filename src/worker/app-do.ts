@@ -118,7 +118,7 @@ export class AppDO extends DurableObject<Env> {
   }
 
   async getSessionHands(code: string): Promise<ScoredHand[]> {
-    const rows = await this.db.select().from(schema.hands).where(eq(schema.hands.sessionCode, code)).all();
+    const rows = await this.db.select().from(schema.hands).where(eq(schema.hands.sessionCode, code)).orderBy(sql`id DESC`).all();
     return rows.map(rowToScoredHand);
   }
 
