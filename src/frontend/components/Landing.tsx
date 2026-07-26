@@ -70,6 +70,10 @@ export function Landing() {
             <button className="scorer-btn scorer-btn-primary landing-btn" type="submit" disabled={loading}>
               {loading ? 'Joining...' : 'Join'}
             </button>
+            <button className="scorer-btn landing-btn" type="button"
+              onClick={() => { location.search = 'standalone'; }}>
+              Try without a session
+            </button>
             <div className="landing-divider" />
             <button className="landing-admin-link" type="button" onClick={() => { setShowAdmin(true); setError(null); }}>Admin</button>
           </form>
