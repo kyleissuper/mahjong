@@ -67,7 +67,6 @@ export class OpenRouterVision implements VisionModel {
     const body = tracing.enterSpan('serializeRequest', () => JSON.stringify({
       model: MODEL,
       temperature: 0,
-      max_tokens: 1024,
       provider: { sort: 'latency', allow_fallbacks: true },
       response_format: {
         type: 'json_schema',
