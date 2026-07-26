@@ -26,6 +26,7 @@ export function SessionView() {
   const [leaderboardDateFilter, setLeaderboardDateFilter] = useState<DateFilter>('day');
   const [scorerKey, setScorerKey] = useState(0);
   const [scorerPhase, setScorerPhase] = useState<'entering' | 'done'>('entering');
+  const scorerBackRef = useRef<(() => void) | null>(null);
   const [expandTimestamp, setExpandHandTimestamp] = useState<string | null>(null);
   const [globalPlayers, setGlobalPlayers] = useState<string[]>([]);
   const [allHands, setAllHands] = useState<ScoredHand[]>([]);
@@ -81,7 +82,7 @@ export function SessionView() {
       <div className="scorer-appbar">
         <div className="scorer-appbar-left">
           {view === 'scorer' && scorerPhase === 'done' ? (
-            <button className="scorer-appbar-back" onClick={() => setScorerKey(k => k + 1)} aria-label="Back">
+            <button className="scorer-appbar-back" onClick={() => scorerBackRef.current?.()} aria-label="Back">
               <BackArrowIcon />
             </button>
           ) : (
@@ -103,6 +104,7 @@ export function SessionView() {
         <Scorer key={scorerKey} roster={roster} sessionCode={code}
           onScored={() => refreshHands()}
           hideAppBar onPhaseChange={setScorerPhase}
+          onBackRef={scorerBackRef}
           onConfirmed={(timestamp) => {
             setPlayerFilter(null);
             setDateFilter('day');

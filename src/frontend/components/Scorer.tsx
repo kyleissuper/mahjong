@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, type MutableRefObject } from 'react';
 import { buildWin } from '../../mahjong/types.ts';
 import type { Tile, Meld, Win, ScoreResult } from '../../mahjong/types.ts';
 import { scoreHand, RULE_LABELS } from '../../mahjong/scoring/engine.ts';
@@ -38,11 +38,12 @@ interface State {
 
 const ZOOM_STEPS = [0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5];
 
-export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, onAddPlayer, hideAppBar, onPhaseChange, onConfirmed }: {
+export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, onAddPlayer, hideAppBar, onPhaseChange, onConfirmed, onBackRef }: {
   roster?: string[]; sessionCode?: string; onScored?: () => void;
   onAddPlayer?: (name: string) => Promise<void>; hideAppBar?: boolean;
   onPhaseChange?: (phase: 'entering' | 'done') => void;
   onConfirmed?: (timestamp: string) => void;
+  onBackRef?: MutableRefObject<(() => void) | null>;
 } = {}) {
   const [state, setState] = useState<State>({
     melds: [],
@@ -125,6 +126,13 @@ export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, o
   }
 
   useEffect(() => { onPhaseChange?.(phase); }, [phase]);
+
+  useEffect(() => {
+    if (onBackRef) {
+      onBackRef.current = () => setState(s => ({ ...s, phase: 'entering', winMeld: null, winTile: null, active: null }));
+    }
+    return () => { if (onBackRef) onBackRef.current = null; };
+  }, [onBackRef]);
 
   const isEntering = phase === 'entering';
   const isFlowersActive = active?.type === 'flowers';
