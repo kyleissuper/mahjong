@@ -1,6 +1,6 @@
 import { DurableObject } from 'cloudflare:workers';
 import { drizzle } from 'drizzle-orm/durable-sqlite';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import * as schema from './schema.ts';
 import { computeScoredHand, type ScoredHand } from '../mahjong/session.ts';
 import type { Hand, Win } from '../mahjong/types.ts';
@@ -67,7 +67,7 @@ export class AppDO extends DurableObject<Env> {
   }
 
   async listSessions() {
-    return this.db.select().from(schema.sessions).all();
+    return this.db.select().from(schema.sessions).orderBy(sql`created_at DESC`).all();
   }
 
   async expireSession(code: string): Promise<void> {
