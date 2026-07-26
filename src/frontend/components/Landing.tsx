@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from '../lib/session-context.tsx';
 import * as api from '../lib/api.ts';
 import '../styles/scorer.css';
@@ -6,10 +6,24 @@ import '../styles/scorer.css';
 export function Landing() {
   const { join } = useSession();
   const [showAdmin, setShowAdmin] = useState(false);
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(() => {
+    const params = new URLSearchParams(location.search);
+    return (params.get('code') ?? '').toUpperCase();
+  });
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const autoJoined = useRef(false);
+
+  useEffect(() => {
+    if (autoJoined.current || !code) return;
+    autoJoined.current = true;
+    setLoading(true);
+    history.replaceState(null, '', location.pathname);
+    join(code)
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to join'))
+      .finally(() => setLoading(false));
+  }, []);
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault();

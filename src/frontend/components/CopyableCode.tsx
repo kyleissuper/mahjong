@@ -4,7 +4,8 @@ export function CopyableCode({ label, code }: { label?: string; code: string }) 
   const [copied, setCopied] = useState(false);
   function handleClick(e: React.MouseEvent) {
     e.stopPropagation();
-    navigator.clipboard.writeText(code).then(() => {
+    const url = `${location.origin}/?code=${code}`;
+    navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
