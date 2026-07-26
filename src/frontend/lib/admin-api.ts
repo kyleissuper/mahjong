@@ -58,3 +58,7 @@ export async function deletePlayer(id: string): Promise<void> {
 export async function mergePlayers(keepId: string, mergeId: string): Promise<void> {
   await postAdmin('/api/admin/players/merge', { keepId, mergeId });
 }
+
+export async function getTimingStats(): Promise<{ timings: any[] }> {
+  return getAdmin<{ timings: any[] }>('/api/admin/timing');
+}

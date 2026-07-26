@@ -126,6 +126,13 @@ export class AppDO extends DurableObject<Env> {
     await this.db.delete(schema.hands).where(eq(schema.hands.id, id));
   }
 
+  async getTimingStats() {
+    const rows = this.ctx.storage.sql.exec<{ timing: string }>(
+      `SELECT timing FROM hands WHERE timing IS NOT NULL ORDER BY id DESC LIMIT 200`
+    ).toArray();
+    return rows.map(r => JSON.parse(r.timing)).filter(Boolean);
+  }
+
   // --- Players ---
 
   async getPlayers() {

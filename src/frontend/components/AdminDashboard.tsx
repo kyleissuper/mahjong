@@ -6,7 +6,7 @@ import type { RegisteredPlayer } from '../../mahjong/player-registry.ts';
 import '../styles/scorer.css';
 
 export function AdminDashboard() {
-  const [tab, setTab] = useState<'sessions' | 'players'>('sessions');
+  const [tab, setTab] = useState<'sessions' | 'players' | 'analytics'>('sessions');
 
   return (
     <div className="admin">
@@ -20,9 +20,11 @@ export function AdminDashboard() {
       <div className="admin-tabs">
         <button className={`session-tab ${tab === 'sessions' ? 'active' : ''}`} onClick={() => setTab('sessions')}>Sessions</button>
         <button className={`session-tab ${tab === 'players' ? 'active' : ''}`} onClick={() => setTab('players')}>Players</button>
+        <button className={`session-tab ${tab === 'analytics' ? 'active' : ''}`} onClick={() => setTab('analytics')}>Analytics</button>
       </div>
       {tab === 'sessions' && <SessionsTab />}
       {tab === 'players' && <PlayersTab />}
+      {tab === 'analytics' && <AnalyticsTab />}
     </div>
   );
 }
@@ -210,6 +212,78 @@ function PlayersTab() {
           <button className="scorer-btn" type="submit" disabled={!mergeFrom || !mergeTo}>Merge</button>
         </form>
       )}
+    </div>
+  );
+}
+
+function AnalyticsTab() {
+  const [timings, setTimings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    admin.getTimingStats().then(({ timings: t }) => { setTimings(t); setLoading(false); });
+  }, []);
+
+  if (loading) return <p className="admin-empty">Loading...</p>;
+  if (timings.length === 0) return <p className="admin-empty">No timing data yet — score a hand to start collecting.</p>;
+
+  const fmt = (ms: number | null) => ms == null ? '—' : ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
+  const avg = (vals: number[]) => vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
+  const median = (vals: number[]) => {
+    if (!vals.length) return null;
+    const sorted = [...vals].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+  };
+
+  const handEntry = timings.map(t => t.handEntryMs).filter((v: any): v is number => v != null);
+  const winTile = timings.map(t => t.winTileMs).filter((v: any): v is number => v != null);
+  const winContext = timings.map(t => t.winContextMs).filter((v: any): v is number => v != null);
+  const review = timings.map(t => t.reviewMs).filter((v: any): v is number => v != null);
+  const total = timings.map(t => t.totalMs).filter((v: any): v is number => v != null);
+  const scanCount = timings.filter(t => t.usedScan).length;
+  const totalUndos = timings.reduce((s: number, t: any) => s + (t.undoCount || 0), 0);
+  const totalClears = timings.reduce((s: number, t: any) => s + (t.clearCount || 0), 0);
+  const totalDeletes = timings.reduce((s: number, t: any) => s + (t.deleteCount || 0), 0);
+  const totalBacks = timings.reduce((s: number, t: any) => s + (t.backCount || 0), 0);
+
+  const rows: [string, number[], string?][] = [
+    ['Hand entry', handEntry, 'First tap to "Score"'],
+    ['Win tile pick', winTile, '"Score" to tile selected'],
+    ['Win context', winContext, 'Tile to all fields filled'],
+    ['Review', review, 'Fields filled to "Confirm"'],
+    ['Total', total, 'First tap to "Confirm"'],
+  ];
+
+  return (
+    <div className="admin-section">
+      <div className="admin-sub-label">Scoring flow timing ({timings.length} hands)</div>
+      <div style={{ overflowX: 'auto' }}>
+        <table className="analytics-table">
+          <thead>
+            <tr><th>Phase</th><th>Median</th><th>Average</th><th>Samples</th></tr>
+          </thead>
+          <tbody>
+            {rows.map(([label, vals, hint]) => (
+              <tr key={label} title={hint}>
+                <td>{label}</td>
+                <td>{fmt(median(vals))}</td>
+                <td>{fmt(avg(vals))}</td>
+                <td>{vals.length}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="admin-sub-label" style={{ marginTop: 16 }}>Friction signals</div>
+      <div className="analytics-stats">
+        <span>Scanned: {scanCount}/{timings.length}</span>
+        <span>Undos: {totalUndos}</span>
+        <span>Clears: {totalClears}</span>
+        <span>Deletes: {totalDeletes}</span>
+        <span>Backs: {totalBacks}</span>
+      </div>
     </div>
   );
 }

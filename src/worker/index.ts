@@ -204,6 +204,11 @@ async function routeAdmin(app: any, request: Request, pathname: string): Promise
     }
   }
 
+  if (pathname === '/api/admin/timing' && request.method === 'GET') {
+    const timings = await app.getTimingStats();
+    return json({ timings });
+  }
+
   return json({ error: 'Not found' }, 404);
 }
 
