@@ -81,9 +81,10 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
       return json({ code }, 201);
     }
 
-    const sessionMatch = pathname.match(/^\/api\/sessions\/([A-Z0-9]+)(\/.*)?$/);
+    const sessionMatch = pathname.match(/^\/api\/sessions\/([A-Za-z0-9]+)(\/.*)?$/);
     if (sessionMatch) {
-      const [, code, sub] = sessionMatch;
+      const [, rawCode, sub] = sessionMatch;
+      const code = rawCode.toUpperCase();
 
       if (request.headers.get('upgrade') === 'websocket') {
         return app.fetch(request);

@@ -1430,7 +1430,7 @@
 
 @keyframes hcard-shine-rotate {
   0%   { transform: rotate(0deg) translate(-50%, -50%); }
-  100% { transform: rotate(720deg) translate(-50%, -50%); }
+  100% { transform: rotate(360deg) translate(-50%, -50%); }
 }
 
 @keyframes hcard-shine-fade {
