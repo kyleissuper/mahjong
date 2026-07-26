@@ -127,10 +127,10 @@ export class AppDO extends DurableObject<Env> {
   }
 
   async getTimingStats() {
-    const rows = this.ctx.storage.sql.exec<{ timing: string }>(
-      `SELECT timing FROM hands WHERE timing IS NOT NULL ORDER BY id DESC LIMIT 200`
+    const rows = this.ctx.storage.sql.exec<{ timing: string; melds: string }>(
+      `SELECT timing, melds FROM hands WHERE timing IS NOT NULL ORDER BY id DESC LIMIT 200`
     ).toArray();
-    return rows.map(r => JSON.parse(r.timing)).filter(Boolean);
+    return rows.map(r => ({ ...JSON.parse(r.timing), submittedMelds: JSON.parse(r.melds) })).filter(Boolean);
   }
 
   // --- Players ---

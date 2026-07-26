@@ -38,6 +38,11 @@ interface State {
 
 const ZOOM_STEPS = [0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5];
 
+interface ScanPrediction {
+  model: string;
+  melds: { type: string; tiles: Tile[]; concealed: boolean }[];
+}
+
 interface TimingData {
   firstInteraction: number | null;
   scoreClicked: number | null;
@@ -49,10 +54,11 @@ interface TimingData {
   deleteCount: number;
   backCount: number;
   usedScan: boolean;
+  scanPrediction: ScanPrediction | null;
 }
 
 function emptyTiming(): TimingData {
-  return { firstInteraction: null, scoreClicked: null, winTilePicked: null, winContextComplete: null, confirmed: null, undoCount: 0, clearCount: 0, deleteCount: 0, backCount: 0, usedScan: false };
+  return { firstInteraction: null, scoreClicked: null, winTilePicked: null, winContextComplete: null, confirmed: null, undoCount: 0, clearCount: 0, deleteCount: 0, backCount: 0, usedScan: false, scanPrediction: null };
 }
 
 function buildTimingPayload(t: TimingData) {
@@ -70,6 +76,7 @@ function buildTimingPayload(t: TimingData) {
     deleteCount: t.deleteCount,
     backCount: t.backCount,
     usedScan: t.usedScan,
+    scanPrediction: t.scanPrediction,
   };
 }
 
@@ -296,6 +303,10 @@ export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, o
           onScan={(scannedMelds) => {
             markFirstInteraction();
             timing.current.usedScan = true;
+            timing.current.scanPrediction = {
+              model: 'google/gemini-2.5-flash',
+              melds: scannedMelds.map(m => ({ type: m.type, tiles: [...m.tiles], concealed: m.concealed })),
+            };
             const editable: EditableMeld[] = [];
             let flowerCount = 0;
             for (const m of scannedMelds) {

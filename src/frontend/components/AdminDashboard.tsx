@@ -284,7 +284,79 @@ function AnalyticsTab() {
         <span>Deletes: {totalDeletes}</span>
         <span>Backs: {totalBacks}</span>
       </div>
+
+      <ScanAccuracy timings={timings} />
     </div>
+  );
+}
+
+function tilesKey(melds: any[]): string {
+  return melds
+    .filter((m: any) => m.type !== 'flower')
+    .flatMap((m: any) => m.tiles)
+    .sort()
+    .join(',');
+}
+
+function ScanAccuracy({ timings }: { timings: any[] }) {
+  const scanned = timings.filter(t => t.scanPrediction?.melds && t.submittedMelds);
+  if (scanned.length === 0) return null;
+
+  const results = scanned.map(t => {
+    const predicted = tilesKey(t.scanPrediction.melds);
+    const submitted = tilesKey(t.submittedMelds);
+    const predictedTiles = predicted.split(',').filter(Boolean);
+    const submittedTiles = submitted.split(',').filter(Boolean);
+    const matching = predictedTiles.filter((tile: string, i: number) => {
+      const idx = submittedTiles.indexOf(tile);
+      if (idx >= 0) { submittedTiles.splice(idx, 1); return true; }
+      return false;
+    });
+    const accuracy = submittedTiles.length + matching.length > 0
+      ? Math.round((matching.length / (predictedTiles.length > 0 ? Math.max(predictedTiles.length, matching.length + submittedTiles.length) : 1)) * 100)
+      : 100;
+    return { exact: predicted === submitted, accuracy, model: t.scanPrediction.model };
+  });
+
+  const exactCount = results.filter(r => r.exact).length;
+  const avgAccuracy = Math.round(results.reduce((s, r) => s + r.accuracy, 0) / results.length);
+  const models = [...new Set(results.map(r => r.model).filter(Boolean))];
+
+  return (
+    <>
+      <div className="admin-sub-label" style={{ marginTop: 16 }}>
+        Scan accuracy ({scanned.length} scanned hand{scanned.length !== 1 ? 's' : ''})
+      </div>
+      <div className="analytics-stats">
+        <span>Exact match: {exactCount}/{scanned.length}</span>
+        <span>Avg tile accuracy: {avgAccuracy}%</span>
+        {models.length > 0 && <span>Model: {models.join(', ')}</span>}
+      </div>
+      {scanned.length > 0 && (
+        <div style={{ overflowX: 'auto', marginTop: 8 }}>
+          <table className="analytics-table">
+            <thead>
+              <tr><th>#</th><th>Predicted</th><th>Submitted</th><th>Match</th></tr>
+            </thead>
+            <tbody>
+              {results.map((r, i) => {
+                const t = scanned[i];
+                const predTiles = t.scanPrediction.melds.filter((m: any) => m.type !== 'flower').flatMap((m: any) => m.tiles);
+                const subTiles = t.submittedMelds.filter((m: any) => m.type !== 'flower').flatMap((m: any) => m.tiles);
+                return (
+                  <tr key={i}>
+                    <td>{scanned.length - i}</td>
+                    <td style={{ fontSize: '0.72rem' }}>{predTiles.join(' ')}</td>
+                    <td style={{ fontSize: '0.72rem' }}>{subTiles.join(' ')}</td>
+                    <td>{r.exact ? 'exact' : `${r.accuracy}%`}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
   );
 }
 
