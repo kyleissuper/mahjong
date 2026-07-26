@@ -4,7 +4,7 @@ import Webcam from 'react-webcam';
 import type { Meld } from '../../mahjong/types.ts';
 
 const MAX_EDGE = 800;
-const JPEG_QUALITY = 0.9;
+const JPEG_QUALITY = 0.7;
 
 const buttonStyle: CSSProperties = {
   appearance: 'none',
