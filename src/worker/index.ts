@@ -28,7 +28,7 @@ export default {
     for (const [key, { email }] of pending) {
       try {
         await resend.emails.send({
-          from: 'onboarding@resend.dev',
+          from: 'backup@mj-backups.kyletan.com',
           to: email,
           subject: `Mahjong Backup — ${date}`,
           text: `Full backup: ${allData.sessions.length} sessions, ${allData.hands.length} hands, ${allData.players.length} players.`,
