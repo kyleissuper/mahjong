@@ -1,4 +1,5 @@
 import { DurableObject } from 'cloudflare:workers';
+import { Resend } from 'resend';
 import { drizzle } from 'drizzle-orm/durable-sqlite';
 import { eq, sql } from 'drizzle-orm';
 import * as schema from './schema.ts';
@@ -7,6 +8,7 @@ import type { Hand, Win } from '../mahjong/types.ts';
 
 interface Env {
   APP: DurableObjectNamespace<AppDO>;
+  RESEND_API_KEY: string;
 }
 
 export class AppDO extends DurableObject<Env> {
@@ -236,23 +238,30 @@ export class AppDO extends DurableObject<Env> {
   async webSocketClose(ws: WebSocket, code: number, reason: string) { ws.close(code, reason); }
 
   async alarm(): Promise<void> {
-    const backupEmail = await this.getBackupEmail();
     const expired = await this.getExpiredSessionCodes();
+    if (expired.length === 0) return;
+
+    const backupEmail = await this.getBackupEmail();
+    if (backupEmail) {
+      const data = await this.exportAll();
+      const json = JSON.stringify(data, null, 2);
+      const date = new Date().toISOString().split('T')[0];
+      const resend = new Resend(this.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: 'backup@mj-backups.kyletan.com',
+        to: backupEmail,
+        subject: `Mahjong Backup — ${date}`,
+        text: `Full backup: ${data.sessions.length} sessions, ${data.hands.length} hands, ${data.players.length} players.`,
+        attachments: [{
+          content: btoa(unescape(encodeURIComponent(json))),
+          filename: `mahjong-backup-${date}.json`,
+        }],
+      });
+    }
+
     for (const code of expired) {
-      if (backupEmail) {
-        await this.ctx.storage.put(`pending-backup:${code}`, { email: backupEmail });
-      }
       await this.expireSession(code);
     }
-  }
-
-  async getPendingBackups(): Promise<Map<string, { email: string }>> {
-    const entries = await this.ctx.storage.list<{ email: string }>({ prefix: 'pending-backup:' });
-    return entries;
-  }
-
-  async clearPendingBackup(key: string): Promise<void> {
-    await this.ctx.storage.delete(key);
   }
 
   // --- Helpers ---
