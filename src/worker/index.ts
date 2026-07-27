@@ -1,4 +1,5 @@
 import { tracing } from 'cloudflare:workers';
+import { Resend } from 'resend';
 import { OpenRouterVision } from '../adapters/openrouter-vision.ts';
 import type { Hand, Win } from '../mahjong/types.ts';
 
@@ -7,12 +8,42 @@ export { AppDO } from './app-do.ts';
 interface Env {
   OPENROUTER_API_KEY: string;
   ADMIN_PASSWORD: string;
+  RESEND_API_KEY: string;
   APP: DurableObjectNamespace;
   ASSETS: { fetch: (request: Request) => Promise<Response> };
   SCANS: R2Bucket;
 }
 
 export default {
+  async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
+    const app = getApp(env);
+    const pending = await app.getPendingBackups();
+    if (pending.size === 0) return;
+
+    const resend = new Resend(env.RESEND_API_KEY);
+    const allData = await app.exportAll();
+    const json = JSON.stringify(allData, null, 2);
+    const date = new Date().toISOString().split('T')[0];
+
+    for (const [key, { email }] of pending) {
+      try {
+        await resend.emails.send({
+          from: 'onboarding@resend.dev',
+          to: email,
+          subject: `Mahjong Backup — ${date}`,
+          text: `Full backup: ${allData.sessions.length} sessions, ${allData.hands.length} hands, ${allData.players.length} players.`,
+          attachments: [{
+            content: btoa(unescape(encodeURIComponent(json))),
+            filename: `mahjong-backup-${date}.json`,
+          }],
+        });
+        await app.clearPendingBackup(key);
+      } catch (err) {
+        console.error('Backup email failed:', err);
+      }
+    }
+  },
+
   async fetch(request: Request, env: Env): Promise<Response> {
     const { pathname } = new URL(request.url);
 
@@ -159,10 +190,15 @@ async function routeAdmin(app: any, request: Request, pathname: string, env: Env
     })) });
   }
 
-  const sessionAction = pathname.match(/^\/api\/admin\/sessions\/([A-Za-z0-9]+)\/(extend|expire|delete)$/);
+  const sessionAction = pathname.match(/^\/api\/admin\/sessions\/([A-Za-z0-9]+)\/(extend|expire|delete|backup-email)$/);
   if (sessionAction && request.method === 'POST') {
     const [, rawAdminCode, action] = sessionAction;
     const code = rawAdminCode.toUpperCase();
+    if (action === 'backup-email') {
+      const { email } = await request.json() as { email: string | null };
+      await app.setBackupEmail(code, email);
+      return json({ ok: true });
+    }
     if (action === 'extend') {
       const { hours = 24 } = await request.json() as { hours?: number };
       await app.extendSession(code, hours);

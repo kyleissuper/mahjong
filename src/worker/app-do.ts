@@ -40,6 +40,7 @@ export class AppDO extends DurableObject<Env> {
         scores TEXT NOT NULL
       )`);
       try { ctx.storage.sql.exec(`ALTER TABLE hands ADD COLUMN timing TEXT`); } catch {}
+      try { ctx.storage.sql.exec(`ALTER TABLE sessions ADD COLUMN backup_email TEXT`); } catch {}
     });
   }
 
@@ -99,6 +100,25 @@ export class AppDO extends DurableObject<Env> {
     return rows
       .map(r => { try { return JSON.parse(r.timing)?.scanId; } catch { return null; } })
       .filter((id): id is string => !!id);
+  }
+
+  async setBackupEmail(code: string, email: string | null): Promise<void> {
+    await this.db.update(schema.sessions).set({ backupEmail: email }).where(eq(schema.sessions.code, code));
+  }
+
+  async exportAll() {
+    const sessions = await this.db.select().from(schema.sessions).all();
+    const hands = await this.db.select().from(schema.hands).all();
+    const players = await this.db.select().from(schema.players).all();
+    return { sessions, hands: hands.map(rowToScoredHand), players };
+  }
+
+  async getExpiredSessionsForBackup(): Promise<{ code: string; backupEmail: string }[]> {
+    const now = new Date().toISOString();
+    const rows = await this.db.select().from(schema.sessions).all();
+    return rows
+      .filter(r => !r.expired && r.backupEmail && r.expiresAt && new Date(r.expiresAt).getTime() < Date.now())
+      .map(r => ({ code: r.code, backupEmail: r.backupEmail! }));
   }
 
   async deleteSession(code: string): Promise<void> {
@@ -209,8 +229,20 @@ export class AppDO extends DurableObject<Env> {
   async webSocketClose(ws: WebSocket, code: number, reason: string) { ws.close(code, reason); }
 
   async alarm(): Promise<void> {
-    // Expire all sessions past their alarm
-    // For now, this is a simple approach since we have one DO
+    const toBackup = await this.getExpiredSessionsForBackup();
+    for (const { code, backupEmail } of toBackup) {
+      await this.ctx.storage.put(`pending-backup:${code}`, { email: backupEmail });
+      await this.expireSession(code);
+    }
+  }
+
+  async getPendingBackups(): Promise<Map<string, { email: string }>> {
+    const entries = await this.ctx.storage.list<{ email: string }>({ prefix: 'pending-backup:' });
+    return entries;
+  }
+
+  async clearPendingBackup(key: string): Promise<void> {
+    await this.ctx.storage.delete(key);
   }
 
   // --- Helpers ---

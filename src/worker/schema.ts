@@ -5,6 +5,7 @@ export const sessions = sqliteTable('sessions', {
   createdAt: text('created_at').notNull(),
   expiresAt: text('expires_at').notNull(),
   expired: integer('expired', { mode: 'boolean' }).notNull().default(false),
+  backupEmail: text('backup_email'),
 });
 
 export const players = sqliteTable('players', {

@@ -72,6 +72,8 @@ function SessionsTab() {
 function SessionCard({ entry, onRefresh }: { entry: any; onRefresh: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [hands, setHands] = useState<any[] | null>(null);
+  const [backupEmail, setBackupEmail] = useState(entry.backupEmail ?? '');
+  const [emailSaved, setEmailSaved] = useState(!!entry.backupEmail);
 
   async function loadHands() {
     if (hands !== null) { setExpanded(!expanded); return; }
@@ -117,6 +119,19 @@ function SessionCard({ entry, onRefresh }: { entry: any; onRefresh: () => void }
               onRefresh();
             }}>Delete</button>
           </div>
+
+          {!entry.expired && (
+            <div className="admin-card-meta" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <input className="landing-input" type="email" placeholder="Backup email (on session end)"
+                value={backupEmail} onChange={e => { setBackupEmail(e.target.value); setEmailSaved(false); }}
+                style={{ flex: 1, fontSize: '0.8rem', padding: '6px 8px' }} />
+              <button className="scorer-btn" disabled={emailSaved} style={{ fontSize: '0.75rem', padding: '5px 10px' }}
+                onClick={async () => {
+                  await admin.setBackupEmail(entry.code, backupEmail || null);
+                  setEmailSaved(true);
+                }}>{emailSaved ? 'Saved' : 'Save'}</button>
+            </div>
+          )}
 
           {hands && hands.length > 0 && (
             <div className="admin-hands">
