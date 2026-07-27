@@ -55,7 +55,13 @@ export class AppDO extends DurableObject<Env> {
   async getSession(code: string) {
     const row = await this.db.select().from(schema.sessions).where(eq(schema.sessions.code, code)).get();
     if (!row) throw new Error('Session not found');
-    if (row.expired) throw new Error('Session expired');
+    const pastExpiry = row.expiresAt && new Date(row.expiresAt).getTime() < Date.now();
+    if (row.expired || pastExpiry) {
+      if (pastExpiry && !row.expired) {
+        await this.db.update(schema.sessions).set({ expired: true }).where(eq(schema.sessions.code, code));
+      }
+      throw new Error('Session expired');
+    }
     return row;
   }
 

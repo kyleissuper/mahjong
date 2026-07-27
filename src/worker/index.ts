@@ -150,8 +150,10 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
 async function routeAdmin(app: any, request: Request, pathname: string, env: Env): Promise<Response> {
   if (pathname === '/api/admin/sessions' && request.method === 'GET') {
     const sessions = await app.listSessions();
+    const now = Date.now();
     return json({ sessions: sessions.map((s: any) => ({
       ...s,
+      expired: s.expired || (s.expiresAt && new Date(s.expiresAt).getTime() < now),
       createdAt: formatPacific(s.createdAt),
       expiresAt: formatPacific(s.expiresAt),
     })) });
