@@ -17,6 +17,9 @@
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["AppDO"] }
   ],
+  "r2_buckets": [
+    { "binding": "SCANS", "bucket_name": "mahjong-scans" }
+  ],
   "observability": {
     "traces": { "enabled": true }
   }

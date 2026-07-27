@@ -9,6 +9,7 @@ interface Env {
   ADMIN_PASSWORD: string;
   APP: DurableObjectNamespace;
   ASSETS: { fetch: (request: Request) => Promise<Response> };
+  SCANS: R2Bucket;
 }
 
 export default {
@@ -129,7 +130,7 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
     if (pathname.startsWith('/api/admin/')) {
       const denied = requireAdmin(request, env);
       if (denied) return denied;
-      return routeAdmin(app, request, pathname);
+      return routeAdmin(app, request, pathname, env);
     }
 
     return json({ error: 'Not found' }, 404);
@@ -146,7 +147,7 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
 
 // --- Admin ---
 
-async function routeAdmin(app: any, request: Request, pathname: string): Promise<Response> {
+async function routeAdmin(app: any, request: Request, pathname: string, env: Env): Promise<Response> {
   if (pathname === '/api/admin/sessions' && request.method === 'GET') {
     const sessions = await app.listSessions();
     return json({ sessions: sessions.map((s: any) => ({
@@ -156,9 +157,10 @@ async function routeAdmin(app: any, request: Request, pathname: string): Promise
     })) });
   }
 
-  const sessionAction = pathname.match(/^\/api\/admin\/sessions\/([A-Z0-9]+)\/(extend|expire|delete)$/);
+  const sessionAction = pathname.match(/^\/api\/admin\/sessions\/([A-Za-z0-9]+)\/(extend|expire|delete)$/);
   if (sessionAction && request.method === 'POST') {
-    const [, code, action] = sessionAction;
+    const [, rawAdminCode, action] = sessionAction;
+    const code = rawAdminCode.toUpperCase();
     if (action === 'extend') {
       const { hours = 24 } = await request.json() as { hours?: number };
       await app.extendSession(code, hours);
@@ -169,7 +171,11 @@ async function routeAdmin(app: any, request: Request, pathname: string): Promise
       return json({ ok: true });
     }
     if (action === 'delete') {
+      const scanIds = await app.getSessionScanIds(code);
       await app.deleteSession(code);
+      if (scanIds.length > 0) {
+        await env.SCANS.delete(scanIds.map((id: string) => `scans/${id}.jpg`));
+      }
       return json({ ok: true });
     }
   }
@@ -232,14 +238,27 @@ async function recognize(request: Request, env: Env): Promise<Response> {
     }
     const imageBytes = Math.round((body.image.length * 3) / 4);
     span.setAttribute('image.bytes', imageBytes);
+
+    const scanId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    await tracing.enterSpan('storeImage', async () => {
+      const base64 = (body.image as string).split(',')[1];
+      const binary = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+      const mime = (body.image as string).split(';')[0].split(':')[1];
+      await env.SCANS.put(`scans/${scanId}.jpg`, binary, {
+        httpMetadata: { contentType: mime },
+        customMetadata: { scanId },
+      });
+    });
+    span.setAttribute('scan.id', scanId);
+
     const vision = new OpenRouterVision(env.OPENROUTER_API_KEY);
     try {
       const melds = await tracing.enterSpan('visionApi', (s) => {
-        s.setAttribute('model', 'google/gemini-3.6-flash');
+        s.setAttribute('model', 'google/gemini-2.5-flash');
         return vision.recognize(body.image as string);
       });
       span.setAttribute('melds.count', melds.length);
-      return json({ melds });
+      return json({ melds, scanId });
     } catch (err) {
       span.setAttribute('error', true);
       return json({ error: err instanceof Error ? err.message : 'Scan failed' }, 502);

@@ -55,10 +55,11 @@ interface TimingData {
   backCount: number;
   usedScan: boolean;
   scanPrediction: ScanPrediction | null;
+  scanId: string | null;
 }
 
 function emptyTiming(): TimingData {
-  return { firstInteraction: null, scoreClicked: null, winTilePicked: null, winContextComplete: null, confirmed: null, undoCount: 0, clearCount: 0, deleteCount: 0, backCount: 0, usedScan: false, scanPrediction: null };
+  return { firstInteraction: null, scoreClicked: null, winTilePicked: null, winContextComplete: null, confirmed: null, undoCount: 0, clearCount: 0, deleteCount: 0, backCount: 0, usedScan: false, scanPrediction: null, scanId: null };
 }
 
 function buildTimingPayload(t: TimingData) {
@@ -77,6 +78,7 @@ function buildTimingPayload(t: TimingData) {
     backCount: t.backCount,
     usedScan: t.usedScan,
     scanPrediction: t.scanPrediction,
+    scanId: t.scanId,
   };
 }
 
@@ -300,9 +302,10 @@ export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, o
               return { ...s, melds: s.melds.map((m, i) => i === idx ? { ...m, tiles: [...m.tiles, tile] } : m) };
             });
           }}
-          onScan={(scannedMelds) => {
+          onScan={(scannedMelds, scanId) => {
             markFirstInteraction();
             timing.current.usedScan = true;
+            timing.current.scanId = scanId ?? null;
             timing.current.scanPrediction = {
               model: 'google/gemini-2.5-flash',
               melds: scannedMelds.map(m => ({ type: m.type, tiles: [...m.tiles], concealed: m.concealed })),
@@ -481,7 +484,7 @@ function BottomSheet({ handReady, hasContent, active, activeSlotTiles, isFlowers
   handReady: boolean; hasContent: boolean; active: ActiveSelection | null;
   activeSlotTiles: Tile[]; isFlowersActive: boolean;
   onScore: () => void; onUndo: () => void; onClear: () => void; onDelete: () => void;
-  onTapTile: (tile: Tile) => void; onScan: (melds: Meld[]) => void;
+  onTapTile: (tile: Tile) => void; onScan: (melds: Meld[], scanId?: string) => void;
 }) {
   const hasActive = !!active;
   const hasTiles = activeSlotTiles.length > 0;

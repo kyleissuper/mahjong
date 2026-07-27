@@ -18,7 +18,7 @@ const buttonStyle: CSSProperties = {
   cursor: 'pointer',
 };
 
-export function ScanHand({ onScan }: { onScan: (melds: Meld[]) => void }) {
+export function ScanHand({ onScan }: { onScan: (melds: Meld[], scanId?: string) => void }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -86,7 +86,7 @@ const glassCardStyle: CSSProperties = {
 
 // --- Full-screen camera capture ---
 
-function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[]) => void; onClose: () => void }) {
+function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[], scanId?: string) => void; onClose: () => void }) {
   const webcamRef = useRef<Webcam>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<'starting' | 'ready' | 'working'>('starting');
@@ -110,9 +110,9 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[]) => void; o
     setPhase('working');
     setError(null);
     try {
-      const melds = await recognize(dataUrl);
+      const { melds, scanId } = await recognize(dataUrl);
       performance.mark('scan:apply-start');
-      onScan(melds);
+      onScan(melds, scanId);
       performance.mark('scan:end');
       performance.measure('scan:total', 'scan:start', 'scan:end');
       performance.measure('scan:apply', 'scan:apply-start', 'scan:end');
@@ -234,19 +234,24 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[]) => void; o
 
 // --- Helpers ---
 
-async function recognize(dataUrl: string): Promise<Meld[]> {
+interface RecognizeResult {
+  melds: Meld[];
+  scanId?: string;
+}
+
+async function recognize(dataUrl: string): Promise<RecognizeResult> {
   performance.mark('scan:fetch-start');
   const resp = await fetch('/api/recognize', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ image: dataUrl }),
   });
-  const data = (await resp.json()) as { melds?: Meld[]; error?: string };
+  const data = (await resp.json()) as { melds?: Meld[]; scanId?: string; error?: string };
   performance.mark('scan:fetch-end');
   performance.measure('scan:fetch', 'scan:fetch-start', 'scan:fetch-end');
   if (!resp.ok) throw new Error(data.error ?? `Request failed (${resp.status})`);
   if (!data.melds?.length) throw new Error('No tiles found — try a clearer photo.');
-  return data.melds;
+  return { melds: data.melds, scanId: data.scanId };
 }
 
 function coverCrop(video: HTMLVideoElement): string {

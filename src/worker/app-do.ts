@@ -86,6 +86,15 @@ export class AppDO extends DurableObject<Env> {
     await this.ctx.storage.setAlarm(newExpiry);
   }
 
+  async getSessionScanIds(code: string): Promise<string[]> {
+    const rows = this.ctx.storage.sql.exec<{ timing: string }>(
+      `SELECT timing FROM hands WHERE session_code = ? AND timing IS NOT NULL`, code
+    ).toArray();
+    return rows
+      .map(r => { try { return JSON.parse(r.timing)?.scanId; } catch { return null; } })
+      .filter((id): id is string => !!id);
+  }
+
   async deleteSession(code: string): Promise<void> {
     await this.db.delete(schema.hands).where(eq(schema.hands.sessionCode, code));
     await this.db.delete(schema.sessions).where(eq(schema.sessions.code, code));
