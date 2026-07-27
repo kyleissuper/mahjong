@@ -102,8 +102,16 @@ export class AppDO extends DurableObject<Env> {
       .filter((id): id is string => !!id);
   }
 
-  async setBackupEmail(code: string, email: string | null): Promise<void> {
-    await this.db.update(schema.sessions).set({ backupEmail: email }).where(eq(schema.sessions.code, code));
+  async setBackupEmail(email: string | null): Promise<void> {
+    if (email) {
+      await this.ctx.storage.put('backup-email', email);
+    } else {
+      await this.ctx.storage.delete('backup-email');
+    }
+  }
+
+  async getBackupEmail(): Promise<string | null> {
+    return await this.ctx.storage.get<string>('backup-email') ?? null;
   }
 
   async exportAll() {
@@ -113,12 +121,11 @@ export class AppDO extends DurableObject<Env> {
     return { sessions, hands: hands.map(rowToScoredHand), players };
   }
 
-  async getExpiredSessionsForBackup(): Promise<{ code: string; backupEmail: string }[]> {
-    const now = new Date().toISOString();
+  async getExpiredSessionCodes(): Promise<string[]> {
     const rows = await this.db.select().from(schema.sessions).all();
     return rows
-      .filter(r => !r.expired && r.backupEmail && r.expiresAt && new Date(r.expiresAt).getTime() < Date.now())
-      .map(r => ({ code: r.code, backupEmail: r.backupEmail! }));
+      .filter(r => !r.expired && r.expiresAt && new Date(r.expiresAt).getTime() < Date.now())
+      .map(r => r.code);
   }
 
   async deleteSession(code: string): Promise<void> {
@@ -229,9 +236,12 @@ export class AppDO extends DurableObject<Env> {
   async webSocketClose(ws: WebSocket, code: number, reason: string) { ws.close(code, reason); }
 
   async alarm(): Promise<void> {
-    const toBackup = await this.getExpiredSessionsForBackup();
-    for (const { code, backupEmail } of toBackup) {
-      await this.ctx.storage.put(`pending-backup:${code}`, { email: backupEmail });
+    const backupEmail = await this.getBackupEmail();
+    const expired = await this.getExpiredSessionCodes();
+    for (const code of expired) {
+      if (backupEmail) {
+        await this.ctx.storage.put(`pending-backup:${code}`, { email: backupEmail });
+      }
       await this.expireSession(code);
     }
   }

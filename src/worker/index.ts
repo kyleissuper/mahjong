@@ -190,15 +190,20 @@ async function routeAdmin(app: any, request: Request, pathname: string, env: Env
     })) });
   }
 
-  const sessionAction = pathname.match(/^\/api\/admin\/sessions\/([A-Za-z0-9]+)\/(extend|expire|delete|backup-email)$/);
+  if (pathname === '/api/admin/backup-email' && request.method === 'GET') {
+    const email = await app.getBackupEmail();
+    return json({ email });
+  }
+  if (pathname === '/api/admin/backup-email' && request.method === 'POST') {
+    const { email } = await request.json() as { email: string | null };
+    await app.setBackupEmail(email);
+    return json({ ok: true });
+  }
+
+  const sessionAction = pathname.match(/^\/api\/admin\/sessions\/([A-Za-z0-9]+)\/(extend|expire|delete)$/);
   if (sessionAction && request.method === 'POST') {
     const [, rawAdminCode, action] = sessionAction;
     const code = rawAdminCode.toUpperCase();
-    if (action === 'backup-email') {
-      const { email } = await request.json() as { email: string | null };
-      await app.setBackupEmail(code, email);
-      return json({ ok: true });
-    }
     if (action === 'extend') {
       const { hours = 24 } = await request.json() as { hours?: number };
       await app.extendSession(code, hours);

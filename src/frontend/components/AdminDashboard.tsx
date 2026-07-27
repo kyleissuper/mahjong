@@ -6,7 +6,7 @@ import type { RegisteredPlayer } from '../../mahjong/player-registry.ts';
 import '../styles/scorer.css';
 
 export function AdminDashboard() {
-  const [tab, setTab] = useState<'sessions' | 'players' | 'analytics'>('sessions');
+  const [tab, setTab] = useState<'sessions' | 'players' | 'analytics' | 'settings'>('sessions');
 
   return (
     <div className="admin">
@@ -21,10 +21,12 @@ export function AdminDashboard() {
         <button className={`session-tab ${tab === 'sessions' ? 'active' : ''}`} onClick={() => setTab('sessions')}>Sessions</button>
         <button className={`session-tab ${tab === 'players' ? 'active' : ''}`} onClick={() => setTab('players')}>Players</button>
         <button className={`session-tab ${tab === 'analytics' ? 'active' : ''}`} onClick={() => setTab('analytics')}>Analytics</button>
+        <button className={`session-tab ${tab === 'settings' ? 'active' : ''}`} onClick={() => setTab('settings')}>Settings</button>
       </div>
       {tab === 'sessions' && <SessionsTab />}
       {tab === 'players' && <PlayersTab />}
       {tab === 'analytics' && <AnalyticsTab />}
+      {tab === 'settings' && <SettingsTab />}
     </div>
   );
 }
@@ -72,8 +74,6 @@ function SessionsTab() {
 function SessionCard({ entry, onRefresh }: { entry: any; onRefresh: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [hands, setHands] = useState<any[] | null>(null);
-  const [backupEmail, setBackupEmail] = useState(entry.backupEmail ?? '');
-  const [emailSaved, setEmailSaved] = useState(!!entry.backupEmail);
 
   async function loadHands() {
     if (hands !== null) { setExpanded(!expanded); return; }
@@ -119,19 +119,6 @@ function SessionCard({ entry, onRefresh }: { entry: any; onRefresh: () => void }
               onRefresh();
             }}>Delete</button>
           </div>
-
-          {!entry.expired && (
-            <div className="admin-card-meta" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <input className="landing-input" type="email" placeholder="Backup email (on session end)"
-                value={backupEmail} onChange={e => { setBackupEmail(e.target.value); setEmailSaved(false); }}
-                style={{ flex: 1, fontSize: '0.8rem', padding: '6px 8px' }} />
-              <button className="scorer-btn" disabled={emailSaved} style={{ fontSize: '0.75rem', padding: '5px 10px' }}
-                onClick={async () => {
-                  await admin.setBackupEmail(entry.code, backupEmail || null);
-                  setEmailSaved(true);
-                }}>{emailSaved ? 'Saved' : 'Save'}</button>
-            </div>
-          )}
 
           {hands && hands.length > 0 && (
             <div className="admin-hands">
@@ -227,6 +214,41 @@ function PlayersTab() {
           <button className="scorer-btn" type="submit" disabled={!mergeFrom || !mergeTo}>Merge</button>
         </form>
       )}
+    </div>
+  );
+}
+
+function SettingsTab() {
+  const [email, setEmail] = useState('');
+  const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    admin.getBackupEmail().then(({ email: e }) => {
+      setEmail(e ?? '');
+      setSaved(!!e);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) return <p className="admin-empty">Loading...</p>;
+
+  return (
+    <div className="admin-section">
+      <div className="admin-sub-label">Backup email</div>
+      <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 8px' }}>
+        A full data backup will be emailed here when any session expires.
+      </p>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <input className="landing-input" type="email" placeholder="you@example.com"
+          value={email} onChange={e => { setEmail(e.target.value); setSaved(false); }}
+          style={{ flex: 1 }} />
+        <button className="scorer-btn scorer-btn-primary" disabled={saved}
+          onClick={async () => {
+            await admin.setBackupEmail(email || null);
+            setSaved(true);
+          }}>{saved ? 'Saved' : 'Save'}</button>
+      </div>
     </div>
   );
 }

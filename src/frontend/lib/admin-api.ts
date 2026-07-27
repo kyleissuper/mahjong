@@ -59,8 +59,12 @@ export async function mergePlayers(keepId: string, mergeId: string): Promise<voi
   await postAdmin('/api/admin/players/merge', { keepId, mergeId });
 }
 
-export async function setBackupEmail(code: string, email: string | null): Promise<void> {
-  await postAdmin(`/api/admin/sessions/${code}/backup-email`, { email });
+export async function getBackupEmail(): Promise<{ email: string | null }> {
+  return getAdmin<{ email: string | null }>('/api/admin/backup-email');
+}
+
+export async function setBackupEmail(email: string | null): Promise<void> {
+  await postAdmin('/api/admin/backup-email', { email });
 }
 
 export async function getTimingStats(): Promise<{ timings: any[] }> {
