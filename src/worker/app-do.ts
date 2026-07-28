@@ -75,9 +75,9 @@ export class AppDO extends DurableObject<Env> {
   }
 
   async expireSession(code: string): Promise<void> {
-    await this.sendBackupIfConfigured();
     await this.db.update(schema.sessions).set({ expired: true }).where(eq(schema.sessions.code, code));
     this.broadcast({ type: 'expired' });
+    await this.sendBackupIfConfigured();
   }
 
   private async sendBackupIfConfigured(): Promise<void> {
