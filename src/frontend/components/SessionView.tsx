@@ -198,13 +198,17 @@ function LeaderboardTab({ leaderboard, dateFilter, onDateFilterChange, onPlayerC
   dateFilter: DateFilter; onDateFilterChange: (v: DateFilter) => void;
   onPlayerClick: (name: string) => void;
 }) {
+  const [visibleCount, setVisibleCount] = useState(20);
+
+  useEffect(() => { setVisibleCount(20); }, [dateFilter]);
+
   return (
     <div className="leaderboard">
       <div style={{ marginBottom: 12 }}>
         <DateFilterPills value={dateFilter} onChange={onDateFilterChange} />
       </div>
       <div className="leaderboard-list">
-        {leaderboard.map((entry, i) => (
+        {leaderboard.slice(0, visibleCount).map((entry, i) => (
           <div key={entry.name} className={`leaderboard-row ${entry.score > 0 ? 'pos' : entry.score < 0 ? 'neg' : ''}`}
             onClick={() => onPlayerClick(entry.name)} style={{ cursor: 'pointer' }}>
             <span className="leaderboard-rank">{i + 1}</span>
@@ -216,6 +220,12 @@ function LeaderboardTab({ leaderboard, dateFilter, onDateFilterChange, onPlayerC
           <p className="leaderboard-empty">No rounds played yet</p>
         )}
       </div>
+      {visibleCount < leaderboard.length && (
+        <button className="scorer-btn history-show-more"
+          onClick={() => setVisibleCount(v => v + 20)}>
+          Show more ({leaderboard.length - visibleCount} remaining)
+        </button>
+      )}
     </div>
   );
 }

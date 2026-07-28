@@ -149,6 +149,8 @@ function PlayersTab() {
   const [newName, setNewName] = useState('');
   const [mergeFrom, setMergeFrom] = useState('');
   const [mergeTo, setMergeTo] = useState('');
+  const [search, setSearch] = useState('');
+  const [visibleCount, setVisibleCount] = useState(20);
 
   useEffect(() => { refresh(); }, []);
 
@@ -184,16 +186,38 @@ function PlayersTab() {
         <button className="scorer-btn scorer-btn-primary" type="submit">Add</button>
       </form>
 
+      {players.length > 20 && (
+        <input className="landing-input" type="text" placeholder="Search players..."
+          value={search} onChange={e => { setSearch(e.target.value); setVisibleCount(20); }}
+          style={{ marginBottom: 8 }} />
+      )}
+
       {loading && <p className="admin-empty">Loading...</p>}
 
-      <div className="admin-list">
-        {players.map(p => (
-          <PlayerCard key={p.id} player={p} onRefresh={refresh} />
-        ))}
-        {!loading && players.length === 0 && (
-          <p className="admin-empty">No players</p>
-        )}
-      </div>
+      {(() => {
+        const filtered = search
+          ? players.filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+          : players;
+        const visible = filtered.slice(0, visibleCount);
+        return (
+          <>
+            <div className="admin-list">
+              {visible.map(p => (
+                <PlayerCard key={p.id} player={p} onRefresh={refresh} />
+              ))}
+              {!loading && filtered.length === 0 && (
+                <p className="admin-empty">{search ? 'No matches' : 'No players'}</p>
+              )}
+            </div>
+            {visibleCount < filtered.length && (
+              <button className="scorer-btn history-show-more"
+                onClick={() => setVisibleCount(v => v + 20)}>
+                Show more ({filtered.length - visibleCount} remaining)
+              </button>
+            )}
+          </>
+        );
+      })()}
 
       {players.length >= 2 && (
         <form className="admin-merge" onSubmit={handleMerge}>
