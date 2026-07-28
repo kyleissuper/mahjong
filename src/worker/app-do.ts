@@ -80,8 +80,29 @@ export class AppDO extends DurableObject<Env> {
   }
 
   async expireSession(code: string): Promise<void> {
+    await this.sendBackupIfConfigured();
     await this.db.update(schema.sessions).set({ expired: true }).where(eq(schema.sessions.code, code));
     this.broadcast({ type: 'expired' });
+  }
+
+  private async sendBackupIfConfigured(): Promise<void> {
+    const email = await this.getBackupEmail();
+    if (!email || !this.env.RESEND_API_KEY) return;
+    const data = await this.exportAll();
+    if (data.hands.length === 0) return;
+    const json = JSON.stringify(data, null, 2);
+    const date = new Date().toISOString().split('T')[0];
+    const resend = new Resend(this.env.RESEND_API_KEY);
+    await resend.emails.send({
+      from: 'backup@mj-backups.kyletan.com',
+      to: email,
+      subject: `Mahjong Backup — ${date}`,
+      text: `Full backup: ${data.sessions.length} sessions, ${data.hands.length} hands, ${data.players.length} players.`,
+      attachments: [{
+        content: btoa(unescape(encodeURIComponent(json))),
+        filename: `mahjong-backup-${date}.json`,
+      }],
+    });
   }
 
   async extendSession(code: string, hours: number): Promise<void> {
@@ -239,26 +260,6 @@ export class AppDO extends DurableObject<Env> {
 
   async alarm(): Promise<void> {
     const expired = await this.getExpiredSessionCodes();
-    if (expired.length === 0) return;
-
-    const backupEmail = await this.getBackupEmail();
-    if (backupEmail) {
-      const data = await this.exportAll();
-      const json = JSON.stringify(data, null, 2);
-      const date = new Date().toISOString().split('T')[0];
-      const resend = new Resend(this.env.RESEND_API_KEY);
-      await resend.emails.send({
-        from: 'backup@mj-backups.kyletan.com',
-        to: backupEmail,
-        subject: `Mahjong Backup — ${date}`,
-        text: `Full backup: ${data.sessions.length} sessions, ${data.hands.length} hands, ${data.players.length} players.`,
-        attachments: [{
-          content: btoa(unescape(encodeURIComponent(json))),
-          filename: `mahjong-backup-${date}.json`,
-        }],
-      });
-    }
-
     for (const code of expired) {
       await this.expireSession(code);
     }
