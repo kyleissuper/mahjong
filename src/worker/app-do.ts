@@ -52,17 +52,12 @@ export class AppDO extends DurableObject<Env> {
     const now = new Date().toISOString();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     await this.db.insert(schema.sessions).values({ code, createdAt: now, expiresAt, expired: false });
-    await this.ctx.storage.setAlarm(Date.now() + 24 * 60 * 60 * 1000);
   }
 
   async getSession(code: string) {
     const row = await this.db.select().from(schema.sessions).where(eq(schema.sessions.code, code)).get();
     if (!row) throw new Error('Session not found');
-    const pastExpiry = row.expiresAt && new Date(row.expiresAt).getTime() < Date.now();
-    if (row.expired || pastExpiry) {
-      if (pastExpiry && !row.expired) {
-        await this.db.update(schema.sessions).set({ expired: true }).where(eq(schema.sessions.code, code));
-      }
+    if (row.expired || (row.expiresAt && new Date(row.expiresAt).getTime() < Date.now())) {
       throw new Error('Session expired');
     }
     return row;
@@ -113,7 +108,6 @@ export class AppDO extends DurableObject<Env> {
     const newExpiry = base + hours * 60 * 60 * 1000;
     const expiresAt = new Date(newExpiry).toISOString();
     await this.db.update(schema.sessions).set({ expired: false, expiresAt }).where(eq(schema.sessions.code, code));
-    await this.ctx.storage.setAlarm(newExpiry);
   }
 
   async getSessionScanIds(code: string): Promise<string[]> {
@@ -144,11 +138,12 @@ export class AppDO extends DurableObject<Env> {
     return { sessions, hands: hands.map(rowToScoredHand), players };
   }
 
-  async getExpiredSessionCodes(): Promise<string[]> {
+  async expireOverdueSessions(): Promise<void> {
     const rows = await this.db.select().from(schema.sessions).all();
-    return rows
-      .filter(r => !r.expired && r.expiresAt && new Date(r.expiresAt).getTime() < Date.now())
-      .map(r => r.code);
+    const overdue = rows.filter(r => !r.expired && r.expiresAt && new Date(r.expiresAt).getTime() < Date.now());
+    for (const row of overdue) {
+      await this.expireSession(row.code);
+    }
   }
 
   async deleteSession(code: string): Promise<void> {
@@ -258,12 +253,6 @@ export class AppDO extends DurableObject<Env> {
   async webSocketMessage(_ws: WebSocket, _message: string | ArrayBuffer) {}
   async webSocketClose(ws: WebSocket, code: number, reason: string) { ws.close(code, reason); }
 
-  async alarm(): Promise<void> {
-    const expired = await this.getExpiredSessionCodes();
-    for (const code of expired) {
-      await this.expireSession(code);
-    }
-  }
 
   // --- Helpers ---
 

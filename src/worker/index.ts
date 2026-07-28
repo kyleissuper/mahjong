@@ -13,6 +13,11 @@ interface Env {
 }
 
 export default {
+  async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
+    const app = getApp(env);
+    await app.expireOverdueSessions();
+  },
+
   async fetch(request: Request, env: Env): Promise<Response> {
     const { pathname } = new URL(request.url);
 
