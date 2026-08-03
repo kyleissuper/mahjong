@@ -5,7 +5,7 @@ interface VisionModel {
   recognize(image: string): Promise<Meld[]>;
 }
 
-const MODEL = 'google/gemini-2.5-flash';
+const MODEL = 'google/gemini-3.6-flash';
 
 const ALL_TILES = [
   ...['b', 'd', 'c'].flatMap(s => [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `${n}${s}`)),
@@ -67,7 +67,7 @@ export class OpenRouterVision implements VisionModel {
     const body = tracing.enterSpan('serializeRequest', () => JSON.stringify({
       model: MODEL,
       temperature: 0,
-      reasoning: { effort: 'none' },
+      reasoning: { effort: 'low' },
       provider: { sort: 'latency', allow_fallbacks: true },
       response_format: {
         type: 'json_schema',
