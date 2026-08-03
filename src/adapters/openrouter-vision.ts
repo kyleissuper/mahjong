@@ -67,7 +67,7 @@ export class OpenRouterVision implements VisionModel {
     const body = tracing.enterSpan('serializeRequest', () => JSON.stringify({
       model: MODEL,
       temperature: 0,
-      reasoning: { effort: 'low' },
+      reasoning: { effort: 'minimal' },
       provider: { sort: 'latency', allow_fallbacks: true },
       response_format: {
         type: 'json_schema',
@@ -84,20 +84,22 @@ export class OpenRouterVision implements VisionModel {
       ],
     }));
 
-    let resp: Response;
-    try {
-      resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          authorization: `Bearer ${this.apiKey}`,
-          'content-type': 'application/json',
-          'x-title': 'Mahjong Scorer',
-        },
-        body,
-      });
-    } catch {
-      throw new Error('Could not reach the model provider');
-    }
+    const makeRequest = () => fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${this.apiKey}`,
+        'content-type': 'application/json',
+        'x-title': 'Mahjong Scorer',
+      },
+      body,
+    });
+
+    const resp = await tracing.enterSpan('hedgedFetch', async () => {
+      const a = makeRequest();
+      const b = makeRequest();
+      const winner = await Promise.race([a, b]);
+      return winner;
+    });
 
     if (!resp.ok) {
       const detail = (await resp.text().catch(() => '')).slice(0, 200);
