@@ -38,6 +38,16 @@ export function SessionView() {
   }, []);
 
   useEffect(() => {
+    if (!code) return;
+    const ws = api.connectWebSocket(code, (data) => {
+      if (data.type === 'player-added' && data.name) {
+        setGlobalPlayers(prev => prev.includes(data.name) ? prev : [...prev, data.name]);
+      }
+    });
+    return () => ws.close();
+  }, [code]);
+
+  useEffect(() => {
     (window as any).__onScoreDemoComplete = async (timestamp: string) => {
       const { hands } = await api.getAllHands();
       setAllHands(hands);

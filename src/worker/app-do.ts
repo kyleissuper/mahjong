@@ -203,6 +203,7 @@ export class AppDO extends DurableObject<Env> {
     const id = generateId();
     const now = new Date().toISOString();
     await this.db.insert(schema.players).values({ id, name, createdAt: now });
+    this.broadcast({ type: 'player-added', name });
     return { id, name, createdAt: now };
   }
 
