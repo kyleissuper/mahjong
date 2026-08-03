@@ -189,6 +189,11 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[], scanId?: s
           <div style={guideLineStyle} />
           <div style={{ ...guidePillStyle, top: '20%' }}>Exposed · top half</div>
           <div style={{ ...guidePillStyle, top: '70%' }}>Concealed · bottom half</div>
+          {!landscape && (
+            <div style={{ ...guidePillStyle, bottom: 120, top: 'auto', background: 'rgba(200,160,50,0.85)' }}>
+              Rotate to landscape for better detection
+            </div>
+          )}
         </>
       )}
 
