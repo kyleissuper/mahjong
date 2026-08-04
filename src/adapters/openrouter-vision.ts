@@ -27,6 +27,11 @@ const HandSchema = z.object({
 
 const PROMPT = `Identify the mahjong tiles. Return JSON: {melds: [{type, tiles, concealed}]}. Tiles: 1b-9b, 1d-9d, 1c-9c, Ew,Sw,Ww,Nw, Rd,Gd,Wd, F. Types: chow/pong/kong/pair/flower. Top half=exposed(concealed:false), bottom=concealed(concealed:true). Group by visual spacing. 3 identical=pong, 3 consecutive same suit=chow, 2 identical=pair.`;
 
+const OPENROUTER_EXTRAS = {
+  reasoning: { effort: 'minimal' },
+  provider: { sort: 'latency', allow_fallbacks: true },
+};
+
 export class OpenRouterVision implements VisionModel {
   private client: ReturnType<typeof Instructor>;
 
@@ -35,6 +40,14 @@ export class OpenRouterVision implements VisionModel {
       baseURL: 'https://openrouter.ai/api/v1',
       apiKey,
       defaultHeaders: { 'x-title': 'Mahjong Scorer' },
+      fetch: async (url: any, init: any) => {
+        if (init?.body) {
+          const body = JSON.parse(init.body as string);
+          Object.assign(body, OPENROUTER_EXTRAS);
+          init = { ...init, body: JSON.stringify(body) };
+        }
+        return globalThis.fetch(url, init);
+      },
     });
     this.client = Instructor({ client: oai, mode: 'JSON' });
   }
@@ -54,11 +67,7 @@ export class OpenRouterVision implements VisionModel {
             { type: 'image_url', image_url: { url: image } },
           ],
         }],
-        extra_body: {
-          reasoning: { effort: 'minimal' },
-          provider: { sort: 'latency', allow_fallbacks: true },
-        },
-      } as any) as z.infer<typeof HandSchema>;
+      }) as z.infer<typeof HandSchema>;
       span.setAttribute('melds.count', result.melds.length);
       return result.melds as Meld[];
     });
