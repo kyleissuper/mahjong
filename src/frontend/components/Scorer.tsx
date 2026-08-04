@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, type MutableRefObject } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback, type MutableRefObject } from 'react';
 import { buildWin } from '../../mahjong/types.ts';
 import type { Tile, Meld, Win, ScoreResult } from '../../mahjong/types.ts';
 import { scoreHand, RULE_LABELS } from '../../mahjong/scoring/engine.ts';
@@ -517,10 +517,8 @@ function BottomSheet({ handReady, hasContent, active, activeSlotTiles, isFlowers
           <div key={name} className="scorer-suit">
             <div className="scorer-suit-tiles">
               {tiles.map(tile => (
-                <button key={tile} className={`tile-frame tile-btn ${activeSlotTiles.includes(tile) ? 'tile-active' : ''}`}
-                  onClick={() => onTapTile(tile)} aria-label={tile}>
-                  <TileImage tile={tile} size={24} />
-                </button>
+                <TileKey key={tile} tile={tile} active={activeSlotTiles.includes(tile)}
+                  onTap={() => onTapTile(tile)} />
               ))}
             </div>
           </div>
@@ -719,6 +717,46 @@ function PlayerSelect({ label, value, options, onChange, onAddPlayer }: {
         )}
       </div>
     </div>
+  );
+}
+
+function TileKey({ tile, active, onTap }: { tile: Tile; active: boolean; onTap: () => void }) {
+  const [pressed, setPressed] = useState(false);
+  const ref = useRef<HTMLButtonElement>(null);
+  const touchedRef = useRef(false);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    touchedRef.current = true;
+    setPressed(true);
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    if (pressed) {
+      onTap();
+      setPressed(false);
+    }
+  }, [pressed, onTap]);
+
+  const handleTouchCancel = useCallback(() => { setPressed(false); }, []);
+
+  const handleClick = useCallback(() => {
+    if (!touchedRef.current) onTap();
+    touchedRef.current = false;
+  }, [onTap]);
+
+  return (
+    <button ref={ref} className={`tile-frame tile-btn ${active ? 'tile-active' : ''} ${pressed ? 'tile-pressed' : ''}`}
+      onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchCancel}
+      onClick={handleClick} aria-label={tile}>
+      <TileImage tile={tile} size={24} />
+      {pressed && (
+        <span className="tile-preview">
+          <TileImage tile={tile} size={44} />
+        </span>
+      )}
+    </button>
   );
 }
 

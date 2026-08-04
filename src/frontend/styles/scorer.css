@@ -398,12 +398,31 @@
 
 /* Tile touch feedback */
 .tile-frame.tile-btn {
+  position: relative;
   transition: transform 0.1s ease, box-shadow 0.1s ease;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-.tile-frame.tile-btn:active {
+.tile-frame.tile-btn:active, .tile-frame.tile-pressed {
   transform: scale(0.9);
   box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+
+.tile-preview {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border, #e0dbd3);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  z-index: 10;
 }
 
 .tile-active {
