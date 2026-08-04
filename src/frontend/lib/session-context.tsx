@@ -38,9 +38,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (!code) return;
     const ws = api.connectWebSocket(code, (data) => {
       if (data.type === 'expired') {
-        setSession(null);
-        setCode(null);
-        localStorage.removeItem('mj-code');
+        setSession(s => s ? { ...s, expired: true } as Session : null);
       }
     });
     return () => ws.close();

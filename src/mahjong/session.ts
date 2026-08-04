@@ -15,6 +15,7 @@ export interface ScoredHand {
 export interface Session {
   code: string;
   createdAt: string;
+  expired?: boolean;
 }
 
 export function createSession(code = ''): Session {

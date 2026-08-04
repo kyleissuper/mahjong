@@ -16,7 +16,8 @@ import '../styles/scorer.css';
 
 export function SessionView() {
   const { session, code, leave, updateSession } = useSession();
-  const [view, setView] = useState<'scorer' | 'leaderboard' | 'hands' | 'rules'>('scorer');
+  const isExpired = !!session?.expired;
+  const [view, setView] = useState<'scorer' | 'leaderboard' | 'hands' | 'rules'>(isExpired ? 'leaderboard' : 'scorer');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [fading, setFading] = useState(false);
   const [addingName, setAddingName] = useState('');
@@ -46,6 +47,10 @@ export function SessionView() {
     });
     return () => ws.close();
   }, [code]);
+
+  useEffect(() => {
+    if (isExpired && view === 'scorer') setView('leaderboard');
+  }, [isExpired]);
 
   useEffect(() => {
     (window as any).__onScoreDemoComplete = async (timestamp: string) => {
@@ -91,7 +96,7 @@ export function SessionView() {
 
       <div className="scorer-appbar">
         <div className="scorer-appbar-left">
-          {view === 'scorer' && scorerPhase === 'done' ? (
+          {view === 'scorer' && !isExpired && scorerPhase === 'done' ? (
             <button className="scorer-appbar-back" onClick={() => scorerBackRef.current?.()} aria-label="Back">
               <BackArrowIcon />
             </button>
@@ -103,14 +108,27 @@ export function SessionView() {
         </div>
         <div className="scorer-appbar-title" />
         <div className="scorer-appbar-right">
-          {view === 'scorer' && (
+          {view === 'scorer' && !isExpired && (
             <button className="scorer-appbar-text-btn" onClick={() => setScorerKey(k => k + 1)}>New</button>
           )}
         </div>
       </div>
 
       <div className={`session-content ${fading ? 'session-content-fading' : ''}`}>
-      {view === 'scorer' && (
+      {view === 'scorer' && isExpired && (
+        <div className="scorer" style={{ position: 'relative' }}>
+          <div className="session-expired-overlay">
+            <div className="session-expired-card">
+              <p className="session-expired-title">Session ended</p>
+              <p className="session-expired-text">Ask your host for the new session code to keep scoring.</p>
+              <button className="scorer-btn scorer-btn-primary" onClick={leave}>Enter new code</button>
+              <button className="scorer-btn" onClick={() => setView('leaderboard')}>View leaderboard</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {view === 'scorer' && !isExpired && (
         <Scorer key={scorerKey} roster={roster} sessionCode={code}
           onScored={() => refreshHands()}
           hideAppBar onPhaseChange={setScorerPhase}
