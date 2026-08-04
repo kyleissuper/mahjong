@@ -128,7 +128,7 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[], scanId?: s
     const video = webcamRef.current?.video;
     if (!video || !video.videoWidth) return;
     performance.mark('scan:image-prep-start');
-    const dataUrl = coverCrop(video);
+    const dataUrl = coverCrop(video, !landscape);
     performance.mark('scan:image-prep-end');
     performance.measure('scan:image-prep', 'scan:image-prep-start', 'scan:image-prep-end');
     submit(dataUrl);
@@ -184,16 +184,26 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[], scanId?: s
         />
       )}
 
-      {showLiveCamera && phase === 'ready' && (
+      {showLiveCamera && phase === 'ready' && landscape && (
         <>
           <div style={guideLineStyle} />
           <div style={{ ...guidePillStyle, top: '20%' }}>Exposed · top half</div>
           <div style={{ ...guidePillStyle, top: '70%' }}>Concealed · bottom half</div>
-          {!landscape && (
-            <div style={{ ...guidePillStyle, bottom: 120, top: 'auto', background: 'rgba(200,160,50,0.85)' }}>
-              Rotate to landscape for better detection
-            </div>
-          )}
+        </>
+      )}
+
+      {showLiveCamera && phase === 'ready' && !landscape && (
+        <>
+          <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '25%', background: 'rgba(0,0,0,0.5)' }} />
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '25%', background: 'rgba(0,0,0,0.5)' }} />
+            <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, zIndex: 1, borderTop: '2px dashed rgba(255,255,255,0.85)' }} />
+          </div>
+          <div style={{ ...guidePillStyle, top: '30%' }}>Exposed · top half</div>
+          <div style={{ ...guidePillStyle, top: '65%' }}>Concealed · bottom half</div>
+          <div style={{ ...guidePillStyle, bottom: 120, top: 'auto', background: 'rgba(200,160,50,0.85)' }}>
+            Rotate for better results
+          </div>
         </>
       )}
 
@@ -259,16 +269,23 @@ async function recognize(dataUrl: string): Promise<RecognizeResult> {
   return { melds: data.melds, scanId: data.scanId };
 }
 
-function coverCrop(video: HTMLVideoElement): string {
+function coverCrop(video: HTMLVideoElement, isPortrait: boolean): string {
   const sw = video.videoWidth;
   const sh = video.videoHeight;
   const cw = video.clientWidth || sw;
   const ch = video.clientHeight || sh;
   const coverScale = Math.max(cw / sw, ch / sh);
-  const visW = cw / coverScale;
-  const visH = ch / coverScale;
-  const sx = (sw - visW) / 2;
-  const sy = (sh - visH) / 2;
+  let visW = cw / coverScale;
+  let visH = ch / coverScale;
+  let sx = (sw - visW) / 2;
+  let sy = (sh - visH) / 2;
+
+  if (isPortrait) {
+    const cropH = visH * 0.5;
+    sy += (visH - cropH) / 2;
+    visH = cropH;
+  }
+
   const outScale = Math.min(1, MAX_EDGE / Math.max(visW, visH));
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(visW * outScale);
