@@ -39,7 +39,7 @@ const videoStyle: CSSProperties = {
 };
 const closeStyle: CSSProperties = {
   position: 'absolute', top: 16, right: 16, zIndex: 2, width: 40, height: 40,
-  borderRadius: 20, border: 'none', background: 'rgba(0,0,0,0.5)', color: '#fff',
+  borderRadius: 20, border: 'none', background: 'rgba(0,0,0,0.8)', color: '#fff',
   fontSize: '1.1rem', cursor: 'pointer',
 };
 const controlsStyle: CSSProperties = {
@@ -195,8 +195,8 @@ function CameraCapture({ onScan, onClose }: { onScan: (melds: Meld[], scanId?: s
       {showLiveCamera && phase === 'ready' && !landscape && (
         <>
           <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '25%', background: 'rgba(0,0,0,0.5)' }} />
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '25%', background: 'rgba(0,0,0,0.5)' }} />
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '25%', background: 'rgba(0,0,0,0.8)' }} />
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '25%', background: 'rgba(0,0,0,0.8)' }} />
             <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, zIndex: 1, borderTop: '2px dashed rgba(255,255,255,0.85)' }} />
           </div>
           <div style={{ ...guidePillStyle, top: '30%' }}>Exposed · top half</div>
