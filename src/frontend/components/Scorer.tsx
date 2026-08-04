@@ -512,18 +512,7 @@ function BottomSheet({ handReady, hasContent, active, activeSlotTiles, isFlowers
       <div style={{ display: 'flex', justifyContent: 'center', padding: '2px 0 10px' }}>
         <ScanHand onScan={onScan} />
       </div>
-      <div className="scorer-grid">
-        {ALL_SUITS.map(({ name, tiles }) => (
-          <div key={name} className="scorer-suit">
-            <div className="scorer-suit-tiles">
-              {tiles.map(tile => (
-                <TileKey key={tile} tile={tile} active={activeSlotTiles.includes(tile)}
-                  onTap={() => onTapTile(tile)} />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+      <TileKeyboard suits={ALL_SUITS} activeSlotTiles={activeSlotTiles} onTapTile={onTapTile} />
     </div>
   );
 }
@@ -720,43 +709,64 @@ function PlayerSelect({ label, value, options, onChange, onAddPlayer }: {
   );
 }
 
-function TileKey({ tile, active, onTap }: { tile: Tile; active: boolean; onTap: () => void }) {
-  const [pressed, setPressed] = useState(false);
-  const ref = useRef<HTMLButtonElement>(null);
+function TileKeyboard({ suits, activeSlotTiles, onTapTile }: {
+  suits: { name: string; tiles: string[] }[];
+  activeSlotTiles: Tile[];
+  onTapTile: (tile: Tile) => void;
+}) {
+  const [hoveredTile, setHoveredTile] = useState<string | null>(null);
   const touchedRef = useRef(false);
+
+  const tileAtPoint = (x: number, y: number): string | null => {
+    const el = document.elementFromPoint(x, y);
+    if (!el) return null;
+    const btn = el.closest('[data-tile]') as HTMLElement | null;
+    return btn?.dataset.tile ?? null;
+  };
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
     touchedRef.current = true;
-    setPressed(true);
+    const t = e.touches[0];
+    setHoveredTile(tileAtPoint(t.clientX, t.clientY));
   }, []);
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
-    if (pressed) {
-      onTap();
-      setPressed(false);
-    }
-  }, [pressed, onTap]);
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const t = e.touches[0];
+    setHoveredTile(tileAtPoint(t.clientX, t.clientY));
+  }, []);
 
-  const handleTouchCancel = useCallback(() => { setPressed(false); }, []);
+  const handleTouchEnd = useCallback(() => {
+    if (hoveredTile) onTapTile(hoveredTile as Tile);
+    setHoveredTile(null);
+  }, [hoveredTile, onTapTile]);
 
-  const handleClick = useCallback(() => {
-    if (!touchedRef.current) onTap();
-    touchedRef.current = false;
-  }, [onTap]);
+  const handleTouchCancel = useCallback(() => { setHoveredTile(null); }, []);
 
   return (
-    <button ref={ref} className={`tile-frame tile-btn ${active ? 'tile-active' : ''} ${pressed ? 'tile-pressed' : ''}`}
-      onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchCancel}
-      onClick={handleClick} aria-label={tile}>
-      <TileImage tile={tile} size={24} />
-      {pressed && (
-        <span className="tile-preview">
-          <TileImage tile={tile} size={44} />
-        </span>
-      )}
-    </button>
+    <div className="scorer-grid"
+      onTouchStart={handleTouchStart} onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchCancel}>
+      {suits.map(({ name, tiles }) => (
+        <div key={name} className="scorer-suit">
+          <div className="scorer-suit-tiles">
+            {tiles.map(tile => (
+              <button key={tile} data-tile={tile}
+                className={`tile-frame tile-btn ${activeSlotTiles.includes(tile) ? 'tile-active' : ''} ${hoveredTile === tile ? 'tile-pressed' : ''}`}
+                onClick={() => { if (!touchedRef.current) onTapTile(tile as Tile); touchedRef.current = false; }}
+                aria-label={tile}>
+                <TileImage tile={tile} size={24} />
+                {hoveredTile === tile && (
+                  <span className="tile-preview">
+                    <TileImage tile={tile} size={44} />
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
