@@ -257,7 +257,9 @@ async function recognize(request: Request, env: Env): Promise<Response> {
     span.setAttribute('image.bytes', imageBytes);
 
     const scanId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    await tracing.enterSpan('storeImage', async () => {
+    span.setAttribute('scan.id', scanId);
+
+    const storeImage = tracing.enterSpan('storeImage', async () => {
       const base64 = (body.image as string).split(',')[1];
       const binary = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
       const mime = (body.image as string).split(';')[0].split(':')[1];
@@ -266,14 +268,13 @@ async function recognize(request: Request, env: Env): Promise<Response> {
         customMetadata: { scanId },
       });
     });
-    span.setAttribute('scan.id', scanId);
 
     const vision = new OpenRouterVision(env.OPENROUTER_API_KEY);
     try {
-      const melds = await tracing.enterSpan('visionApi', (s) => {
-        s.setAttribute('model', 'google/gemini-2.5-flash');
-        return vision.recognize(body.image as string);
-      });
+      const [melds] = await Promise.all([
+        vision.recognize(body.image as string),
+        storeImage,
+      ]);
       span.setAttribute('melds.count', melds.length);
       return json({ melds, scanId });
     } catch (err) {
