@@ -82,7 +82,7 @@ function buildTimingPayload(t: TimingData) {
   };
 }
 
-export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, onAddPlayer, hideAppBar, onPhaseChange, onConfirmed, onBackRef }: {
+export function Scorer({ roster = ['Player 1', 'Player 2', 'Player 3', 'Player 4'], sessionCode, onScored, onAddPlayer, hideAppBar, onPhaseChange, onConfirmed, onBackRef }: {
   roster?: string[]; sessionCode?: string; onScored?: () => void;
   onAddPlayer?: (name: string) => Promise<void>; hideAppBar?: boolean;
   onPhaseChange?: (phase: 'entering' | 'done') => void;
@@ -325,7 +325,7 @@ export function Scorer({ roster = ['A', 'B', 'C', 'D'], sessionCode, onScored, o
 
       {phase === 'done' && (
         <div className="scorer-finish">
-          {winMeld !== null && <WinContextPanel roster={roster} win={win} onChangeWin={setWin} onAddPlayer={onAddPlayer} />}
+          {winMeld !== null && <WinContextPanel roster={roster} win={win} onChangeWin={setWin} onAddPlayer={onAddPlayer} standalone={!sessionCode} />}
           {scoringResult && <ScoreResultsPanel result={scoringResult} onConfirm={sessionCode ? confirmScore : undefined} />}
         </div>
       )}
@@ -519,14 +519,30 @@ function BottomSheet({ handReady, hasContent, active, activeSlotTiles, isFlowers
 
 type WinState = Partial<Win> & { otherPlayers?: string[]; dealerAnswered?: boolean };
 
-function WinContextPanel({ roster, win, onChangeWin, onAddPlayer }: {
+function WinContextPanel({ roster, win, onChangeWin, onAddPlayer, standalone }: {
   roster: string[];
   win: WinState;
   onChangeWin: (fn: (w: WinState) => WinState) => void;
   onAddPlayer?: (name: string) => Promise<void>;
+  standalone?: boolean;
 }) {
   const method = win.method ?? 'discard';
   const isSelfPick = method === 'self-pick';
+
+  useEffect(() => {
+    if (!standalone || roster.length < 4) return;
+    onChangeWin(w => {
+      if (w.winner) return w;
+      const auto: WinState = { ...w, winner: roster[0] };
+      if (isSelfPick) {
+        auto.otherPlayers = roster.slice(1, 4);
+      } else {
+        auto.from = roster[1];
+      }
+      return auto;
+    });
+  }, [standalone, method]);
+
   const losersReady = isSelfPick
     ? (win.otherPlayers?.length ?? 0) === 3
     : !!win.from;
@@ -537,20 +553,30 @@ function WinContextPanel({ roster, win, onChangeWin, onAddPlayer }: {
         {(['self-pick', 'discard', 'stolen-kong'] as const).map(m => (
           <button key={m}
             className={`scorer-btn scorer-btn-fill ${method === m ? 'scorer-btn-primary' : ''}`}
-            onClick={() => onChangeWin(w => ({ ...w, method: m, from: undefined, otherPlayers: undefined, dealer: undefined, dealerAnswered: false }))}
+            onClick={() => onChangeWin(w => {
+              const next: WinState = { ...w, method: m, from: undefined, otherPlayers: undefined, dealer: undefined, dealerAnswered: false };
+              if (standalone && roster.length >= 4) {
+                next.winner = roster[0];
+                if (m === 'self-pick') { next.otherPlayers = roster.slice(1, 4); }
+                else { next.from = roster[1]; }
+              }
+              return next;
+            })}
           >{m}</button>
         ))}
       </div>
 
-      <PlayerSelect label="Winner" value={win.winner} options={roster} onAddPlayer={onAddPlayer}
-        onChange={p => onChangeWin(w => ({ ...w, winner: p, from: undefined, otherPlayers: undefined, dealer: undefined, dealerAnswered: false }))} />
+      {!standalone && (
+        <PlayerSelect label="Winner" value={win.winner} options={roster} onAddPlayer={onAddPlayer}
+          onChange={p => onChangeWin(w => ({ ...w, winner: p, from: undefined, otherPlayers: undefined, dealer: undefined, dealerAnswered: false }))} />
+      )}
 
-      {win.winner && !isSelfPick && (
+      {!standalone && win.winner && !isSelfPick && (
         <PlayerSelect label="Discarder" value={win.from} options={roster.filter(p => p !== win.winner)} onAddPlayer={onAddPlayer}
           onChange={p => onChangeWin(w => ({ ...w, from: p, dealer: undefined, dealerAnswered: false }))} />
       )}
 
-      {win.winner && isSelfPick && (
+      {!standalone && win.winner && isSelfPick && (
         <div className="scorer-step-group">
           <span className="scorer-field-label">Other players</span>
           {[0, 1, 2].map(i => {
