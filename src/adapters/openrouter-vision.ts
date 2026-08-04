@@ -19,37 +19,13 @@ const MeldSchema = z.object({
   type: z.enum(['chow', 'pong', 'kong', 'pair', 'flower', 'orphans']),
   tiles: z.array(z.enum(ALL_TILES)).max(14),
   concealed: z.boolean(),
-  winTile: z.enum(ALL_TILES).optional(),
 });
 
 const HandSchema = z.object({
   melds: z.array(MeldSchema).max(8),
 });
 
-const PROMPT = `You are reading a photo of a winning Hong Kong mahjong hand and transcribing it into structured melds.
-
-Tile notation:
-- bamboo 1b..9b, dots/circles 1d..9d, characters(wan) 1c..9c
-- winds Ew(east) Sw(south) Ww(west) Nw(north)
-- dragons Rd(red) Gd(green) Wd(white)
-- flower F
-
-Meld types:
-- "chow": 3 consecutive tiles, same suit (e.g. 1c 2c 3c)
-- "pong": 3 identical tiles
-- "kong": 4 identical tiles
-- "pair": 2 identical tiles
-- "flower": one or more F tiles
-- "orphans": the special 13-orphans hand
-
-Layout conventions (use them, but trust what you actually see):
-- Tiles in the TOP HALF of the image are exposed melds -> concealed = false.
-- Tiles in the BOTTOM HALF of the image are concealed -> concealed = true.
-- Exactly ONE tile in the whole hand is the winning tile: the single tile is often rotated sideways. Set "winTile" ONLY on the one meld that contains it, and OMIT "winTile" on every other meld.
-- Group tiles into melds using the visual spacing between groups.
-- A "pair" is exactly 2 identical tiles. Three identical tiles are a "pong", never a "chow"; a "chow" is 3 different consecutive tiles. Count the tiles in each group carefully.
-
-Read carefully. If you are not confident what a tile is, leave it out of the meld rather than guessing.`;
+const PROMPT = `Identify the mahjong tiles. Return JSON: {melds: [{type, tiles, concealed}]}. Tiles: 1b-9b, 1d-9d, 1c-9c, Ew,Sw,Ww,Nw, Rd,Gd,Wd, F. Types: chow/pong/kong/pair/flower. Top half=exposed(concealed:false), bottom=concealed(concealed:true). Group by visual spacing. 3 identical=pong, 3 consecutive same suit=chow, 2 identical=pair.`;
 
 export class OpenRouterVision implements VisionModel {
   private client: ReturnType<typeof Instructor>;
@@ -78,7 +54,11 @@ export class OpenRouterVision implements VisionModel {
             { type: 'image_url', image_url: { url: image } },
           ],
         }],
-      });
+        extra_body: {
+          reasoning: { effort: 'minimal' },
+          provider: { sort: 'latency', allow_fallbacks: true },
+        },
+      } as any) as z.infer<typeof HandSchema>;
       span.setAttribute('melds.count', result.melds.length);
       return result.melds as Meld[];
     });
