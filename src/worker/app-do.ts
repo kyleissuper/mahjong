@@ -234,7 +234,24 @@ export class AppDO extends DurableObject<Env> {
     const keep = await this.db.select().from(schema.players).where(eq(schema.players.id, keepId)).get();
     const merge = await this.db.select().from(schema.players).where(eq(schema.players.id, mergeId)).get();
     if (!keep || !merge) throw new Error('Player not found');
-    await this.renamePlayer(mergeId, keep.name);
+    const allHands = await this.db.select().from(schema.hands).all();
+    for (const h of allHands) {
+      const scores = h.scores as Record<string, number>;
+      if (merge.name in scores || h.winner === merge.name) {
+        const newScores: Record<string, number> = {};
+        for (const [k, v] of Object.entries(scores)) {
+          if (k === merge.name) {
+            newScores[keep.name] = (newScores[keep.name] ?? 0) + v;
+          } else {
+            newScores[k] = (newScores[k] ?? 0) + v;
+          }
+        }
+        await this.db.update(schema.hands).set({
+          winner: h.winner === merge.name ? keep.name : h.winner,
+          scores: newScores as any,
+        }).where(eq(schema.hands.id, h.id));
+      }
+    }
     await this.deletePlayer(mergeId);
   }
 
