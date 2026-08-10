@@ -197,6 +197,12 @@ export class AppDO extends DurableObject<Env> {
     return this.db.select().from(schema.players).all();
   }
 
+  async searchPlayers(query: string) {
+    const all = await this.db.select().from(schema.players).all();
+    const q = query.toLowerCase();
+    return all.filter(p => p.name.toLowerCase().includes(q));
+  }
+
   async registerPlayer(name: string) {
     const id = generateId();
     const now = new Date().toISOString();

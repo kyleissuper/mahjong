@@ -33,6 +33,10 @@ export class HttpBackend implements Backend {
     return this.get<{ players: RegisteredPlayer[] }>('/api/players');
   }
 
+  async searchPlayers(query: string): Promise<{ players: RegisteredPlayer[] }> {
+    return this.get<{ players: RegisteredPlayer[] }>(`/api/players?q=${encodeURIComponent(query)}`);
+  }
+
   async registerPlayer(name: string): Promise<{ player: RegisteredPlayer }> {
     return this.post<{ player: RegisteredPlayer }>('/api/players', { name });
   }

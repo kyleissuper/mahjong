@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, within, cleanup, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState, useEffect } from 'react';
+import { SWRConfig } from 'swr';
 import { setBackend } from '../src/frontend/lib/backend.ts';
 import { MemoryBackend } from '../src/frontend/lib/memory-backend.ts';
 import { SessionProvider, useSession } from '../src/frontend/lib/session-context.tsx';
@@ -56,9 +57,11 @@ function AutoJoinSession({ code }: { code: string }) {
 
 async function renderSessionView(code: string) {
   render(
-    <SessionProvider>
-      <AutoJoinSession code={code} />
-    </SessionProvider>
+    <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
+      <SessionProvider>
+        <AutoJoinSession code={code} />
+      </SessionProvider>
+    </SWRConfig>
   );
 
   await waitFor(() => {
@@ -346,6 +349,14 @@ describe('Player dropdown ordering', () => {
     const winnerRow = screen.getByText('Winner').closest('.scorer-step-row') as HTMLElement;
     const input = within(winnerRow).getByRole('textbox');
     await user.click(input);
+
+    // Wait for server-side search results to load
+    await waitFor(() => {
+      const opts = [...document.querySelectorAll('.combo-option')]
+        .map(el => el.textContent)
+        .filter(t => t && t !== '+ Add player');
+      expect(opts.length).toBeGreaterThanOrEqual(3);
+    });
 
     const options = [...document.querySelectorAll('.combo-option')]
       .map(el => el.textContent)

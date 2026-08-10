@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { SWRConfig } from 'swr';
 import { setBackend } from './lib/backend.ts';
 import { HttpBackend } from './lib/http-backend.ts';
 
@@ -51,8 +52,10 @@ function Root() {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <SessionProvider>
-      <Root />
-    </SessionProvider>
+    <SWRConfig value={{ revalidateOnFocus: true, errorRetryCount: 3 }}>
+      <SessionProvider>
+        <Root />
+      </SessionProvider>
+    </SWRConfig>
   </StrictMode>,
 );
