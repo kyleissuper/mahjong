@@ -8,6 +8,7 @@ import { isHandReady } from '../../mahjong/hand.ts';
 import { TileImage } from './TileImage.tsx';
 import { ScanHand } from './ScanHand.tsx';
 import { BackArrowIcon } from './Icons.tsx';
+import { usePlayerSearch } from '../hooks/usePlayerSearch.ts';
 import { useZoom } from '../hooks/useZoom.ts';
 import '../styles/scorer.css';
 
@@ -567,12 +568,12 @@ function WinContextPanel({ roster, win, onChangeWin, onAddPlayer, standalone }: 
       </div>
 
       {!standalone && (
-        <PlayerSelect label="Winner" value={win.winner} options={roster} onAddPlayer={onAddPlayer}
+        <PlayerSelect label="Winner" value={win.winner} sortHint={roster} onAddPlayer={onAddPlayer}
           onChange={p => onChangeWin(w => ({ ...w, winner: p, from: undefined, otherPlayers: undefined, dealer: undefined, dealerAnswered: false }))} />
       )}
 
       {!standalone && win.winner && !isSelfPick && (
-        <PlayerSelect label="Discarder" value={win.from} options={roster.filter(p => p !== win.winner)} onAddPlayer={onAddPlayer}
+        <PlayerSelect label="Discarder" value={win.from} exclude={[win.winner]} sortHint={roster} onAddPlayer={onAddPlayer}
           onChange={p => onChangeWin(w => ({ ...w, from: p, dealer: undefined, dealerAnswered: false }))} />
       )}
 
@@ -584,7 +585,7 @@ function WinContextPanel({ roster, win, onChangeWin, onAddPlayer, standalone }: 
             const excluded = [win.winner!, ...chosen.filter((_, j) => j !== i)];
             return (
               <PlayerSelect key={i}
-                value={chosen[i]} options={roster.filter(p => !excluded.includes(p))} onAddPlayer={onAddPlayer}
+                value={chosen[i]} exclude={excluded} sortHint={roster} onAddPlayer={onAddPlayer}
                 onChange={p => onChangeWin(w => {
                   const next = [...(w.otherPlayers ?? [])];
                   next[i] = p;
@@ -625,12 +626,14 @@ function WinContextPanel({ roster, win, onChangeWin, onAddPlayer, standalone }: 
   );
 }
 
-function PlayerSelect({ label, value, options, onChange, onAddPlayer }: {
-  label?: string; value?: string; options: string[];
+function PlayerSelect({ label, value, options, exclude, sortHint, onChange, onAddPlayer }: {
+  label?: string; value?: string; options?: string[]; exclude?: string[];
+  sortHint?: string[];
   onChange: (value: string) => void; onAddPlayer?: (name: string) => Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [highlight, setHighlight] = useState(0);
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
@@ -638,9 +641,35 @@ function PlayerSelect({ label, value, options, onChange, onAddPlayer }: {
   const ref = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const filtered = query
-    ? options.filter(p => p.toLowerCase().includes(query.toLowerCase()))
-    : options;
+  useEffect(() => {
+    if (!query) { setDebouncedQuery(''); return; }
+    const t = setTimeout(() => setDebouncedQuery(query), 200);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  const useServer = !options;
+  const { players: serverPlayers, invalidate } = usePlayerSearch(debouncedQuery, useServer && open);
+
+  const baseList = useServer
+    ? serverPlayers
+    : query
+      ? options.filter(p => p.toLowerCase().includes(query.toLowerCase()))
+      : options;
+
+  const sorted = useServer && sortHint?.length
+    ? [...baseList].sort((a, b) => {
+        const ai = sortHint.indexOf(a);
+        const bi = sortHint.indexOf(b);
+        if (ai !== -1 && bi !== -1) return ai - bi;
+        if (ai !== -1) return -1;
+        if (bi !== -1) return 1;
+        return a.localeCompare(b);
+      })
+    : baseList;
+
+  const filtered = exclude?.length
+    ? sorted.filter(p => !exclude.includes(p))
+    : sorted;
 
   function select(p: string) {
     onChange(p);
@@ -673,6 +702,7 @@ function PlayerSelect({ label, value, options, onChange, onAddPlayer }: {
     setAddError(null);
     try {
       await onAddPlayer(newName.trim());
+      invalidate();
       select(newName.trim());
       setNewName('');
       setAdding(false);

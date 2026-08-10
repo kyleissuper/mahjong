@@ -50,6 +50,11 @@ export class MemoryBackend implements Backend {
     return { players: this.registry.players };
   }
 
+  async searchPlayers(query: string): Promise<{ players: RegisteredPlayer[] }> {
+    const q = query.toLowerCase();
+    return { players: this.registry.players.filter(p => p.name.toLowerCase().includes(q)) };
+  }
+
   async registerPlayer(name: string): Promise<{ player: RegisteredPlayer }> {
     this.registry = registerPlayer(this.registry, name);
     return { player: findPlayerByName(this.registry, name)! };

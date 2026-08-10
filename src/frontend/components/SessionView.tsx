@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSession } from '../lib/session-context.tsx';
 import { Scorer } from './Scorer.tsx';
 import { CopyableCode } from './CopyableCode.tsx';
 import { ScoringReference } from './ScoringReference.tsx';
 import { TileImage } from './TileImage.tsx';
-import { rosterByActivity, type ScoredHand } from '../../mahjong/session.ts';
+import { type ScoredHand } from '../../mahjong/session.ts';
 import { filterHistory, type DateFilter } from '../../mahjong/history.ts';
 import { leaderboardFromHands } from '../../mahjong/leaderboard.ts';
 import { RULE_LABELS } from '../../mahjong/scoring/engine.ts';
@@ -29,24 +29,12 @@ export function SessionView() {
   const [scorerPhase, setScorerPhase] = useState<'entering' | 'done'>('entering');
   const scorerBackRef = useRef<(() => void) | null>(null);
   const [expandTimestamp, setExpandHandTimestamp] = useState<string | null>(null);
-  const [globalPlayers, setGlobalPlayers] = useState<string[]>([]);
   const [allHands, setAllHands] = useState<ScoredHand[]>([]);
   const [drawerClosing, setDrawerClosing] = useState(false);
 
   useEffect(() => {
-    api.getPlayers().then(({ players }) => setGlobalPlayers(players.map(p => p.name)));
     api.getAllHands().then(({ hands }) => setAllHands(hands));
   }, []);
-
-  useEffect(() => {
-    if (!code) return;
-    const ws = api.connectWebSocket(code, (data) => {
-      if (data.type === 'player-added' && data.name) {
-        setGlobalPlayers(prev => prev.includes(data.name) ? prev : [...prev, data.name]);
-      }
-    });
-    return () => ws.close();
-  }, [code]);
 
   useEffect(() => {
     if (isExpired && view === 'scorer') setView('leaderboard');
@@ -68,9 +56,14 @@ export function SessionView() {
     api.getAllHands().then(({ hands }) => setAllHands(hands));
   }
 
+  const roster = useMemo(() => {
+    const names = new Set<string>();
+    for (const h of allHands) for (const name of Object.keys(h.scores)) names.add(name);
+    return [...names];
+  }, [allHands]);
+
   if (!session || !code) return null;
 
-  const roster = rosterByActivity(allHands, globalPlayers);
   const leaderboardHands = filterHistory(allHands, { date: leaderboardDateFilter });
   const leaderboard = leaderboardFromHands(leaderboardHands);
   const filteredHands = filterHistory(allHands, {
@@ -147,7 +140,6 @@ export function SessionView() {
           }}
           onAddPlayer={async (name) => {
             await api.registerPlayer(name);
-            setGlobalPlayers(prev => [...prev, name]);
           }} />
       )}
 

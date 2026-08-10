@@ -7,5 +7,6 @@ export function scoreHand(code: string, hand: any, win: any, timing?: any) { ret
 export function getAllHands() { return getBackend().getAllHands(); }
 export function getSessionHands(code: string) { return getBackend().getSessionHands(code); }
 export function getPlayers() { return getBackend().getPlayers(); }
+export function searchPlayers(query: string) { return getBackend().searchPlayers(query); }
 export function registerPlayer(name: string) { return getBackend().registerPlayer(name); }
 export function connectWebSocket(code: string, onMessage: (data: any) => void) { return getBackend().connectWebSocket(code, onMessage); }

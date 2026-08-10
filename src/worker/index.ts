@@ -121,7 +121,8 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
 
     // Players
     if (pathname === '/api/players' && request.method === 'GET') {
-      const players = await app.getPlayers();
+      const q = new URL(request.url).searchParams.get('q');
+      const players = q ? await app.searchPlayers(q) : await app.getPlayers();
       return json({ players });
     }
 

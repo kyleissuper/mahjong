@@ -10,6 +10,7 @@ export interface Backend {
   getAllHands(): Promise<{ hands: ScoredHand[] }>;
   getSessionHands(code: string): Promise<{ hands: ScoredHand[] }>;
   getPlayers(): Promise<{ players: RegisteredPlayer[] }>;
+  searchPlayers(query: string): Promise<{ players: RegisteredPlayer[] }>;
   registerPlayer(name: string): Promise<{ player: RegisteredPlayer }>;
   connectWebSocket(code: string, onMessage: (data: any) => void): { close(): void };
 }
