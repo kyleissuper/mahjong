@@ -9,7 +9,7 @@ import { filterHistory, type DateFilter } from '../../mahjong/history.ts';
 import { leaderboardFromHands } from '../../mahjong/leaderboard.ts';
 import { RULE_LABELS } from '../../mahjong/scoring/engine.ts';
 import { DateFilterPills } from './DateFilterPills.tsx';
-import { HamburgerIcon, BackArrowIcon } from './Icons.tsx';
+import { HamburgerIcon, BackArrowIcon, PlusIcon } from './Icons.tsx';
 import * as api from '../lib/api.ts';
 import '../styles/scorer.css';
 
@@ -144,9 +144,10 @@ export function SessionView() {
       )}
 
       {view === 'leaderboard' && (
-        <div className="scorer">
+        <div className={`scorer ${isExpired ? '' : 'scorer-has-fab'}`}>
           <LeaderboardTab leaderboard={leaderboard}
             dateFilter={leaderboardDateFilter} onDateFilterChange={setLeaderboardDateFilter}
+            onScoreNew={isExpired ? undefined : () => navigateTo('scorer')}
             onPlayerClick={(name) => {
                 setPlayerFilter(name);
                 navigateTo('hands');
@@ -155,10 +156,11 @@ export function SessionView() {
       )}
 
       {view === 'hands' && (
-        <div className="scorer">
+        <div className={`scorer ${isExpired ? '' : 'scorer-has-fab'}`}>
           <HandsTab hands={filteredHands} roster={roster}
             playerFilter={playerFilter} onPlayerFilterChange={setPlayerFilter}
             dateFilter={dateFilter} onDateFilterChange={setDateFilter}
+            onScoreNew={isExpired ? undefined : () => navigateTo('scorer')}
             expandTimestamp={expandTimestamp} onExpandConsumed={() => setExpandHandTimestamp(null)} />
         </div>
       )}
@@ -169,6 +171,13 @@ export function SessionView() {
         </div>
       )}
       </div>
+
+      {!isExpired && (view === 'leaderboard' || view === 'hands') && !fading && (
+        <button className="fab" onClick={() => navigateTo('scorer')}>
+          <PlusIcon />
+          Score hand
+        </button>
+      )}
     </div>
   );
 }
@@ -213,10 +222,11 @@ function Drawer({ open, closing, onClose, code, currentView, onNavigate, onLeave
   );
 }
 
-function LeaderboardTab({ leaderboard, dateFilter, onDateFilterChange, onPlayerClick }: {
+function LeaderboardTab({ leaderboard, dateFilter, onDateFilterChange, onPlayerClick, onScoreNew }: {
   leaderboard: { name: string; score: number }[];
   dateFilter: DateFilter; onDateFilterChange: (v: DateFilter) => void;
   onPlayerClick: (name: string) => void;
+  onScoreNew?: () => void;
 }) {
   const [visibleCount, setVisibleCount] = useState(20);
 
@@ -237,7 +247,14 @@ function LeaderboardTab({ leaderboard, dateFilter, onDateFilterChange, onPlayerC
           </div>
         ))}
         {leaderboard.length === 0 && (
-          <p className="leaderboard-empty">No rounds played yet</p>
+          <div className="empty-state">
+            <p className="leaderboard-empty">No rounds played yet</p>
+            {onScoreNew && (
+              <button className="scorer-btn scorer-btn-primary empty-state-cta" onClick={onScoreNew}>
+                Score a hand
+              </button>
+            )}
+          </div>
         )}
       </div>
       {visibleCount < leaderboard.length && (
@@ -250,11 +267,12 @@ function LeaderboardTab({ leaderboard, dateFilter, onDateFilterChange, onPlayerC
   );
 }
 
-function HandsTab({ hands, roster, playerFilter, onPlayerFilterChange, dateFilter, onDateFilterChange, expandTimestamp, onExpandConsumed }: {
+function HandsTab({ hands, roster, playerFilter, onPlayerFilterChange, dateFilter, onDateFilterChange, expandTimestamp, onExpandConsumed, onScoreNew }: {
   hands: ScoredHand[]; roster: string[];
   playerFilter: string | null; onPlayerFilterChange: (v: string | null) => void;
   dateFilter: DateFilter; onDateFilterChange: (v: DateFilter) => void;
   expandTimestamp?: string | null; onExpandConsumed?: () => void;
+  onScoreNew?: () => void;
 }) {
   const [expanded, setExpanded] = useState<number | null>(null);
   const [visibleCount, setVisibleCount] = useState(20);
@@ -286,7 +304,14 @@ function HandsTab({ hands, roster, playerFilter, onPlayerFilterChange, dateFilte
       </div>
 
       {hands.length === 0 && (
-        <p className="leaderboard-empty">No hands recorded yet</p>
+        <div className="empty-state">
+          <p className="leaderboard-empty">No hands recorded yet</p>
+          {onScoreNew && !playerFilter && (
+            <button className="scorer-btn scorer-btn-primary empty-state-cta" onClick={onScoreNew}>
+              Score a hand
+            </button>
+          )}
+        </div>
       )}
 
       <div className="history-list" ref={scrollRef}>

@@ -1818,3 +1818,56 @@
   color: var(--text-secondary);
   line-height: 1.5;
 }
+
+/* === Score-hand FAB === */
+
+.fab {
+  position: fixed;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  right: max(16px, calc(50% - 240px + 16px));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 20px 0 16px;
+  border: none;
+  border-radius: 24px;
+  background: #2d8366;
+  color: white;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 3px 5px -1px rgba(0,0,0,0.2), 0 6px 10px 0 rgba(0,0,0,0.14);
+  z-index: 100;
+  animation: fab-in 0.15s ease;
+}
+
+.fab:active {
+  background: var(--accent-dark);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+@keyframes fab-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Room so the FAB doesn't cover the last row / "Show more" button */
+.scorer-has-fab {
+  padding-bottom: 88px;
+}
+
+/* === Empty states === */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.empty-state-cta {
+  align-self: center;
+  padding: 12px 24px;
+}
