@@ -829,7 +829,7 @@ function TileKeyboard({ suits, activeSlotTiles, onTapTile }: {
 function DealerPicker({ players, showNeither, value, answered, onChange }: {
   players: string[]; showNeither?: boolean; value?: string; answered?: boolean; onChange: (p: string | undefined) => void;
 }) {
-  const isNeither = answered && value === undefined;
+  const isNeither = !!answered && value === undefined;
   return (
     <div className="scorer-dealer-picker">
       <span className="scorer-field-label">Dealer this round?</span>
