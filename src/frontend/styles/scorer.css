@@ -375,7 +375,13 @@
 
 /* === Tile grid === */
 
-.scorer-grid { padding: 0; }
+.scorer-grid {
+  padding: 0;
+  /* Finger-drags on the keyboard must never scroll or zoom the page.
+     React's touch listeners are passive, so preventDefault can't do this. */
+  touch-action: none;
+  -webkit-touch-callout: none;
+}
 
 .scorer-suit { margin-bottom: 6px; }
 
@@ -394,6 +400,10 @@
   gap: 3px;
   flex-wrap: wrap;
   justify-content: center;
+}
+
+.tile-frame img {
+  -webkit-user-drag: none;
 }
 
 /* Tile touch feedback */
@@ -541,7 +551,7 @@
   background: var(--surface);
   color: var(--text);
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 500;
 }
 
@@ -626,7 +636,7 @@
   background: var(--bg);
   color: var(--text);
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.85rem;
+  font-size: 1rem;
 }
 
 .scorer-add-player-input:focus {
@@ -1103,7 +1113,7 @@
   background: var(--bg);
   color: var(--text);
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.9rem;
+  font-size: 1rem;
   box-sizing: border-box;
 }
 

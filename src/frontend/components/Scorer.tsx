@@ -781,7 +781,8 @@ function TileKeyboard({ suits, activeSlotTiles, onTapTile }: {
   };
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
+    // No preventDefault here: React registers touch listeners as passive, so
+    // it never worked — scroll/zoom suppression is CSS touch-action on the grid.
     touchedRef.current = true;
     const t = e.touches[0];
     setHoveredTile(tileAtPoint(t.clientX, t.clientY));
