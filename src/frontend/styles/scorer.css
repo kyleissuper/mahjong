@@ -398,8 +398,20 @@
 .scorer-suit-tiles {
   display: flex;
   gap: 3px;
-  flex-wrap: wrap;
+  /* A row of keys must always fit the viewport: with large system text or
+     display zoom the effective viewport narrows, so keys shrink, never wrap. */
+  flex-wrap: nowrap;
   justify-content: center;
+}
+
+.scorer-suit-tiles .tile-frame {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.scorer-suit-tiles .tile-frame img {
+  max-width: 100%;
+  height: auto;
 }
 
 .tile-frame img {

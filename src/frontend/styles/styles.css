@@ -23,7 +23,14 @@ html, body {
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html { font-size: 16px; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+html {
+  font-size: 16px;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+  /* Don't let mobile browsers inflate fixed-size text (Android font boost). */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 
 /* Kill double-tap-to-zoom on every engine (the viewport meta doesn't on iOS). */
 html, body { touch-action: manipulation; }
