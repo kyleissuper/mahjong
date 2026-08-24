@@ -370,7 +370,9 @@ function AppBar({ isEntering, onBack, onReset }: {
       </div>
       <div className="scorer-appbar-title"></div>
       <div className="scorer-appbar-right">
-        <button className="scorer-appbar-text-btn" onClick={onReset}>Reset</button>
+        {isEntering && (
+          <button className="scorer-appbar-text-btn" onClick={onReset}>Reset</button>
+        )}
       </div>
     </div>
   );
