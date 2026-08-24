@@ -1494,6 +1494,29 @@ describe('scoreHand', () => {
     expect(result.handValue).toBe(7);
   });
 
+  it('doubled train leg — 123, 123, 456, 789 awards the duplicate point (11 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['1d', '2d', '3d'], concealed: true },
+        { type: 'chow', tiles: ['1d', '2d', '3d'], concealed: true },
+        { type: 'chow', tiles: ['4d', '5d', '6d'], concealed: true },
+        { type: 'chow', tiles: ['7d', '8d', '9d'], concealed: true, winTile: '7d' },
+        { type: 'pair', tiles: ['3b', '3b'], concealed: false },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'allChows', points: 1 },
+      { name: 'missingSuit', points: 1 },
+      { name: 'doubleChow', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
+      { name: 'oneToNineTrain', points: 4 },
+    ]);
+    expect(result.handValue).toBe(11);
+    expect(result.scores).toEqual({ A: 11, B: -11, C: 0, D: 0 });
+  });
+
   it('little and big pong — pongs of 1s and 9s of the same suit (1 pt)', () => {
     const hand: Hand = {
       melds: [
@@ -1802,10 +1825,10 @@ describe('scoreHand', () => {
       { name: 'splitKong', points: 1 },
       { name: 'doubleChow', points: 1 },
       { name: 'noFlowersNoHonors', points: 3 },
-      { name: 'oneToNineTrain', points: 3 },
+      { name: 'oneToNineTrain', points: 4 },
       { name: 'pure', points: 8 },
     ]);
-    expect(result.handValue).toBe(19);
+    expect(result.handValue).toBe(20);
   });
 
   it('unordered chow tiles produce the same score as sorted', () => {

@@ -413,10 +413,16 @@ function noFlowersNoHonors(hand: Hand): number {
 function oneToNineTrain(hand: Hand): number {
   const chows = hand.melds.filter(m => m.type === 'chow');
   const bySuit = Map.groupBy(chows, m => suit(m.tiles[0]));
-  return [...bySuit.values()].some(melds => {
+  for (const melds of bySuit.values()) {
     const values = new Set(melds.flatMap(m => m.tiles.map(numValue)));
-    return [1, 2, 3, 4, 5, 6, 7, 8, 9].every(v => values.has(v));
-  }) ? 3 : 0;
+    if (![1, 2, 3, 4, 5, 6, 7, 8, 9].every(v => values.has(v))) continue;
+    const legs = melds.map(m => m.tiles.map(numValue).sort().join(''));
+    const duplicates = ['123', '456', '789']
+      .map(leg => legs.filter(l => l === leg).length)
+      .reduce((sum, count) => sum + Math.max(0, count - 1), 0);
+    return 3 + duplicates;
+  }
+  return 0;
 }
 
 function no19sNoHonors(hand: Hand): number {
