@@ -273,6 +273,79 @@ function SettingsTab() {
             setSaved(true);
           }}>{saved ? 'Saved' : 'Save'}</button>
       </div>
+
+      <BackfillSection />
+    </div>
+  );
+}
+
+function BackfillSection() {
+  const [report, setReport] = useState<admin.BackfillReport | null>(null);
+  const [running, setRunning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState<number | null>(null);
+
+  async function run(commit: boolean) {
+    setRunning(true);
+    setError(null);
+    try {
+      const r = await admin.backfillScans(commit);
+      setReport(r);
+      if (commit) setDone(r.committed ?? 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed');
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  const linkable = report?.proposals.filter(p => !p.contested).length ?? 0;
+
+  return (
+    <div style={{ marginTop: 24 }}>
+      <div className="admin-sub-label">Scan photo backfill</div>
+      <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 8px' }}>
+        Re-recognizes orphaned scan photos and links them to hands that were scored
+        without a photo reference, matching by tile content and capture time.
+        Dry run first; ambiguous matches are never written.
+      </p>
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button className="scorer-btn" disabled={running} onClick={() => run(false)}>
+          {running ? 'Running…' : 'Dry run'}
+        </button>
+        {report && linkable > 0 && done === null && (
+          <button className="scorer-btn scorer-btn-primary" disabled={running}
+            onClick={() => run(true)}>
+            Link {linkable} photo{linkable === 1 ? '' : 's'}
+          </button>
+        )}
+      </div>
+      {error && <p className="landing-error" style={{ marginTop: 8 }}>{error}</p>}
+      {done !== null && (
+        <p style={{ fontSize: '0.8rem', color: 'var(--accent-text)', marginTop: 8 }}>
+          Linked {done} photo{done === 1 ? '' : 's'}.
+        </p>
+      )}
+      {report && (
+        <div style={{ marginTop: 10, fontSize: '0.78rem' }}>
+          <p style={{ color: 'var(--text-secondary)', margin: '0 0 6px' }}>
+            {report.unlinkedHands} hands without photos · {report.orphanScans} orphaned photos ·{' '}
+            {report.recognized} re-recognized{report.recognitionFailed > 0 ? ` · ${report.recognitionFailed} failed` : ''}
+          </p>
+          {report.proposals.length === 0 && <p className="admin-empty">No confident matches found.</p>}
+          {report.proposals.map(p => (
+            <div key={p.handId} style={{
+              display: 'flex', justifyContent: 'space-between', gap: 8, padding: '6px 0',
+              borderTop: '1px solid var(--border)', opacity: p.contested ? 0.55 : 1,
+            }}>
+              <span>{p.winner} · {p.handTime.split(', ')[0]} {p.handTime.split(', ')[1]}</span>
+              <span style={{ color: p.contested ? 'var(--red-accent)' : 'var(--text-secondary)' }}>
+                {Math.round(p.score * 100)}% tiles{p.contested ? ' · ambiguous, skipped' : ''}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -184,6 +184,18 @@ export class AppDO extends DurableObject<Env> {
     await this.db.delete(schema.hands).where(eq(schema.hands.id, id));
   }
 
+  async setHandScanId(id: number, scanId: string): Promise<void> {
+    const rows = this.ctx.storage.sql.exec<{ timing: string | null }>(
+      `SELECT timing FROM hands WHERE id = ?`, id
+    ).toArray();
+    if (rows.length === 0) return;
+    let timing: any = {};
+    try { timing = rows[0].timing ? JSON.parse(rows[0].timing) : {}; } catch {}
+    timing.scanId = scanId;
+    timing.scanIdBackfilled = true;
+    this.ctx.storage.sql.exec(`UPDATE hands SET timing = ? WHERE id = ?`, JSON.stringify(timing), id);
+  }
+
   async hasScan(scanId: string): Promise<boolean> {
     const rows = this.ctx.storage.sql.exec(
       `SELECT 1 FROM hands WHERE timing LIKE ? LIMIT 1`, `%"scanId":"${scanId}"%`

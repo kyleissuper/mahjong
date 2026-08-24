@@ -1,6 +1,7 @@
 import { tracing } from 'cloudflare:workers';
 import { OpenRouterVision } from '../adapters/openrouter-vision.ts';
-import type { Hand, Win } from '../mahjong/types.ts';
+import { matchScansToHands, parsePacificTimestamp } from './scan-match.ts';
+import type { Hand, Meld, Win } from '../mahjong/types.ts';
 
 export { AppDO } from './app-do.ts';
 
@@ -235,6 +236,11 @@ async function routeAdmin(app: any, request: Request, pathname: string, env: Env
     return json({ ok: true });
   }
 
+  if (pathname === '/api/admin/scans/backfill' && request.method === 'POST') {
+    const { commit = false } = await request.json() as { commit?: boolean };
+    return backfillScans(app, env, commit);
+  }
+
   if (pathname === '/api/admin/players' && request.method === 'GET') {
     const players = await app.getPlayers();
     return json({ players });
@@ -313,6 +319,109 @@ async function recognize(request: Request, env: Env): Promise<Response> {
       span.setAttribute('error', true);
       return json({ error: err instanceof Error ? err.message : 'Scan failed' }, 502);
     }
+  });
+}
+
+// --- Scan photo backfill ---
+// Hands scored by clients that predate scanId tracking have photos in R2 but
+// no link. Re-recognize orphaned photos and match them to hands by tile
+// content + capture time; commit only uncontested matches.
+
+async function backfillScans(app: any, env: Env, commit: boolean): Promise<Response> {
+  const MAX_RECOGNIZE = 80;
+  const WINDOW_MS = 21 * 60 * 1000;
+
+  const hands: any[] = await app.getAllHands();
+  const linked = new Set(hands.map(h => h.scanId).filter(Boolean));
+
+  const unlinkedHands = hands
+    .map(h => ({
+      id: h.id,
+      winner: h.winner,
+      timestamp: h.timestamp,
+      timeMs: parsePacificTimestamp(h.timestamp),
+      tiles: (h.melds as Meld[]).flatMap(m => m.tiles),
+      hasScan: !!h.scanId,
+    }))
+    .filter(h => !h.hasScan && h.timeMs !== null);
+
+  // All R2 scans not linked to any hand.
+  const orphans: { scanId: string; timeMs: number }[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await env.SCANS.list({ prefix: 'scans/', cursor });
+    for (const obj of page.objects) {
+      const scanId = obj.key.slice('scans/'.length).replace(/\.jpg$/, '');
+      const timeMs = parseInt(scanId.split('-')[0]);
+      if (!linked.has(scanId) && Number.isFinite(timeMs)) orphans.push({ scanId, timeMs });
+    }
+    cursor = page.truncated ? page.cursor : undefined;
+  } while (cursor);
+
+  // Only photos near some unlinked hand are worth a vision call.
+  const relevant = orphans.filter(o =>
+    unlinkedHands.some(h => Math.abs((h.timeMs as number) - o.timeMs) <= WINDOW_MS)
+  ).slice(0, MAX_RECOGNIZE);
+
+  const vision = relevant.length > 0 ? new OpenRouterVision(env.OPENROUTER_API_KEY) : null;
+  const recognized: { scanId: string; timeMs: number; tiles: string[] }[] = [];
+  let recognitionFailed = 0;
+  const queue = [...relevant];
+  await Promise.all(Array.from({ length: 4 }, async () => {
+    for (let item = queue.shift(); item; item = queue.shift()) {
+      try {
+        const obj = await env.SCANS.get(`scans/${item.scanId}.jpg`);
+        if (!obj) { recognitionFailed++; continue; }
+        const bytes = new Uint8Array(await obj.arrayBuffer());
+        let bin = '';
+        for (let i = 0; i < bytes.length; i += 8192) {
+          bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
+        }
+        const mime = obj.httpMetadata?.contentType ?? 'image/jpeg';
+        const melds = await vision!.recognize(`data:${mime};base64,${btoa(bin)}`);
+        recognized.push({ ...item, tiles: melds.flatMap(m => m.tiles) });
+      } catch {
+        recognitionFailed++;
+      }
+    }
+  }));
+
+  const matches = matchScansToHands(
+    unlinkedHands.map(h => ({ id: h.id, timeMs: h.timeMs as number, tiles: h.tiles })),
+    recognized,
+  );
+
+  const byHand = new Map(unlinkedHands.map(h => [h.id, h]));
+  const byScan = new Map(recognized.map(s => [s.scanId, s]));
+  const proposals = matches.map(m => ({
+    handId: m.handId,
+    winner: byHand.get(m.handId)!.winner,
+    handTime: byHand.get(m.handId)!.timestamp,
+    scanId: m.scanId,
+    scanTime: formatPacific(new Date(byScan.get(m.scanId)!.timeMs).toISOString()),
+    score: Math.round(m.score * 100) / 100,
+    contested: m.contested,
+    handTiles: byHand.get(m.handId)!.tiles,
+    scanTiles: byScan.get(m.scanId)!.tiles,
+  }));
+
+  let committed = 0;
+  if (commit) {
+    for (const p of proposals) {
+      if (!p.contested) {
+        await app.setHandScanId(p.handId, p.scanId);
+        committed++;
+      }
+    }
+  }
+
+  return json({
+    committed: commit ? committed : null,
+    unlinkedHands: unlinkedHands.length,
+    orphanScans: orphans.length,
+    recognized: recognized.length,
+    recognitionFailed,
+    proposals,
   });
 }
 
