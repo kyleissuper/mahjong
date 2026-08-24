@@ -409,9 +409,15 @@
   min-width: 0;
 }
 
-.scorer-suit-tiles .tile-frame img {
+/* Direct child only: the key face shrinks with the key, but the image inside
+   the absolutely-positioned preview bubble must keep its natural size. */
+.scorer-suit-tiles .tile-frame > img {
   max-width: 100%;
   height: auto;
+}
+
+.scorer-suit-tiles .tile-preview img {
+  max-width: none;
 }
 
 .tile-frame img {
