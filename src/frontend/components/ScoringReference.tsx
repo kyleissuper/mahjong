@@ -5,6 +5,9 @@ const categories = buildCategories(getRuleReference());
 export function ScoringReference() {
   return (
     <div className="ref-body">
+      <a className="ref-source-link" href="https://drive.google.com/file/d/1rNlWHI4g6hdUZRpWTFSbdoDXzJOAzIS0/view" target="_blank" rel="noopener noreferrer">
+        Official guide: Mission: Mahjong! Vegas Style Scoring ↗
+      </a>
       {categories.map(({ pts, rules }) => (
         <div key={pts} className="ref-category">
           <div className="ref-category-title">{pts} {pts === '1' ? 'point' : 'points'}</div>
