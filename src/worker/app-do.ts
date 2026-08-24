@@ -4,7 +4,6 @@ import { drizzle } from 'drizzle-orm/durable-sqlite';
 import { eq, sql } from 'drizzle-orm';
 import * as schema from './schema.ts';
 import { computeScoredHand, type ScoredHand } from '../mahjong/session.ts';
-import { rescoreStoredHand } from '../mahjong/rescore.ts';
 import type { Hand, Win } from '../mahjong/types.ts';
 
 interface Env {
@@ -54,86 +53,7 @@ export class AppDO extends DurableObject<Env> {
         old_id TEXT PRIMARY KEY,
         new_id TEXT NOT NULL
       )`);
-      await this.migrateHandsToPlayerIds();
-      await this.migrateRuleNames();
     });
-  }
-
-  /**
-   * One-time: engine rule ids were renamed to match Mission: Mahjong! card
-   * terminology; stored receipts reference the old ids.
-   */
-  private async migrateRuleNames(): Promise<void> {
-    if (await this.ctx.storage.get('rule-names-migrated')) return;
-    const RENAMES: Record<string, string> = {
-      allSetsHave19WithHonors: 'semiMixed19s',
-      allSetsHave19: 'pureMixed19s',
-      all19WithHonors: 'semi19sPongs',
-      all19: 'pure19sPongs',
-      only2Suits: 'missingSuit',
-      winFromButt: 'winFromFlowerWall',
-      oneToNineChain: 'oneToNineTrain',
-      dragonKongExposed: 'dragonKong',
-      dragonKongHidden: 'dragonSecretKong',
-      windKongExposed: 'windKong',
-      windKongHidden: 'windSecretKong',
-      exposedKong: 'kong',
-      hiddenKong: 'secretKong',
-      noTerminalsWithHonors: 'no19sWithHonors',
-      noTerminalsNoHonors: 'no19sNoHonors',
-    };
-    const rows = this.ctx.storage.sql.exec<{ id: number; applied_rules: string }>(
-      `SELECT id, applied_rules FROM hands`
-    ).toArray();
-    for (const row of rows) {
-      let applied: { name: string; points: number }[];
-      try { applied = JSON.parse(row.applied_rules); } catch { continue; }
-      if (!applied.some(r => r.name in RENAMES)) continue;
-      const next = applied.map(r => ({ ...r, name: RENAMES[r.name] ?? r.name }));
-      this.ctx.storage.sql.exec(
-        `UPDATE hands SET applied_rules = ? WHERE id = ?`, JSON.stringify(next), row.id
-      );
-    }
-    await this.ctx.storage.put('rule-names-migrated', true);
-  }
-
-  /**
-   * One-time: hands historically stored players by display name in `winner`
-   * and the `scores` keys. Identity moves to registry ids — names found in
-   * hands but missing from the registry get entries minted for them.
-   */
-  private async migrateHandsToPlayerIds(): Promise<void> {
-    if (await this.ctx.storage.get('ids-migrated')) return;
-    const nameToId = new Map<string, string>();
-    for (const p of this.ctx.storage.sql.exec<{ id: string; name: string }>(
-      `SELECT id, name FROM players`
-    ).toArray()) {
-      nameToId.set(p.name, p.id);
-    }
-    const ensureId = (name: string, createdAt: string): string => {
-      const existing = nameToId.get(name);
-      if (existing) return existing;
-      const id = generateId();
-      this.ctx.storage.sql.exec(
-        `INSERT INTO players (id, name, created_at) VALUES (?, ?, ?)`, id, name, createdAt
-      );
-      nameToId.set(name, id);
-      return id;
-    };
-    const rows = this.ctx.storage.sql.exec<{ id: number; winner: string; scores: string; timestamp: string }>(
-      `SELECT id, winner, scores, timestamp FROM hands`
-    ).toArray();
-    for (const row of rows) {
-      const scores = JSON.parse(row.scores) as Record<string, number>;
-      const idScores = Object.fromEntries(
-        Object.entries(scores).map(([name, v]) => [ensureId(name, row.timestamp), v])
-      );
-      this.ctx.storage.sql.exec(
-        `UPDATE hands SET winner_id = ?, scores = ? WHERE id = ?`,
-        ensureId(row.winner, row.timestamp), JSON.stringify(idScores), row.id
-      );
-    }
-    await this.ctx.storage.put('ids-migrated', true);
   }
 
   // --- Sessions ---
@@ -265,75 +185,6 @@ export class AppDO extends DurableObject<Env> {
     return this.resolveHandNames(scored, names);
   }
 
-  /**
-   * Recompute every stored hand under the current rules. Dry run reports what
-   * would change; apply backs up each touched row (first backup wins) and
-   * writes the new values. Idempotent: a second apply finds nothing to change.
-   */
-  async rescoreHands(apply: boolean) {
-    this.ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS hands_rescore_backup (
-      id INTEGER PRIMARY KEY,
-      backed_up_at TEXT NOT NULL,
-      hand_value REAL NOT NULL,
-      applied_rules TEXT NOT NULL,
-      scores TEXT NOT NULL
-    )`);
-    const rows = this.ctx.storage.sql.exec<{
-      id: number; session_code: string; timestamp: string; winner_id: string | null;
-      method: string; hand_value: number; applied_rules: string; melds: string; scores: string;
-    }>(`SELECT id, session_code, timestamp, winner_id, method, hand_value, applied_rules, melds, scores FROM hands`).toArray();
-
-    const changed: unknown[] = [];
-    const anomalies: unknown[] = [];
-    let unchanged = 0;
-    for (const row of rows) {
-      try {
-        if (!row.winner_id) throw new Error('missing winner_id');
-        const oldRules = JSON.parse(row.applied_rules) as { name: string; points: number }[];
-        const oldScores = JSON.parse(row.scores) as Record<string, number>;
-        const result = rescoreStoredHand({
-          melds: JSON.parse(row.melds),
-          method: row.method as Win['method'],
-          winnerId: row.winner_id,
-          handValue: row.hand_value,
-          appliedRules: oldRules,
-          scores: oldScores,
-        });
-        const same = result.handValue === row.hand_value
-          && JSON.stringify(result.appliedRules) === JSON.stringify(oldRules)
-          && Object.keys(oldScores).length === Object.keys(result.scores).length
-          && Object.entries(result.scores).every(([player, v]) => oldScores[player] === v);
-        if (same) { unchanged++; continue; }
-        changed.push({
-          id: row.id,
-          session: row.session_code,
-          timestamp: row.timestamp,
-          oldValue: row.hand_value,
-          newValue: result.handValue,
-          oldRules: oldRules.map(r => `${r.name}:${r.points}`),
-          newRules: result.appliedRules.map(r => `${r.name}:${r.points}`),
-          oldScores,
-          newScores: result.scores,
-        });
-        if (apply) {
-          this.ctx.storage.sql.exec(
-            `INSERT OR IGNORE INTO hands_rescore_backup (id, backed_up_at, hand_value, applied_rules, scores)
-             VALUES (?, ?, ?, ?, ?)`,
-            row.id, new Date().toISOString(), row.hand_value, row.applied_rules, row.scores
-          );
-          this.ctx.storage.sql.exec(
-            `UPDATE hands SET hand_value = ?, applied_rules = ?, scores = ? WHERE id = ?`,
-            result.handValue, JSON.stringify(result.appliedRules), JSON.stringify(result.scores), row.id
-          );
-        }
-      } catch (err) {
-        anomalies.push({ id: row.id, session: row.session_code, timestamp: row.timestamp,
-          error: err instanceof Error ? err.message : String(err) });
-      }
-    }
-    if (apply && changed.length > 0) this.broadcast({ type: 'hands-changed' });
-    return { applied: apply, total: rows.length, unchanged, changed, anomalies };
-  }
 
   /**
    * Win arrives keyed by player ids. Ids retired by a merge (a phone can hold
