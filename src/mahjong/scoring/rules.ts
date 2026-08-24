@@ -70,7 +70,7 @@ export const rules: Rule[] = [
   { name: 'allKongs', label: 'All Kongs', pts: '16', score: allKongs, absorbs: ['allPongs'] },
   { name: 'pure19sPongs', label: "Pure 1's or 9's Pongs", pts: '16', score: pure19sPongs, absorbs: ['semiMixed19s', 'pureMixed19s', 'semi19sPongs', 'noFlowersNoHonors', 'littleAndBigPong'] },
   { name: 'threeSuitPongs', label: 'Three Suit Pongs', pts: '4', score: threeSuitPongs },
-  { name: 'allPairs', label: 'All Pairs', pts: '12', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258'] },
+  { name: 'allPairs', label: 'All Pairs', pts: '12', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258', 'canOnlyWinWithOne'] },
   { name: 'allHonors', label: 'All Honors', pts: '12', score: allHonors, absorbs: ['allPongs', ...HONOR_COMPONENTS, 'semiMixed19s', 'semi19sPongs', 'no19sWithHonors', 'missingSuit'] },
   { name: 'prodigyHand', label: 'Prodigy Hand', pts: '12', score: prodigyHand },
   { name: 'heavenlyHand', label: 'Heavenly Hand', pts: '24', score: heavenlyHand, absorbs: ['selfPick', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'noFlowersNoHonors'] },

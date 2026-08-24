@@ -724,12 +724,11 @@ describe('scoreHand', () => {
     const result = scoreHand(hand, win);
 
     expect(result.appliedRules).toEqual([
-      { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'selfPick', points: 1 },
       { name: 'allPairs', points: 12 },
     ]);
-    expect(result.handValue).toBe(14);
-    expect(result.scores).toEqual({ A: -14, B: 43, C: -14, D: -15 });
+    expect(result.handValue).toBe(13);
+    expect(result.scores).toEqual({ A: -13, B: 40, C: -13, D: -14 });
   });
 
   it('Hand 22 — thirteen orphans, dealer self-pick (18 pts)', () => {
@@ -1939,12 +1938,11 @@ describe('scoreHand', () => {
     const result = scoreHand(hand, win);
 
     expect(result.appliedRules).toEqual([
-      { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'selfPick', points: 1 },
       { name: 'threeSuitsWithWindAndDragon', points: 1 },
       { name: 'allPairs', points: 12 },
     ]);
-    expect(result.handValue).toBe(15);
+    expect(result.handValue).toBe(14);
   });
 
   it('hand with kong counts tiles correctly for suit rules', () => {
