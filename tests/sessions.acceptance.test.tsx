@@ -409,7 +409,7 @@ describe('Self-pick scoring', () => {
 });
 
 describe('Session expiry', () => {
-  it('returns to landing when session expires', async () => {
+  it('shows read-only leaderboard when session expires', async () => {
     backend.addSession('TEST1');
 
     await renderSessionView('TEST1');
@@ -422,10 +422,14 @@ describe('Session expiry', () => {
       backend.broadcastWs({ type: 'expired' });
     });
 
-    // Session view should disappear (session cleared from context)
+    // Session view stays mounted but switches to the read-only leaderboard
     await waitFor(() => {
-      expect(document.querySelector('.scorer')).toBeNull();
+      expect(document.querySelector('.leaderboard')).toBeTruthy();
     });
+    expect(document.querySelector('.session-view')).toBeTruthy();
+
+    // Scoring is no longer offered: no score-hand FAB for expired sessions
+    expect(document.querySelector('.fab')).toBeNull();
   });
 });
 
