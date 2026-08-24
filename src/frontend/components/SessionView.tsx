@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import useSWR from 'swr';
 import { useSession } from '../lib/session-context.tsx';
 import { Scorer } from './Scorer.tsx';
 import { CopyableCode } from './CopyableCode.tsx';
@@ -16,7 +17,7 @@ import '../styles/scorer.css';
 
 
 export function SessionView() {
-  const { session, code, leave, updateSession } = useSession();
+  const { session, code, leave, updateSession, handsVersion } = useSession();
   const isExpired = !!session?.expired;
   const [view, setView] = useState<'scorer' | 'leaderboard' | 'hands' | 'rules'>(isExpired ? 'leaderboard' : 'scorer');
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -30,12 +31,13 @@ export function SessionView() {
   const [scorerPhase, setScorerPhase] = useState<'entering' | 'done'>('entering');
   const scorerBackRef = useRef<(() => void) | null>(null);
   const [expandTimestamp, setExpandHandTimestamp] = useState<string | null>(null);
-  const [allHands, setAllHands] = useState<ScoredHand[]>([]);
   const [drawerClosing, setDrawerClosing] = useState(false);
 
-  useEffect(() => {
-    api.getAllHands().then(({ hands }) => setAllHands(hands));
-  }, []);
+  const { data: handsData, mutate: mutateHands } = useSWR('all-hands', () => api.getAllHands());
+  const allHands: ScoredHand[] = handsData?.hands ?? [];
+
+  // Server said hands changed (someone scored) or the socket reconnected.
+  useEffect(() => { if (handsVersion > 0) mutateHands(); }, [handsVersion]);
 
   useEffect(() => {
     if (isExpired && view === 'scorer') setView('leaderboard');
@@ -43,8 +45,7 @@ export function SessionView() {
 
   useEffect(() => {
     (window as any).__onScoreDemoComplete = async (timestamp: string) => {
-      const { hands } = await api.getAllHands();
-      setAllHands(hands);
+      await mutateHands();
       setPlayerFilter(null);
       setDateFilter('day');
       setExpandHandTimestamp(timestamp);
@@ -54,7 +55,7 @@ export function SessionView() {
   }, []);
 
   function refreshHands() {
-    api.getAllHands().then(({ hands }) => setAllHands(hands));
+    mutateHands();
   }
 
   const roster = useMemo(() => {

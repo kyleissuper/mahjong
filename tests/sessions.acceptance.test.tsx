@@ -433,6 +433,28 @@ describe('Session expiry', () => {
   });
 });
 
+describe('Live updates', () => {
+  it('leaderboard picks up a hand scored on another device', async () => {
+    backend.addSession('TEST1');
+
+    await renderSessionView('TEST1');
+    await navigateToTab('Leaderboard');
+    expect(screen.getByText('No rounds played yet')).toBeDefined();
+
+    // Another device scores a hand: data appears in the backend, then the
+    // server broadcasts hands-changed over the WebSocket.
+    const hand = computeScoredHand({ melds: dragonPongMelds }, discardWin('Kyle', 'Ming', 'Ming'));
+    backend.addHand('TEST1', hand);
+    await act(async () => {
+      backend.broadcastWs({ type: 'hands-changed' });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Kyle')).toBeDefined();
+    });
+  });
+});
+
 describe('Date filtering', () => {
   it('hands view filters by date range', async () => {
     backend.addSession('TEST1');

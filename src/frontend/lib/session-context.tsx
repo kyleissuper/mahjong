@@ -6,6 +6,8 @@ interface SessionContextValue {
   loading: boolean;
   session: Session | null;
   code: string | null;
+  /** Bumps whenever hands changed server-side (or the socket reconnected). */
+  handsVersion: number;
   join: (code: string) => Promise<void>;
   create: () => Promise<string>;
   refresh: () => Promise<void>;
@@ -34,14 +36,34 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
+  const [handsVersion, setHandsVersion] = useState(0);
+
   useEffect(() => {
     if (!code) return;
-    const ws = api.connectWebSocket(code, (data) => {
-      if (data.type === 'expired') {
-        setSession(s => s ? { ...s, expired: true } as Session : null);
+    let stopped = false;
+    let ws: { close(): void } | null = null;
+    let timer: ReturnType<typeof setTimeout>;
+
+    const connect = (isReconnect: boolean) => {
+      ws = api.connectWebSocket(code, (data) => {
+        if (data.type === 'expired') {
+          setSession(s => s ? { ...s, expired: true } as Session : null);
+        }
+        if (data.type === 'hands-changed') {
+          setHandsVersion(v => v + 1);
+        }
+      });
+      // Anything could have happened while the socket was down.
+      if (isReconnect) setHandsVersion(v => v + 1);
+      const raw = ws as unknown as WebSocket;
+      if (typeof raw.addEventListener === 'function') {
+        raw.addEventListener('close', () => {
+          if (!stopped) timer = setTimeout(() => connect(true), 3000);
+        });
       }
-    });
-    return () => ws.close();
+    };
+    connect(false);
+    return () => { stopped = true; clearTimeout(timer); ws?.close(); };
   }, [code]);
 
   const join = useCallback(async (joinCode: string) => {
@@ -73,7 +95,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <SessionContext.Provider value={{ loading, session, code, join, create, refresh, leave, updateSession: setSession }}>
+    <SessionContext.Provider value={{ loading, session, code, handsVersion, join, create, refresh, leave, updateSession: setSession }}>
       {children}
     </SessionContext.Provider>
   );

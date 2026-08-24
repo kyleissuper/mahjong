@@ -171,6 +171,7 @@ export class AppDO extends DurableObject<Env> {
       scores: scored.scores as any,
       timing: timing ?? null,
     });
+    this.broadcast({ type: 'hands-changed' });
     return scored;
   }
 
@@ -186,6 +187,7 @@ export class AppDO extends DurableObject<Env> {
 
   async deleteHand(id: number): Promise<void> {
     await this.db.delete(schema.hands).where(eq(schema.hands.id, id));
+    this.broadcast({ type: 'hands-changed' });
   }
 
   async getScanRecognitions(): Promise<Record<string, string[]>> {
