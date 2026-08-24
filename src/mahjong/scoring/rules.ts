@@ -48,7 +48,7 @@ export const rules: Rule[] = [
   { name: 'threeConsecutivePongs', label: 'Three Consecutive Pongs', pts: '4', score: threeConsecutivePongs },
   { name: 'noFlowersNoHonors', label: 'No Flowers and No Honors', pts: '3', score: noFlowersNoHonors },
   { name: 'oneToNineTrain', label: '1 through 9 Train', pts: '3', score: oneToNineTrain, absorbs: ['littleAndBigChow'] },
-  { name: 'twoKongMahjong', label: '2 Kong Mahjong', pts: '6', score: twoKongMahjong },
+  { name: 'twoKongMahjong', label: '2 Kong Mahjong', pts: '8', score: twoKongMahjong },
   { name: 'twoDoubleChows', label: 'Two Double Chows', pts: '12', score: twoDoubleChows, absorbs: ['doubleChow'] },
   { name: 'littleDragons', label: 'Little Dragons', pts: '8', score: littleDragons, absorbs: [...DRAGON_COMPONENTS] },
   { name: 'littleWinds', label: 'Little Winds', pts: '12', score: littleWinds, absorbs: [...WIND_COMPONENTS] },
@@ -67,7 +67,7 @@ export const rules: Rule[] = [
   ] },
   { name: 'hiddenTreasure', label: 'Hidden Treasure', pts: '16', score: hiddenTreasure, absorbs: ['fourHiddenPongs', 'threeHiddenPongs', 'allPongs', 'cleanDoorstepAndSelfPick', 'cleanDoorstep', 'selfPick'] },
   { name: 'no19sNoHonors', label: "No 1's or 9's with NO Honors", pts: '3', score: no19sNoHonors, absorbs: ['noFlowersNoHonors'] },
-  { name: 'allKongs', label: 'All Kongs', pts: '16', score: allKongs, absorbs: ['twoKongMahjong', 'allPongs'] },
+  { name: 'allKongs', label: 'All Kongs', pts: '16', score: allKongs, absorbs: ['allPongs'] },
   { name: 'pure19sPongs', label: "Pure 1's or 9's Pongs", pts: '16', score: pure19sPongs, absorbs: ['semiMixed19s', 'pureMixed19s', 'semi19sPongs', 'noFlowersNoHonors', 'littleAndBigPong'] },
   { name: 'threeSuitPongs', label: 'Three Suit Pongs', pts: '4', score: threeSuitPongs },
   { name: 'allPairs', label: 'All Pairs', pts: '12', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258'] },
@@ -148,8 +148,8 @@ function allPongs(hand: Hand): number {
   return s.length && s.every(({ type }) => type === 'pong' || type === 'kong') ? 4 : 0;
 }
 
-function twoKongMahjong({ melds }: Hand): number {
-  return melds.filter(({ type }) => type === 'kong').length === 2 ? 6 : 0;
+function twoKongMahjong(_hand: Hand, { special }: Win): number {
+  return special.includes('twoKongMahjong') ? 8 : 0;
 }
 
 function twoDoubleChows({ melds }: Hand): number {

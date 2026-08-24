@@ -872,7 +872,40 @@ describe('scoreHand', () => {
     expect(result.handValue).toBe(3);
   });
 
-  it('Hand 24 — two kong mahjong (7 pts)', () => {
+  it('Hand 24 — 2 kong mahjong declared, win after two consecutive kongs (14 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'kong', tiles: ['3b', '3b', '3b', '3b'], concealed: false },
+        { type: 'kong', tiles: ['7c', '7c', '7c', '7c'], concealed: false },
+        { type: 'chow', tiles: ['4d', '5d', '6d'], concealed: false, winTile: '6d' },
+        { type: 'pong', tiles: ['2d', '2d', '2d'], concealed: false },
+        { type: 'pair', tiles: ['8b', '8b'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'A',
+      method: 'discard',
+      from: 'B',
+      dealer: 'C',
+      dealerRounds: 1,
+      special: ['twoKongMahjong'],
+    };
+
+    const result = scoreHand(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'kong', points: 2 },
+      { name: 'twoKongMahjong', points: 8 },
+      { name: 'no19sNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(14);
+    expect(result.scores).toEqual({ A: 14, B: -14, C: 0, D: 0 });
+  });
+
+  it('two kongs in hand without the declaration is NOT 2 kong mahjong (6 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'kong', tiles: ['3b', '3b', '3b', '3b'], concealed: false },
@@ -898,11 +931,10 @@ describe('scoreHand', () => {
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
       { name: 'kong', points: 2 },
-      { name: 'twoKongMahjong', points: 6 },
       { name: 'no19sNoHonors', points: 3 },
     ]);
-    expect(result.handValue).toBe(12);
-    expect(result.scores).toEqual({ A: 12, B: -12, C: 0, D: 0 });
+    expect(result.handValue).toBe(6);
+    expect(result.scores).toEqual({ A: 6, B: -6, C: 0, D: 0 });
   });
 
   it('Hand 23 — two double chows, clean doorstep (19 pts)', () => {

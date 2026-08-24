@@ -25,7 +25,7 @@ export interface Win {
   special: WinCondition[];
 }
 
-export type WinCondition = 'fromFlowerWall' | 'lastTile' | 'firstTurn' | 'prodigy';
+export type WinCondition = 'fromFlowerWall' | 'lastTile' | 'firstTurn' | 'prodigy' | 'twoKongMahjong';
 
 export interface AppliedRule {
   name: string;

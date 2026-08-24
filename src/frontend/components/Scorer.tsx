@@ -876,7 +876,7 @@ function DealerPicker({ players, showNeither, value, answered, onChange }: {
 }
 
 function SpecialConditions({ win, onChangeWin }: { win: WinState; onChangeWin: (fn: (w: WinState) => WinState) => void }) {
-  const specialLabels = { fromFlowerWall: 'Flower Wall draw', lastTile: 'Last tile', firstTurn: '1st turn win', prodigy: 'Ready in 4' } as const;
+  const specialLabels = { fromFlowerWall: 'Flower Wall draw', lastTile: 'Last tile', firstTurn: '1st turn win', prodigy: 'Ready in 4', twoKongMahjong: '2 Kong Mahjong' } as const;
 
   return (
     <div className="scorer-step-row" style={{ flexWrap: 'wrap' }}>
