@@ -34,8 +34,7 @@ function buildCategories(rules: RuleInfo[]) {
     byPts.get(key)!.push(r);
   }
 
-  const order = ['1', '2', '3', '4', '6', '8', '12', '14', '16', '18', '20'];
-  return order
-    .filter(k => byPts.has(k))
+  return [...byPts.keys()]
+    .sort((a, b) => Number(a) - Number(b))
     .map(k => ({ pts: k, rules: byPts.get(k)! }));
 }
