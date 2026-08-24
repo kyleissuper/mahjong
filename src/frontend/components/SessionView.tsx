@@ -104,7 +104,7 @@ export function SessionView() {
         <div className="scorer-appbar-title" />
         <div className="scorer-appbar-right">
           {view === 'scorer' && !isExpired && (
-            <button className="scorer-appbar-text-btn" onClick={() => setScorerKey(k => k + 1)}>New</button>
+            <button className="scorer-appbar-text-btn" onClick={() => setScorerKey(k => k + 1)}>Reset</button>
           )}
         </div>
       </div>
