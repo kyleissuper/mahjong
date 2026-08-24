@@ -50,28 +50,28 @@ export const rules: Rule[] = [
   { name: 'littleDragons', label: 'Little Dragons', pts: '8', score: littleDragons, absorbs: [...DRAGON_COMPONENTS] },
   { name: 'littleWinds', label: 'Little Winds', pts: '12', score: littleWinds, absorbs: [...WIND_COMPONENTS] },
   { name: 'bigDragons', label: 'Big Dragons', pts: '12', score: bigDragons, absorbs: ['littleDragons', ...DRAGON_COMPONENTS] },
-  { name: 'bigWinds', label: 'Big Winds', pts: '18', score: bigWinds, absorbs: ['littleWinds', ...WIND_COMPONENTS, 'allPongs', 'no19sWithHonors', 'semiPure', 'missingSuit', 'semiMixed19s'] },
+  { name: 'bigWinds', label: 'Big Winds', pts: '16', score: bigWinds, absorbs: ['littleWinds', ...WIND_COMPONENTS, 'allPongs', 'no19sWithHonors', 'semiPure', 'missingSuit', 'semiMixed19s'] },
   { name: 'semiPure', label: 'Semi-Pure Hand', pts: '4', score: semiPure, absorbs: ['missingSuit'] },
   { name: 'fourConsecutivePongs', label: 'Four Consecutive Pongs', pts: '8', score: fourConsecutivePongs, absorbs: ['allPongs', 'threeConsecutivePongs'] },
   { name: 'semiMixed19s', label: "Semi Mixed 1's or 9's", pts: '4', score: semiMixed19s },
-  { name: 'pureMixed19s', label: "Pure Mixed 1's or 9's", pts: '4', score: pureMixed19s, absorbs: ['semiMixed19s'] },
-  { name: 'semi19sPongs', label: "Semi 1's or 9's Pongs", pts: '8', score: semi19sPongs, absorbs: ['semiMixed19s'] },
+  { name: 'pureMixed19s', label: "Pure Mixed 1's or 9's", pts: '8', score: pureMixed19s, absorbs: ['semiMixed19s'] },
+  { name: 'semi19sPongs', label: "Semi 1's or 9's Pongs", pts: '12', score: semi19sPongs, absorbs: ['semiMixed19s'] },
   { name: 'pure', label: 'Pure Hand', pts: '8', score: pure },
   { name: 'fourHiddenPongs', label: 'Four Hidden Pongs', pts: '12', score: fourHiddenPongs, absorbs: ['allPongs', 'threeHiddenPongs'] },
   { name: 'no19sNoHonors', label: "No 1's or 9's with NO Honors", pts: '3', score: no19sNoHonors, absorbs: ['noFlowersNoHonors'] },
-  { name: 'allKongs', label: 'All Kongs', pts: '14', score: allKongs, absorbs: ['twoKongMahjong', 'allPongs'] },
+  { name: 'allKongs', label: 'All Kongs', pts: '16', score: allKongs, absorbs: ['twoKongMahjong', 'allPongs'] },
   { name: 'pure19sPongs', label: "Pure 1's or 9's Pongs", pts: '16', score: pure19sPongs, absorbs: ['semiMixed19s', 'pureMixed19s', 'semi19sPongs', 'noFlowersNoHonors'] },
   { name: 'threeSuitPongs', label: 'Three Suit Pongs', pts: '4', score: threeSuitPongs },
   { name: 'allPairs', label: 'All Pairs', pts: '12', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258'] },
   { name: 'allHonors', label: 'All Honors', pts: '12', score: allHonors, absorbs: ['allPongs', ...HONOR_COMPONENTS, 'semiMixed19s', 'semi19sPongs', 'no19sWithHonors', 'missingSuit'] },
   { name: 'prodigyHand', label: 'Prodigy Hand', pts: '12', score: prodigyHand },
-  { name: 'heavenlyHand', label: 'Heavenly Hand', pts: '20', score: heavenlyHand, absorbs: ['selfPick', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'noFlowersNoHonors'] },
+  { name: 'heavenlyHand', label: 'Heavenly Hand', pts: '24', score: heavenlyHand, absorbs: ['selfPick', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'noFlowersNoHonors'] },
   { name: 'earthlyHand', label: 'Earthly Hand', pts: '16', score: earthlyHand, absorbs: ['cleanDoorstep', 'noFlowersNoHonors'] },
   { name: 'heavenlyGates', label: 'Heavenly Gates', pts: '16', score: heavenlyGates, absorbs: ['pure', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'canOnlyWinWithOne', 'pairOf258', 'noFlowersNoHonors', 'oneToNineTrain'] },
-  { name: 'thirteenOrphans', label: 'Thirteen Orphans', pts: '14', score: thirteenOrphans, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'semiMixed19s', 'semi19sPongs', 'allPongs', ...HONOR_COMPONENTS, 'no19sWithHonors', 'threeSuitsWithWindAndDragon'] },
-  { name: 'jadeDragon', label: 'Jade Dragon', pts: '14', score: jadeDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'missingSuit', 'semiPure'] },
-  { name: 'rubyDragon', label: 'Ruby Dragon', pts: '14', score: rubyDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'missingSuit', 'semiPure'] },
-  { name: 'pearlDragon', label: 'Pearl Dragon', pts: '14', score: pearlDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'missingSuit', 'semiPure'] },
+  { name: 'thirteenOrphans', label: 'Thirteen Orphans', pts: '16', score: thirteenOrphans, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'semiMixed19s', 'semi19sPongs', 'allPongs', ...HONOR_COMPONENTS, 'no19sWithHonors', 'threeSuitsWithWindAndDragon'] },
+  { name: 'jadeDragon', label: 'Jade Dragon', pts: '12', score: jadeDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'missingSuit', 'semiPure'] },
+  { name: 'rubyDragon', label: 'Ruby Dragon', pts: '12', score: rubyDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'missingSuit', 'semiPure'] },
+  { name: 'pearlDragon', label: 'Pearl Dragon', pts: '12', score: pearlDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'missingSuit', 'semiPure'] },
 ];
 
 // --- Rule implementations ---
@@ -158,7 +158,7 @@ function littleDragons({ melds }: Hand): number {
 }
 
 function bigWinds({ melds }: Hand): number {
-  return melds.filter(({ type, tiles: [first] }) => (type === 'pong' || type === 'kong') && isWind(first)).length === 4 ? 18 : 0;
+  return melds.filter(({ type, tiles: [first] }) => (type === 'pong' || type === 'kong') && isWind(first)).length === 4 ? 16 : 0;
 }
 
 function semiPure(hand: Hand): number {
@@ -194,14 +194,14 @@ function semiMixed19s(hand: Hand): number {
 }
 
 function semi19sPongs(hand: Hand): number {
-  return handTiles(hand).every(t => isTerminal(t) || isHonor(t)) ? 8 : 0;
+  return handTiles(hand).every(t => isTerminal(t) || isHonor(t)) ? 12 : 0;
 }
 
 function pureMixed19s(hand: Hand): number {
   const playing = handMelds(hand);
   return playing.every(({ tiles }) => tiles.some(isTerminal))
     && playing.every(({ tiles }) => tiles.every(isNumberTile))
-    ? 4 : 0;
+    ? 8 : 0;
 }
 
 function pure(hand: Hand): number {
@@ -216,7 +216,7 @@ function fourHiddenPongs({ melds }: Hand): number {
 
 function allKongs(hand: Hand): number {
   const s = sets(hand);
-  return s.length && s.every(({ type }) => type === 'kong') ? 14 : 0;
+  return s.length && s.every(({ type }) => type === 'kong') ? 16 : 0;
 }
 
 function pure19sPongs(hand: Hand): number {
@@ -238,8 +238,8 @@ function prodigyHand(_hand: Hand, { special }: Win): number {
   return special.includes('prodigy') ? 12 : 0;
 }
 
-function heavenlyHand(_hand: Hand, { method, winner, dealer, special }: Win): number {
-  return method === 'self-pick' && winner === dealer && special.includes('firstTurn') ? 20 : 0;
+function heavenlyHand(_hand: Hand, { method, special }: Win): number {
+  return method === 'self-pick' && special.includes('firstTurn') ? 24 : 0;
 }
 
 function earthlyHand(_hand: Hand, { method, winner, dealer, special }: Win): number {
@@ -263,14 +263,14 @@ function threeSuitsWithWindAndDragon(hand: Hand): number {
 }
 
 function thirteenOrphans(hand: Hand): number {
-  if (hand.melds.some(({ type }) => type === 'orphans')) return 14;
+  if (hand.melds.some(({ type }) => type === 'orphans')) return 16;
   const tiles = handTiles(hand);
   if (tiles.length !== 14) return 0;
   const counts = new Map<string, number>();
   for (const t of tiles) counts.set(t, (counts.get(t) ?? 0) + 1);
   return ORPHAN_TILES.every(t => (counts.get(t) ?? 0) >= 1)
     && [...counts.values()].filter(c => c === 2).length === 1
-    && [...counts.values()].every(c => c <= 2) ? 14 : 0;
+    && [...counts.values()].every(c => c <= 2) ? 16 : 0;
 }
 
 function allHonors(hand: Hand): number {
@@ -281,21 +281,21 @@ function pearlDragon(hand: Hand): number {
   const tiles = handTiles(hand);
   const allDotsOrWhite = tiles.every(t => suit(t) === 'd' || t === 'Wd');
   const hasWhiteDragon = tiles.some(t => t === 'Wd');
-  return allDotsOrWhite && hasWhiteDragon ? 14 : 0;
+  return allDotsOrWhite && hasWhiteDragon ? 12 : 0;
 }
 
 function rubyDragon(hand: Hand): number {
   const tiles = handTiles(hand);
   const allCharsOrRed = tiles.every(t => suit(t) === 'c' || t === 'Rd');
   const hasRedDragon = tiles.some(t => t === 'Rd');
-  return allCharsOrRed && hasRedDragon ? 14 : 0;
+  return allCharsOrRed && hasRedDragon ? 12 : 0;
 }
 
 function jadeDragon(hand: Hand): number {
   const tiles = handTiles(hand);
   const allBambooOrGreen = tiles.every(t => suit(t) === 'b' || t === 'Gd');
   const hasGreenDragon = tiles.some(t => t === 'Gd');
-  return allBambooOrGreen && hasGreenDragon ? 14 : 0;
+  return allBambooOrGreen && hasGreenDragon ? 12 : 0;
 }
 
 function lastWallTile(_hand: Hand, { method, special }: Win): number {

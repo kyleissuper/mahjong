@@ -108,7 +108,7 @@ describe('scoreHand', () => {
     expect(result.scores).toEqual({ A: 3, B: 0, C: -3, D: 0 });
   });
 
-  it('Hand 4 — all greens, all pongs, dealer self-pick (19 pts)', () => {
+  it('Hand 4 — all greens, all pongs, dealer self-pick (17 pts)', () => {
     // canOnlyWinWithOne does NOT fire: concealed 1b×3 + 3b can rearrange
     // to pair(1b) + chow(1b,2b,3b), so 2b also completes the hand.
     const hand: Hand = {
@@ -135,10 +135,10 @@ describe('scoreHand', () => {
     expect(result.appliedRules).toEqual([
       { name: 'allPongs', points: 4 },
       { name: 'selfPick', points: 1 },
-      { name: 'jadeDragon', points: 14 },
+      { name: 'jadeDragon', points: 12 },
     ]);
-    expect(result.handValue).toBe(19);
-    expect(result.scores).toEqual({ A: 60, B: -20, C: -20, D: -20 });
+    expect(result.handValue).toBe(17);
+    expect(result.scores).toEqual({ A: 54, B: -18, C: -18, D: -18 });
   });
 
   it('Hand 5 — 1-9 chain, clean doorstep, discard win (5 pts)', () => {
@@ -411,7 +411,7 @@ describe('scoreHand', () => {
     expect(result.scores).toEqual({ A: 0, B: 0, C: 11, D: -11 });
   });
 
-  it('Hand 13 — terminals & honors, all pongs, dealer discard win (10 pts)', () => {
+  it('Hand 13 — terminals & honors, all pongs, dealer discard win (18 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: true },
@@ -438,10 +438,10 @@ describe('scoreHand', () => {
       { name: 'windPong', points: 1 },
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'allPongs', points: 4 },
-      { name: 'semi19sPongs', points: 8 },
+      { name: 'semi19sPongs', points: 12 },
     ]);
-    expect(result.handValue).toBe(14);
-    expect(result.scores).toEqual({ A: 0, B: 15, C: -15, D: 0 });
+    expect(result.handValue).toBe(18);
+    expect(result.scores).toEqual({ A: 0, B: 19, C: -19, D: 0 });
   });
 
   it('Hand 14 — little dragons (8 pts)', () => {
@@ -731,7 +731,7 @@ describe('scoreHand', () => {
     expect(result.scores).toEqual({ A: -14, B: 43, C: -14, D: -15 });
   });
 
-  it('Hand 22 — thirteen orphans, dealer self-pick (16 pts)', () => {
+  it('Hand 22 — thirteen orphans, dealer self-pick (18 pts)', () => {
     const hand: Hand = {
       melds: [
         {
@@ -757,10 +757,10 @@ describe('scoreHand', () => {
     expect(result.appliedRules).toEqual([
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'selfPick', points: 1 },
-      { name: 'thirteenOrphans', points: 14 },
+      { name: 'thirteenOrphans', points: 16 },
     ]);
-    expect(result.handValue).toBe(16);
-    expect(result.scores).toEqual({ A: 51, B: -17, C: -17, D: -17 });
+    expect(result.handValue).toBe(18);
+    expect(result.scores).toEqual({ A: 57, B: -19, C: -19, D: -19 });
   });
 
   it('pong wait with two possible winning tiles should NOT be canOnlyWinWithOne', () => {
@@ -971,7 +971,7 @@ describe('scoreHand', () => {
     );
   });
 
-  it('Hand 26 — heavenly hand, dealer wins on deal (21 pts)', () => {
+  it('Hand 26 — heavenly hand, dealer wins on deal (25 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['3b', '3b', '3b'], concealed: true },
@@ -995,10 +995,40 @@ describe('scoreHand', () => {
 
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
-      { name: 'heavenlyHand', points: 20 },
+      { name: 'heavenlyHand', points: 24 },
     ]);
-    expect(result.handValue).toBe(21);
-    expect(result.scores).toEqual({ A: 66, B: -22, C: -22, D: -22 });
+    expect(result.handValue).toBe(25);
+    expect(result.scores).toEqual({ A: 78, B: -26, C: -26, D: -26 });
+  });
+
+  it('Hand 26b — heavenly hand, NON-dealer self-draw on their first turn (25 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['3b', '3b', '3b'], concealed: true },
+        { type: 'pong', tiles: ['7d', '7d', '7d'], concealed: true },
+        { type: 'chow', tiles: ['4c', '5c', '6c'], concealed: true },
+        { type: 'chow', tiles: ['1d', '2d', '3d'], concealed: true },
+        { type: 'pair', tiles: ['8b', '8b'], concealed: true },
+      ],
+    };
+
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'],
+      winner: 'B',
+      method: 'self-pick',
+      dealer: 'A',
+      dealerRounds: 1,
+      special: ['firstTurn'],
+    };
+
+    const result = scoreHand(hand, win);
+
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'heavenlyHand', points: 24 },
+    ]);
+    expect(result.handValue).toBe(25);
+    expect(result.scores).toEqual({ A: -26, B: 76, C: -25, D: -25 });
   });
 
   it('Hand 27 — earthly hand, non-dealer wins on first discard (18 pts)', () => {
@@ -1033,7 +1063,7 @@ describe('scoreHand', () => {
     expect(result.scores).toEqual({ A: -19, B: 19, C: 0, D: 0 });
   });
 
-  it('Hand 28 — big winds (19 pts)', () => {
+  it('Hand 28 — big winds (17 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
@@ -1058,13 +1088,13 @@ describe('scoreHand', () => {
 
     expect(result.appliedRules).toEqual([
       { name: 'canOnlyWinWithOne', points: 1 },
-      { name: 'bigWinds', points: 18 },
+      { name: 'bigWinds', points: 16 },
     ]);
-    expect(result.handValue).toBe(19);
-    expect(result.scores).toEqual({ A: -19, B: 0, C: 0, D: 19 });
+    expect(result.handValue).toBe(17);
+    expect(result.scores).toEqual({ A: -17, B: 0, C: 0, D: 17 });
   });
 
-  it('Hand 29 — all kongs, hidden kong, win from butt (20 pts)', () => {
+  it('Hand 29 — all kongs, secret kong, win from the flower wall (28 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'kong', tiles: ['4b', '4b', '4b', '4b'], concealed: false },
@@ -1094,10 +1124,10 @@ describe('scoreHand', () => {
       { name: 'kong', points: 3 },
       { name: 'secretKong', points: 2 },
       { name: 'noFlowersNoHonors', points: 3 },
-      { name: 'allKongs', points: 14 },
+      { name: 'allKongs', points: 16 },
     ]);
-    expect(result.handValue).toBe(26);
-    expect(result.scores).toEqual({ A: -27, B: 79, C: -26, D: -26 });
+    expect(result.handValue).toBe(28);
+    expect(result.scores).toEqual({ A: -29, B: 85, C: -28, D: -28 });
   });
 
   it('Hand 30 — prodigy hand, clean doorstep (18 pts)', () => {
@@ -1249,7 +1279,7 @@ describe('scoreHand', () => {
       ],
     };
     const result = scoreHand(hand, discardWin);
-    expect(result.appliedRules.find(r => r.name === rule)).toEqual({ name: rule, points: 14 });
+    expect(result.appliedRules.find(r => r.name === rule)).toEqual({ name: rule, points: 12 });
   });
 
   it.each(PURITY_DRAGONS)('$name Dragon does NOT fire when the matching dragon is absent', ({ rule, suit }) => {
@@ -1285,7 +1315,7 @@ describe('scoreHand', () => {
     }
   });
 
-  it('all 1s/9s with honors — every tile is terminal or honor (8 pts)', () => {
+  it('all 1s/9s with honors — every tile is terminal or honor (12 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['9d', '9d', '9d'], concealed: false },
@@ -1309,13 +1339,13 @@ describe('scoreHand', () => {
     const result = scoreHand(hand, win);
 
     expect(result.appliedRules.find(r => r.name === 'semi19sPongs')).toEqual(
-      { name: 'semi19sPongs', points: 8 },
+      { name: 'semi19sPongs', points: 12 },
     );
     // should absorb the "all sets have" variant
     expect(result.appliedRules.find(r => r.name === 'semiMixed19s')).toBeUndefined();
   });
 
-  it('all sets have 1/9, no honors (4 pts)', () => {
+  it('all sets have 1/9, no honors (8 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: false },
@@ -1338,7 +1368,7 @@ describe('scoreHand', () => {
     const result = scoreHand(hand, win);
 
     expect(result.appliedRules.find(r => r.name === 'pureMixed19s')).toEqual(
-      { name: 'pureMixed19s', points: 4 },
+      { name: 'pureMixed19s', points: 8 },
     );
     // should absorb the "with honors" variant
     expect(result.appliedRules.find(r => r.name === 'semiMixed19s')).toBeUndefined();
