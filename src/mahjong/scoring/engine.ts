@@ -28,10 +28,22 @@ function getAppliedRules(hand: Hand, win: Win): AppliedRule[] {
   const fired = rules
     .map(r => ({ name: r.name, points: r.score(hand, win), absorbs: r.absorbs }))
     .filter(r => r.points > 0);
-  return resolveAbsorption(fired);
+  return resolveAbsorption(resolveDemotions(fired));
 }
 
 type FiredRule = { name: string; points: number; absorbs?: string[] };
+
+const ruleByName = new Map(rules.map(r => [r.name, r]));
+
+function resolveDemotions(fired: FiredRule[]): FiredRule[] {
+  const demotions = fired.flatMap(f => ruleByName.get(f.name)!.demotes ?? []);
+  return fired.map(f => {
+    const demotion = demotions.find(d => d.from === f.name);
+    if (!demotion) return f;
+    const to = ruleByName.get(demotion.to)!;
+    return { name: to.name, points: (f.points / demotion.fromEach) * demotion.toEach, absorbs: to.absorbs };
+  });
+}
 
 function resolveAbsorption(all: FiredRule[], survivors: FiredRule[] = all): AppliedRule[] {
   const absorbed = new Set(survivors.flatMap(r => r.absorbs ?? []));

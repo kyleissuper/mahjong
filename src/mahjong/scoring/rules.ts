@@ -7,6 +7,7 @@ export interface Rule {
   pts: string;
   score: (hand: Hand, win: Win) => number;
   absorbs?: string[];
+  demotes?: { from: string; to: string; fromEach: number; toEach: number }[];
 }
 
 export const DRAGON_COMPONENTS = ['dragonPong', 'dragonKong', 'dragonSecretKong'] as const;
@@ -59,7 +60,12 @@ export const rules: Rule[] = [
   { name: 'pureMixed19s', label: "Pure Mixed 1's or 9's", pts: '8', score: pureMixed19s, absorbs: ['semiMixed19s'] },
   { name: 'semi19sPongs', label: "Semi 1's or 9's Pongs", pts: '12', score: semi19sPongs, absorbs: ['semiMixed19s'] },
   { name: 'pure', label: 'Pure Hand', pts: '8', score: pure },
-  { name: 'fourHiddenPongs', label: 'Four Hidden Pongs', pts: '12', score: fourHiddenPongs, absorbs: ['allPongs', 'threeHiddenPongs'] },
+  { name: 'fourHiddenPongs', label: 'Four Hidden Pongs', pts: '12', score: fourHiddenPongs, absorbs: ['allPongs', 'threeHiddenPongs'], demotes: [
+    { from: 'secretKong', to: 'kong', fromEach: 2, toEach: 1 },
+    { from: 'windSecretKong', to: 'windKong', fromEach: 3, toEach: 2 },
+    { from: 'dragonSecretKong', to: 'dragonKong', fromEach: 3, toEach: 2 },
+  ] },
+  { name: 'hiddenTreasure', label: 'Hidden Treasure', pts: '16', score: hiddenTreasure, absorbs: ['fourHiddenPongs', 'threeHiddenPongs', 'allPongs', 'cleanDoorstepAndSelfPick', 'cleanDoorstep', 'selfPick'] },
   { name: 'no19sNoHonors', label: "No 1's or 9's with NO Honors", pts: '3', score: no19sNoHonors, absorbs: ['noFlowersNoHonors'] },
   { name: 'allKongs', label: 'All Kongs', pts: '16', score: allKongs, absorbs: ['twoKongMahjong', 'allPongs'] },
   { name: 'pure19sPongs', label: "Pure 1's or 9's Pongs", pts: '16', score: pure19sPongs, absorbs: ['semiMixed19s', 'pureMixed19s', 'semi19sPongs', 'noFlowersNoHonors', 'littleAndBigPong'] },
@@ -234,6 +240,10 @@ function pure(hand: Hand): number {
 function fourHiddenPongs({ melds }: Hand): number {
   return melds.filter(({ type, concealed }) =>
     (type === 'pong' || type === 'kong') && concealed).length >= 4 ? 12 : 0;
+}
+
+function hiddenTreasure(hand: Hand, { method }: Win): number {
+  return method === 'self-pick' && fourHiddenPongs(hand) ? 16 : 0;
 }
 
 function allKongs(hand: Hand): number {

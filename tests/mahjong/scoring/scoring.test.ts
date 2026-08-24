@@ -308,7 +308,7 @@ describe('scoreHand', () => {
     expect(result.scores).toEqual({ A: -7, B: -7, C: 22, D: -8 });
   });
 
-  it('Hand 10 — pure, four hidden pongs, clean doorstep & self-pick (27 pts)', () => {
+  it('Hand 10 — pure, hidden treasure (28 pts)', () => {
     // canOnlyWinWithOne does NOT fire: concealed 3d×3 + 4d can rearrange
     // to pair(3d) + chow(3d,4d,5d), so 5d also completes the hand.
     const hand: Hand = {
@@ -333,14 +333,13 @@ describe('scoreHand', () => {
     const result = scoreHand(hand, win);
 
     expect(result.appliedRules).toEqual([
-      { name: 'cleanDoorstepAndSelfPick', points: 3 },
       { name: 'littleAndBigPong', points: 1 },
       { name: 'noFlowersNoHonors', points: 3 },
       { name: 'pure', points: 8 },
-      { name: 'fourHiddenPongs', points: 12 },
+      { name: 'hiddenTreasure', points: 16 },
     ]);
-    expect(result.handValue).toBe(27);
-    expect(result.scores).toEqual({ A: -28, B: 82, C: -27, D: -27 });
+    expect(result.handValue).toBe(28);
+    expect(result.scores).toEqual({ A: -29, B: 85, C: -28, D: -28 });
   });
 
   it('Hand 11 — 1-9 chain, split kong, clean doorstep (10 pts)', () => {
@@ -1606,6 +1605,135 @@ describe('scoreHand', () => {
       { name: 'heavenlyGates', points: 16 },
     ]);
     expect(result.handValue).toBe(16);
+  });
+
+
+  it('hidden treasure — four hidden pongs AND self-drawn (20 pts total)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['2b', '2b', '2b'], concealed: true },
+        { type: 'pong', tiles: ['5d', '5d', '5d'], concealed: true },
+        { type: 'pong', tiles: ['7c', '7c', '7c'], concealed: true },
+        { type: 'pong', tiles: ['3d', '3d', '3d'], concealed: true, winTile: '3d' },
+        { type: 'pair', tiles: ['8b', '8b'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'B', method: 'self-pick',
+      dealer: 'A', dealerRounds: 1, special: [],
+    };
+    const result = scoreHand(hand, win);
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'hiddenTreasure', points: 16 },
+      { name: 'no19sNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(20);
+    expect(result.scores).toEqual({ A: -21, B: 61, C: -20, D: -20 });
+  });
+
+  it('same four-pong shape won by discard is NOT hidden treasure (13 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['2b', '2b', '2b'], concealed: true },
+        { type: 'pong', tiles: ['5d', '5d', '5d'], concealed: true },
+        { type: 'pong', tiles: ['7c', '7c', '7c'], concealed: true },
+        { type: 'pong', tiles: ['3d', '3d', '3d'], concealed: true, winTile: '3d' },
+        { type: 'pair', tiles: ['8b', '8b'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'B', method: 'discard', from: 'C',
+      dealer: 'A', dealerRounds: 1, special: [],
+    };
+    const result = scoreHand(hand, win);
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'allPongs', points: 4 },
+      { name: 'cleanDoorstep', points: 1 },
+      { name: 'threeHiddenPongs', points: 4 },
+      { name: 'no19sNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(13);
+    expect(result.scores).toEqual({ A: 0, B: 13, C: -13, D: 0 });
+  });
+
+  it('four hidden kongs, self-drawn — secret kongs score as plain kongs (40 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'kong', tiles: ['2b', '2b', '2b', '2b'], concealed: true },
+        { type: 'kong', tiles: ['5d', '5d', '5d', '5d'], concealed: true },
+        { type: 'kong', tiles: ['7c', '7c', '7c', '7c'], concealed: true },
+        { type: 'kong', tiles: ['3d', '3d', '3d', '3d'], concealed: true },
+        { type: 'pair', tiles: ['6b', '6b'], concealed: true, winTile: '6b' },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'B', method: 'self-pick',
+      dealer: 'A', dealerRounds: 1, special: [],
+    };
+    const result = scoreHand(hand, win);
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'kong', points: 4 },
+      { name: 'hiddenTreasure', points: 16 },
+      { name: 'no19sNoHonors', points: 3 },
+      { name: 'allKongs', points: 16 },
+    ]);
+    expect(result.handValue).toBe(40);
+    expect(result.scores).toEqual({ A: -41, B: 121, C: -40, D: -40 });
+  });
+
+  it('four hidden kongs by discard — four hidden pongs, no hidden treasure (37 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'kong', tiles: ['2b', '2b', '2b', '2b'], concealed: true },
+        { type: 'kong', tiles: ['5d', '5d', '5d', '5d'], concealed: true },
+        { type: 'kong', tiles: ['7c', '7c', '7c', '7c'], concealed: true },
+        { type: 'kong', tiles: ['3d', '3d', '3d', '3d'], concealed: true },
+        { type: 'pair', tiles: ['6b', '6b'], concealed: true, winTile: '6b' },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'B', method: 'discard', from: 'C',
+      dealer: 'A', dealerRounds: 1, special: [],
+    };
+    const result = scoreHand(hand, win);
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'kong', points: 4 },
+      { name: 'cleanDoorstep', points: 1 },
+      { name: 'fourHiddenPongs', points: 12 },
+      { name: 'no19sNoHonors', points: 3 },
+      { name: 'allKongs', points: 16 },
+    ]);
+    expect(result.handValue).toBe(37);
+    expect(result.scores).toEqual({ A: 0, B: 37, C: -37, D: 0 });
+  });
+
+  it('hidden wind kong inside hidden treasure scores as exposed kong of honor (20 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['2b', '2b', '2b'], concealed: true },
+        { type: 'pong', tiles: ['5d', '5d', '5d'], concealed: true },
+        { type: 'kong', tiles: ['Ww', 'Ww', 'Ww', 'Ww'], concealed: true },
+        { type: 'pong', tiles: ['7c', '7c', '7c'], concealed: true, winTile: '7c' },
+        { type: 'pair', tiles: ['8b', '8b'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'B', method: 'self-pick',
+      dealer: 'A', dealerRounds: 1, special: [],
+    };
+    const result = scoreHand(hand, win);
+    expect(result.appliedRules).toEqual([
+      { name: 'windKong', points: 2 },
+      { name: 'pairOf258', points: 1 },
+      { name: 'no19sWithHonors', points: 1 },
+      { name: 'hiddenTreasure', points: 16 },
+    ]);
+    expect(result.handValue).toBe(20);
+    expect(result.scores).toEqual({ A: -21, B: 61, C: -20, D: -20 });
   });
 
   it('7788899 pattern: pair wait is NOT single (pong+pair decomposition)', () => {
