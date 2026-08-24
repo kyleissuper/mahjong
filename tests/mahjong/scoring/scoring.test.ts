@@ -511,7 +511,7 @@ describe('scoreHand', () => {
     expect(result.scores).toEqual({ A: 12, B: 0, C: 0, D: -12 });
   });
 
-  it('Hand 16 — all 1s/9s, three suit pongs, dealer extra round 4 (26 pts)', () => {
+  it('Hand 16 — all 1s/9s, three suit pongs, dealer extra round 4 (22 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: false },
@@ -535,13 +535,12 @@ describe('scoreHand', () => {
 
     expect(result.appliedRules).toEqual([
       { name: 'canOnlyWinWithOne', points: 1 },
-      { name: 'allPongs', points: 4 },
       { name: 'selfPick', points: 1 },
       { name: 'pure19sPongs', points: 16 },
       { name: 'threeSuitPongs', points: 4 },
     ]);
-    expect(result.handValue).toBe(26);
-    expect(result.scores).toEqual({ A: -35, B: 87, C: -26, D: -26 });
+    expect(result.handValue).toBe(22);
+    expect(result.scores).toEqual({ A: -31, B: 75, C: -22, D: -22 });
   });
 
   it('Hand 17 — four consecutive pongs, semi-pure (14 pts)', () => {
@@ -1089,6 +1088,53 @@ describe('scoreHand', () => {
     expect(result.scores).toEqual({ A: -26, B: 76, C: -25, D: -25 });
   });
 
+  it('heavenly hand absorbs prodigy — winning on your first turn implies ready (25 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['3b', '3b', '3b'], concealed: true },
+        { type: 'pong', tiles: ['7d', '7d', '7d'], concealed: true },
+        { type: 'chow', tiles: ['4c', '5c', '6c'], concealed: true },
+        { type: 'chow', tiles: ['1d', '2d', '3d'], concealed: true },
+        { type: 'pair', tiles: ['8b', '8b'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'A', method: 'self-pick',
+      dealer: 'A', dealerRounds: 1, special: ['firstTurn', 'prodigy'],
+    };
+    const result = scoreHand(hand, win);
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'heavenlyHand', points: 24 },
+    ]);
+    expect(result.handValue).toBe(25);
+    expect(result.scores).toEqual({ A: 78, B: -26, C: -26, D: -26 });
+  });
+
+  it('earthly hand absorbs prodigy (18 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: true, winTile: '2b' },
+        { type: 'pong', tiles: ['6d', '6d', '6d'], concealed: true },
+        { type: 'chow', tiles: ['4c', '5c', '6c'], concealed: true },
+        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: true },
+        { type: 'pair', tiles: ['5d', '5d'], concealed: true },
+      ],
+    };
+    const win: Win = {
+      players: ['A', 'B', 'C', 'D'], winner: 'D', method: 'discard', from: 'A',
+      dealer: 'C', dealerRounds: 1, special: ['firstTurn', 'prodigy'],
+    };
+    const result = scoreHand(hand, win);
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'earthlyHand', points: 16 },
+    ]);
+    expect(result.handValue).toBe(18);
+    expect(result.scores).toEqual({ A: -18, B: 0, C: 0, D: 18 });
+  });
+
   it('Hand 27 — earthly hand, non-dealer wins on first discard (18 pts)', () => {
     const hand: Hand = {
       melds: [
@@ -1624,7 +1670,7 @@ describe('scoreHand', () => {
     expect(result.handValue).toBe(11);
   });
 
-  it('pure 1s/9s pongs hand scores 25, little and big pong folded into the 16', () => {
+  it('pure 1s/9s pongs hand scores 21 — little and big pong and all pongs folded into the 16', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: false },
@@ -1637,11 +1683,10 @@ describe('scoreHand', () => {
     const result = scoreHand(hand, discardWin);
     expect(result.appliedRules).toEqual([
       { name: 'canOnlyWinWithOne', points: 1 },
-      { name: 'allPongs', points: 4 },
       { name: 'pure19sPongs', points: 16 },
       { name: 'threeSuitPongs', points: 4 },
     ]);
-    expect(result.handValue).toBe(25);
+    expect(result.handValue).toBe(21);
   });
 
   it('heavenly gates hand scores 16 flat on a discard win', () => {
@@ -1659,6 +1704,64 @@ describe('scoreHand', () => {
       { name: 'heavenlyGates', points: 16 },
     ]);
     expect(result.handValue).toBe(16);
+  });
+
+  it('big winds with a terminal pair is NOT semi 1s/9s pongs — the pair is not a pong (17 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'pong', tiles: ['Sw', 'Sw', 'Sw'], concealed: false },
+        { type: 'pong', tiles: ['Ww', 'Ww', 'Ww'], concealed: false },
+        { type: 'pong', tiles: ['Nw', 'Nw', 'Nw'], concealed: true },
+        { type: 'pair', tiles: ['1b', '1b'], concealed: true, winTile: '1b' },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'bigWinds', points: 16 },
+    ]);
+    expect(result.handValue).toBe(17);
+  });
+
+  it('big winds with a dragon pair stacks all honors (29 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+        { type: 'pong', tiles: ['Sw', 'Sw', 'Sw'], concealed: false },
+        { type: 'pong', tiles: ['Ww', 'Ww', 'Ww'], concealed: false },
+        { type: 'pong', tiles: ['Nw', 'Nw', 'Nw'], concealed: true },
+        { type: 'pair', tiles: ['Rd', 'Rd'], concealed: true, winTile: 'Rd' },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'bigWinds', points: 16 },
+      { name: 'allHonors', points: 12 },
+    ]);
+    expect(result.handValue).toBe(29);
+  });
+
+  it('chows covering 1-9 without the exact 123/456/789 legs are NOT a train (7 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['1d', '2d', '3d'], concealed: true },
+        { type: 'chow', tiles: ['2d', '3d', '4d'], concealed: true },
+        { type: 'chow', tiles: ['5d', '6d', '7d'], concealed: true },
+        { type: 'chow', tiles: ['7d', '8d', '9d'], concealed: true, winTile: '7d' },
+        { type: 'pair', tiles: ['3b', '3b'], concealed: false },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'allChows', points: 1 },
+      { name: 'missingSuit', points: 1 },
+      { name: 'littleAndBigChow', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(7);
   });
 
 

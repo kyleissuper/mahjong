@@ -68,15 +68,15 @@ export const rules: Rule[] = [
   { name: 'hiddenTreasure', label: 'Hidden Treasure', pts: '16', score: hiddenTreasure, absorbs: ['fourHiddenPongs', 'threeHiddenPongs', 'allPongs', 'cleanDoorstepAndSelfPick', 'cleanDoorstep', 'selfPick'] },
   { name: 'no19sNoHonors', label: "No 1's or 9's with NO Honors", pts: '3', score: no19sNoHonors, absorbs: ['noFlowersNoHonors'] },
   { name: 'allKongs', label: 'All Kongs', pts: '16', score: allKongs, absorbs: ['allPongs'] },
-  { name: 'pure19sPongs', label: "Pure 1's or 9's Pongs", pts: '16', score: pure19sPongs, absorbs: ['semiMixed19s', 'pureMixed19s', 'semi19sPongs', 'noFlowersNoHonors', 'littleAndBigPong'] },
+  { name: 'pure19sPongs', label: "Pure 1's or 9's Pongs", pts: '16', score: pure19sPongs, absorbs: ['semiMixed19s', 'pureMixed19s', 'semi19sPongs', 'noFlowersNoHonors', 'littleAndBigPong', 'allPongs'] },
   { name: 'threeSuitPongs', label: 'Three Suit Pongs', pts: '4', score: threeSuitPongs },
   { name: 'allPairs', label: 'All Pairs', pts: '12', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258', 'canOnlyWinWithOne'] },
-  { name: 'allHonors', label: 'All Honors', pts: '12', score: allHonors, absorbs: ['allPongs', ...HONOR_COMPONENTS, 'semiMixed19s', 'semi19sPongs', 'no19sWithHonors', 'missingSuit'] },
+  { name: 'allHonors', label: 'All Honors', pts: '12', score: allHonors, absorbs: ['allPongs', ...HONOR_COMPONENTS, 'semiMixed19s', 'no19sWithHonors', 'missingSuit'] },
   { name: 'prodigyHand', label: 'Prodigy Hand', pts: '12', score: prodigyHand },
-  { name: 'heavenlyHand', label: 'Heavenly Hand', pts: '24', score: heavenlyHand, absorbs: ['selfPick', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'noFlowersNoHonors'] },
-  { name: 'earthlyHand', label: 'Earthly Hand', pts: '16', score: earthlyHand, absorbs: ['cleanDoorstep', 'noFlowersNoHonors'] },
+  { name: 'heavenlyHand', label: 'Heavenly Hand', pts: '24', score: heavenlyHand, absorbs: ['selfPick', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'noFlowersNoHonors', 'prodigyHand'] },
+  { name: 'earthlyHand', label: 'Earthly Hand', pts: '16', score: earthlyHand, absorbs: ['cleanDoorstep', 'noFlowersNoHonors', 'prodigyHand'] },
   { name: 'heavenlyGates', label: 'Heavenly Gates', pts: '16', score: heavenlyGates, absorbs: ['pure', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'canOnlyWinWithOne', 'pairOf258', 'noFlowersNoHonors', 'oneToNineTrain', 'littleAndBigChow', 'littleAndBigPong'] },
-  { name: 'thirteenOrphans', label: 'Thirteen Orphans', pts: '16', score: thirteenOrphans, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'semiMixed19s', 'semi19sPongs', 'allPongs', ...HONOR_COMPONENTS, 'no19sWithHonors', 'threeSuitsWithWindAndDragon'] },
+  { name: 'thirteenOrphans', label: 'Thirteen Orphans', pts: '16', score: thirteenOrphans, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'semiMixed19s', 'allPongs', ...HONOR_COMPONENTS, 'no19sWithHonors', 'threeSuitsWithWindAndDragon', 'heavenlyGates'] },
   { name: 'jadeDragon', label: 'Jade Dragon', pts: '12', score: jadeDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'missingSuit', 'semiPure'] },
   { name: 'rubyDragon', label: 'Ruby Dragon', pts: '12', score: rubyDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'missingSuit', 'semiPure'] },
   { name: 'pearlDragon', label: 'Pearl Dragon', pts: '12', score: pearlDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'missingSuit', 'semiPure'] },
@@ -222,7 +222,9 @@ function semiMixed19s(hand: Hand): number {
 }
 
 function semi19sPongs(hand: Hand): number {
-  return handTiles(hand).every(t => isTerminal(t) || isHonor(t)) ? 12 : 0;
+  const hasTerminalPong = sets(hand).some(({ type, tiles: [first] }) =>
+    (type === 'pong' || type === 'kong') && isTerminal(first));
+  return hasTerminalPong && handTiles(hand).every(t => isTerminal(t) || isHonor(t)) ? 12 : 0;
 }
 
 function pureMixed19s(hand: Hand): number {
@@ -414,13 +416,10 @@ function oneToNineTrain(hand: Hand): number {
   const chows = hand.melds.filter(m => m.type === 'chow');
   const bySuit = Map.groupBy(chows, m => suit(m.tiles[0]));
   for (const melds of bySuit.values()) {
-    const values = new Set(melds.flatMap(m => m.tiles.map(numValue)));
-    if (![1, 2, 3, 4, 5, 6, 7, 8, 9].every(v => values.has(v))) continue;
     const legs = melds.map(m => m.tiles.map(numValue).sort().join(''));
-    const duplicates = ['123', '456', '789']
-      .map(leg => legs.filter(l => l === leg).length)
-      .reduce((sum, count) => sum + Math.max(0, count - 1), 0);
-    return 3 + duplicates;
+    const counts = ['123', '456', '789'].map(leg => legs.filter(l => l === leg).length);
+    if (counts.some(count => count === 0)) continue;
+    return 3 + counts.reduce((sum, count) => sum + (count - 1), 0);
   }
   return 0;
 }
