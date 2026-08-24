@@ -11,9 +11,9 @@ export function CopyableCode({ label, code }: { label?: string; code: string }) 
     });
   }
   return (
-    <span className="copyable-code" onClick={handleClick} title="Click to copy">
+    <span className="copyable-code" onClick={handleClick} title="Copy join link">
       {label && <>{label}: </>}{code}
-      {copied && <span className="copyable-copied">Copied!</span>}
+      {copied && <span className="copyable-copied">Link copied!</span>}
     </span>
   );
 }
