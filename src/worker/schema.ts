@@ -17,7 +17,9 @@ export const hands = sqliteTable('hands', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   sessionCode: text('session_code').notNull().references(() => sessions.code),
   timestamp: text('timestamp').notNull(),
+  // Name snapshot at time of play (archival); identity lives in winnerId.
   winner: text('winner').notNull(),
+  winnerId: text('winner_id'),
   method: text('method').notNull(),
   handValue: real('hand_value').notNull(),
   appliedRules: text('applied_rules', { mode: 'json' }).notNull(),

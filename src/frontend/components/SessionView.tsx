@@ -141,7 +141,8 @@ export function SessionView() {
             }, 200);
           }}
           onAddPlayer={async (name) => {
-            await api.registerPlayer(name);
+            const { player } = await api.registerPlayer(name);
+            return { id: player.id, name: player.name };
           }} />
       )}
 

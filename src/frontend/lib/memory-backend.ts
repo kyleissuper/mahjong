@@ -38,12 +38,25 @@ export class MemoryBackend implements Backend {
     return { hand: scored };
   }
 
+  // Like the real backend, hands are keyed by player id at write time and
+  // resolved to display names at read time. Keys that aren't registry ids
+  // (test fixtures inserted with plain names) pass through unchanged.
+  private resolveNames(h: ScoredHand): ScoredHand {
+    const names = new Map(this.registry.players.map(p => [p.id, p.name]));
+    const resolve = (key: string) => names.get(key) ?? key;
+    return {
+      ...h,
+      winner: resolve(h.winner),
+      scores: Object.fromEntries(Object.entries(h.scores).map(([k, v]) => [resolve(k), v])),
+    };
+  }
+
   async getAllHands(): Promise<{ hands: ScoredHand[] }> {
-    return { hands: this.hands };
+    return { hands: this.hands.map(h => this.resolveNames(h)) };
   }
 
   async getSessionHands(code: string): Promise<{ hands: ScoredHand[] }> {
-    return { hands: this.hands.filter(h => h.sessionCode === code) };
+    return { hands: this.hands.filter(h => h.sessionCode === code).map(h => this.resolveNames(h)) };
   }
 
   async getPlayers(): Promise<{ players: RegisteredPlayer[] }> {

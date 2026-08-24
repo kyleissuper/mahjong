@@ -168,7 +168,8 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
     if (pathname.startsWith('/api/admin/')) {
       const denied = requireAdmin(request, env);
       if (denied) return denied;
-      return routeAdmin(app, request, pathname, env);
+      // return await: a bare `return promise` would reject outside this try.
+      return await routeAdmin(app, request, pathname, env);
     }
 
     return json({ error: 'Not found' }, 404);

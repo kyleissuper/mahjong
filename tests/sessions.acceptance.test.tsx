@@ -547,8 +547,11 @@ describe('Confirm & Record flow', () => {
       expect(cards[0].textContent).toContain('Kyle');
     });
 
-    // The hand should be saved in the backend
+    // The hand should be saved keyed by player id; reads resolve the name.
     expect(backend.hands).toHaveLength(1);
-    expect(backend.hands[0].winner).toBe('Kyle');
+    const kyle = backend.registry.players.find(p => p.name === 'Kyle')!;
+    expect(backend.hands[0].winner).toBe(kyle.id);
+    const { hands } = await backend.getAllHands();
+    expect(hands.find(h => h.winner === 'Kyle')).toBeDefined();
   });
 });

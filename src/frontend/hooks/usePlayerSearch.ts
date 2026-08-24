@@ -15,7 +15,7 @@ export function usePlayerSearch(query: string, enabled: boolean) {
   }
 
   return {
-    players: data?.players.map(p => p.name) ?? [],
+    players: data?.players.map(p => ({ id: p.id, name: p.name })) ?? [],
     isLoading,
     error,
     invalidate,

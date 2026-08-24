@@ -21,6 +21,25 @@ const ALL_SUITS = [
 
 type Slot = Tile[];
 
+/** Identity is the registry id; the name is display-only. Standalone mode uses name-as-id. */
+export interface PlayerRef { id: string; name: string }
+
+type WinState = {
+  method?: Win['method'];
+  winner?: PlayerRef;
+  from?: PlayerRef;
+  dealer?: PlayerRef;
+  otherPlayers?: (PlayerRef | undefined)[];
+  dealerRounds?: number;
+  special?: Win['special'];
+  dealerAnswered?: boolean;
+};
+
+function chosenRefs(win: WinState): PlayerRef[] {
+  return [win.winner, win.from, ...(win.otherPlayers ?? [])]
+    .filter((r): r is PlayerRef => !!r);
+}
+
 interface EditableMeld {
   tiles: Tile[];
   concealed: boolean;
@@ -85,7 +104,7 @@ function buildTimingPayload(t: TimingData) {
 
 export function Scorer({ roster = ['Player 1', 'Player 2', 'Player 3', 'Player 4'], sessionCode, onScored, onAddPlayer, hideAppBar, onPhaseChange, onConfirmed, onBackRef }: {
   roster?: string[]; sessionCode?: string; onScored?: () => void;
-  onAddPlayer?: (name: string) => Promise<void>; hideAppBar?: boolean;
+  onAddPlayer?: (name: string) => Promise<PlayerRef>; hideAppBar?: boolean;
   onPhaseChange?: (phase: 'entering' | 'done') => void;
   onConfirmed?: (timestamp: string) => void;
   onBackRef?: MutableRefObject<(() => void) | null>;
@@ -105,7 +124,7 @@ export function Scorer({ roster = ['Player 1', 'Player 2', 'Player 3', 'Player 4
 
   const { melds, flowers, active, phase, winMeld, winTile } = state;
 
-  const [win, setWin] = useState<Partial<Win> & { otherPlayers?: string[]; dealerAnswered?: boolean }>({
+  const [win, setWin] = useState<WinState>({
     method: 'discard',
     dealerRounds: 1,
     special: [],
@@ -140,9 +159,9 @@ export function Scorer({ roster = ['Player 1', 'Player 2', 'Player 3', 'Player 4
     if (method !== 'self-pick' && !win.from) return null;
 
     const winObj = buildWin({
-      method, winner, from: win.from,
-      otherPlayers: win.otherPlayers,
-      dealer: dealer,
+      method, winner: winner.id, from: win.from?.id,
+      otherPlayers: win.otherPlayers?.filter((p): p is PlayerRef => !!p).map(p => p.id),
+      dealer: dealer?.id,
       dealerRounds, special,
     });
     const hand = { melds: toScoringHand(state) };
@@ -157,9 +176,9 @@ export function Scorer({ roster = ['Player 1', 'Player 2', 'Player 3', 'Player 4
     const timingPayload = buildTimingPayload(timing.current);
     const { winner, dealer, method = 'discard', dealerRounds = 1, special = [] } = win;
     const winObj = buildWin({
-      method, winner: winner!, from: win.from,
-      otherPlayers: win.otherPlayers,
-      dealer: dealer,
+      method, winner: winner!.id, from: win.from?.id,
+      otherPlayers: win.otherPlayers?.filter((p): p is PlayerRef => !!p).map(p => p.id),
+      dealer: dealer?.id,
       dealerRounds, special,
     });
     const hand = { melds: toScoringHand(state) };
@@ -327,7 +346,7 @@ export function Scorer({ roster = ['Player 1', 'Player 2', 'Player 3', 'Player 4
       {phase === 'done' && (
         <div className="scorer-finish">
           {winMeld !== null && <WinContextPanel roster={roster} win={win} onChangeWin={setWin} onAddPlayer={onAddPlayer} standalone={!sessionCode} />}
-          {scoringResult && <ScoreResultsPanel result={scoringResult} onConfirm={sessionCode ? confirmScore : undefined} />}
+          {scoringResult && <ScoreResultsPanel result={scoringResult} names={new Map(chosenRefs(win).map(r => [r.id, r.name]))} onConfirm={sessionCode ? confirmScore : undefined} />}
         </div>
       )}
       </div>
@@ -518,34 +537,34 @@ function BottomSheet({ handReady, hasContent, active, activeSlotTiles, isFlowers
   );
 }
 
-type WinState = Partial<Win> & { otherPlayers?: string[]; dealerAnswered?: boolean };
-
 function WinContextPanel({ roster, win, onChangeWin, onAddPlayer, standalone }: {
   roster: string[];
   win: WinState;
   onChangeWin: (fn: (w: WinState) => WinState) => void;
-  onAddPlayer?: (name: string) => Promise<void>;
+  onAddPlayer?: (name: string) => Promise<PlayerRef>;
   standalone?: boolean;
 }) {
   const method = win.method ?? 'discard';
   const isSelfPick = method === 'self-pick';
+  // Standalone has no registry; local names double as ids.
+  const localRef = (name: string): PlayerRef => ({ id: name, name });
 
   useEffect(() => {
     if (!standalone || roster.length < 4) return;
     onChangeWin(w => {
       if (w.winner) return w;
-      const auto: WinState = { ...w, winner: roster[0] };
+      const auto: WinState = { ...w, winner: localRef(roster[0]) };
       if (isSelfPick) {
-        auto.otherPlayers = roster.slice(1, 4);
+        auto.otherPlayers = roster.slice(1, 4).map(localRef);
       } else {
-        auto.from = roster[1];
+        auto.from = localRef(roster[1]);
       }
       return auto;
     });
   }, [standalone, method]);
 
   const losersReady = isSelfPick
-    ? (win.otherPlayers?.length ?? 0) === 3
+    ? (win.otherPlayers?.filter(Boolean).length ?? 0) === 3
     : !!win.from;
 
   return (
@@ -557,9 +576,9 @@ function WinContextPanel({ roster, win, onChangeWin, onAddPlayer, standalone }: 
             onClick={() => onChangeWin(w => {
               const next: WinState = { ...w, method: m, from: undefined, otherPlayers: undefined, dealer: undefined, dealerAnswered: false };
               if (standalone && roster.length >= 4) {
-                next.winner = roster[0];
-                if (m === 'self-pick') { next.otherPlayers = roster.slice(1, 4); }
-                else { next.from = roster[1]; }
+                next.winner = localRef(roster[0]);
+                if (m === 'self-pick') { next.otherPlayers = roster.slice(1, 4).map(localRef); }
+                else { next.from = localRef(roster[1]); }
               }
               return next;
             })}
@@ -582,7 +601,7 @@ function WinContextPanel({ roster, win, onChangeWin, onAddPlayer, standalone }: 
           <span className="scorer-field-label">Other players</span>
           {[0, 1, 2].map(i => {
             const chosen = win.otherPlayers ?? [];
-            const excluded = [win.winner!, ...chosen.filter((_, j) => j !== i)];
+            const excluded = [win.winner!, ...chosen.filter((p, j): p is PlayerRef => !!p && j !== i)];
             return (
               <PlayerSelect key={i}
                 value={chosen[i]} exclude={excluded} sortHint={roster} onAddPlayer={onAddPlayer}
@@ -599,7 +618,7 @@ function WinContextPanel({ roster, win, onChangeWin, onAddPlayer, standalone }: 
       {win.winner && losersReady && (
         <DealerPicker
           players={isSelfPick
-            ? [win.winner!, ...(win.otherPlayers ?? [])]
+            ? [win.winner!, ...(win.otherPlayers ?? []).filter((p): p is PlayerRef => !!p)]
             : [win.winner!, win.from!]}
           showNeither={!isSelfPick}
           value={win.dealer}
@@ -627,9 +646,9 @@ function WinContextPanel({ roster, win, onChangeWin, onAddPlayer, standalone }: 
 }
 
 function PlayerSelect({ label, value, options, exclude, sortHint, onChange, onAddPlayer }: {
-  label?: string; value?: string; options?: string[]; exclude?: string[];
+  label?: string; value?: PlayerRef; options?: PlayerRef[]; exclude?: PlayerRef[];
   sortHint?: string[];
-  onChange: (value: string) => void; onAddPlayer?: (name: string) => Promise<void>;
+  onChange: (value: PlayerRef | undefined) => void; onAddPlayer?: (name: string) => Promise<PlayerRef>;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -653,25 +672,25 @@ function PlayerSelect({ label, value, options, exclude, sortHint, onChange, onAd
   const baseList = useServer
     ? serverPlayers
     : query
-      ? options.filter(p => p.toLowerCase().includes(query.toLowerCase()))
+      ? options.filter(p => p.name.toLowerCase().includes(query.toLowerCase()))
       : options;
 
   const sorted = useServer && sortHint?.length
     ? [...baseList].sort((a, b) => {
-        const ai = sortHint.indexOf(a);
-        const bi = sortHint.indexOf(b);
+        const ai = sortHint.indexOf(a.name);
+        const bi = sortHint.indexOf(b.name);
         if (ai !== -1 && bi !== -1) return ai - bi;
         if (ai !== -1) return -1;
         if (bi !== -1) return 1;
-        return a.localeCompare(b);
+        return a.name.localeCompare(b.name);
       })
     : baseList;
 
   const filtered = exclude?.length
-    ? sorted.filter(p => !exclude.includes(p))
+    ? sorted.filter(p => !exclude.some(e => e.id === p.id))
     : sorted;
 
-  function select(p: string) {
+  function select(p: PlayerRef) {
     onChange(p);
     setQuery('');
     setOpen(false);
@@ -701,9 +720,9 @@ function PlayerSelect({ label, value, options, exclude, sortHint, onChange, onAd
     if (!newName.trim() || !onAddPlayer) return;
     setAddError(null);
     try {
-      await onAddPlayer(newName.trim());
+      const added = await onAddPlayer(newName.trim());
       invalidate();
-      select(newName.trim());
+      select(added);
       setNewName('');
       setAdding(false);
     } catch (err) {
@@ -731,22 +750,22 @@ function PlayerSelect({ label, value, options, exclude, sortHint, onChange, onAd
       {label && <span className="scorer-field-label">{label}</span>}
       <div className="combo" ref={ref}>
         <input className="combo-input" ref={inputRef}
-          placeholder={value || 'Search players...'}
-          value={open ? query : (value || '')}
+          placeholder={value?.name || 'Search players...'}
+          value={open ? query : (value?.name || '')}
           onFocus={() => { setOpen(true); setQuery(''); }}
           onChange={e => { setQuery(e.target.value); setOpen(true); }}
           onKeyDown={handleKeyDown} />
         {value && !open && (
-          <button className="combo-clear" onClick={() => { onChange(''); inputRef.current?.focus(); }}
+          <button className="combo-clear" onClick={() => { onChange(undefined); inputRef.current?.focus(); }}
             aria-label="Clear">×</button>
         )}
         {open && (
           <div className="combo-dropdown">
             {filtered.map((p, i) => (
-              <div key={p} className={`combo-option ${i === highlight ? 'combo-option-active' : ''}`}
+              <div key={p.id} className={`combo-option ${i === highlight ? 'combo-option-active' : ''}`}
                 onMouseEnter={() => setHighlight(i)}
                 onMouseDown={e => { e.preventDefault(); select(p); }}>
-                {p}
+                {p.name}
               </div>
             ))}
             {filtered.length === 0 && (
@@ -828,7 +847,7 @@ function TileKeyboard({ suits, activeSlotTiles, onTapTile }: {
 }
 
 function DealerPicker({ players, showNeither, value, answered, onChange }: {
-  players: string[]; showNeither?: boolean; value?: string; answered?: boolean; onChange: (p: string | undefined) => void;
+  players: PlayerRef[]; showNeither?: boolean; value?: PlayerRef; answered?: boolean; onChange: (p: PlayerRef | undefined) => void;
 }) {
   const isNeither = !!answered && value === undefined;
   return (
@@ -836,10 +855,10 @@ function DealerPicker({ players, showNeither, value, answered, onChange }: {
       <span className="scorer-field-label">Dealer this round?</span>
       <div className="scorer-dealer-options">
         {players.map(p => (
-          <label key={p} className={`scorer-dealer-option ${value === p ? 'active' : ''}`}>
-            <input type="radio" name="dealer" value={p} checked={value === p}
+          <label key={p.id} className={`scorer-dealer-option ${value?.id === p.id ? 'active' : ''}`}>
+            <input type="radio" name="dealer" value={p.id} checked={value?.id === p.id}
               onChange={() => onChange(p)} />
-            {p}
+            {p.name}
           </label>
         ))}
         {showNeither && (
@@ -874,13 +893,15 @@ function SpecialConditions({ win, onChangeWin }: { win: WinState; onChangeWin: (
   );
 }
 
-function ScoreResultsPanel({ result, onConfirm }: { result: ScoreResult; onConfirm?: () => void }) {
+function ScoreResultsPanel({ result, names, onConfirm }: {
+  result: ScoreResult; names: Map<string, string>; onConfirm?: () => void;
+}) {
   return (
     <div className="scorer-results">
       <div className="scorer-hero">
         {Object.entries(result.scores).map(([player, delta]) => (
           <div key={player} className={`scorer-hero-player ${delta > 0 ? 'pos' : delta < 0 ? 'neg' : ''}`}>
-            <span className="scorer-hero-name">{player}</span>
+            <span className="scorer-hero-name">{names.get(player) ?? player}</span>
             <span className="scorer-hero-delta">{delta > 0 ? '+' : ''}{delta}</span>
           </div>
         ))}

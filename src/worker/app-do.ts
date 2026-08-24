@@ -47,7 +47,53 @@ export class AppDO extends DurableObject<Env> {
         scan_id TEXT PRIMARY KEY,
         tiles TEXT NOT NULL
       )`);
+      try { ctx.storage.sql.exec(`ALTER TABLE hands ADD COLUMN winner_id TEXT`); } catch {}
+      // A merged-away id submitted by a phone mid-entry resolves through here.
+      ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS player_merges (
+        old_id TEXT PRIMARY KEY,
+        new_id TEXT NOT NULL
+      )`);
+      await this.migrateHandsToPlayerIds();
     });
+  }
+
+  /**
+   * One-time: hands historically stored players by display name in `winner`
+   * and the `scores` keys. Identity moves to registry ids — names found in
+   * hands but missing from the registry get entries minted for them.
+   */
+  private async migrateHandsToPlayerIds(): Promise<void> {
+    if (await this.ctx.storage.get('ids-migrated')) return;
+    const nameToId = new Map<string, string>();
+    for (const p of this.ctx.storage.sql.exec<{ id: string; name: string }>(
+      `SELECT id, name FROM players`
+    ).toArray()) {
+      nameToId.set(p.name, p.id);
+    }
+    const ensureId = (name: string, createdAt: string): string => {
+      const existing = nameToId.get(name);
+      if (existing) return existing;
+      const id = generateId();
+      this.ctx.storage.sql.exec(
+        `INSERT INTO players (id, name, created_at) VALUES (?, ?, ?)`, id, name, createdAt
+      );
+      nameToId.set(name, id);
+      return id;
+    };
+    const rows = this.ctx.storage.sql.exec<{ id: number; winner: string; scores: string; timestamp: string }>(
+      `SELECT id, winner, scores, timestamp FROM hands`
+    ).toArray();
+    for (const row of rows) {
+      const scores = JSON.parse(row.scores) as Record<string, number>;
+      const idScores = Object.fromEntries(
+        Object.entries(scores).map(([name, v]) => [ensureId(name, row.timestamp), v])
+      );
+      this.ctx.storage.sql.exec(
+        `UPDATE hands SET winner_id = ?, scores = ? WHERE id = ?`,
+        ensureId(row.winner, row.timestamp), JSON.stringify(idScores), row.id
+      );
+    }
+    await this.ctx.storage.put('ids-migrated', true);
   }
 
   // --- Sessions ---
@@ -137,7 +183,8 @@ export class AppDO extends DurableObject<Env> {
     const sessions = await this.db.select().from(schema.sessions).all();
     const hands = await this.db.select().from(schema.hands).all();
     const players = await this.db.select().from(schema.players).all();
-    return { sessions, hands: hands.map(rowToScoredHand), players };
+    const names = new Map(players.map(p => [p.id, p.name]));
+    return { sessions, hands: hands.map(h => rowToScoredHand(h, names)), players };
   }
 
   async expireOverdueSessions(): Promise<void> {
@@ -158,11 +205,14 @@ export class AppDO extends DurableObject<Env> {
 
   async scoreHand(code: string, hand: Hand, win: Win, timing?: any): Promise<ScoredHand> {
     await this.getSession(code);
-    const scored = computeScoredHand(hand, win);
+    const resolvedWin = await this.resolveWinPlayerIds(win);
+    const scored = computeScoredHand(hand, resolvedWin);
+    const names = await this.playerNames();
     await this.db.insert(schema.hands).values({
       sessionCode: code,
       timestamp: scored.timestamp,
-      winner: scored.winner,
+      winner: names.get(scored.winner) ?? scored.winner,
+      winnerId: scored.winner,
       method: scored.method,
       handValue: scored.handValue,
       appliedRules: scored.appliedRules as any,
@@ -172,17 +222,65 @@ export class AppDO extends DurableObject<Env> {
       timing: timing ?? null,
     });
     this.broadcast({ type: 'hands-changed' });
-    return scored;
+    return this.resolveHandNames(scored, names);
+  }
+
+  /**
+   * Win arrives keyed by player ids. Ids retired by a merge (a phone can hold
+   * one mid-entry) resolve through player_merges; anything else must exist.
+   */
+  private async resolveWinPlayerIds(win: Win): Promise<Win> {
+    const merges = new Map(
+      this.ctx.storage.sql.exec<{ old_id: string; new_id: string }>(
+        `SELECT old_id, new_id FROM player_merges`
+      ).toArray().map(r => [r.old_id, r.new_id])
+    );
+    const registry = new Set((await this.getPlayers()).map(p => p.id));
+    const resolve = (id: string): string => {
+      let cur = id;
+      for (let hops = 0; hops < 5 && !registry.has(cur); hops++) {
+        const next = merges.get(cur);
+        if (!next) break;
+        cur = next;
+      }
+      if (!registry.has(cur)) throw new Error(`Unknown player: ${id}`);
+      return cur;
+    };
+    return {
+      ...win,
+      winner: resolve(win.winner),
+      from: win.from ? resolve(win.from) : win.from,
+      dealer: win.dealer ? resolve(win.dealer) : win.dealer,
+      players: win.players.map(resolve) as Win['players'],
+    };
+  }
+
+  private async playerNames(): Promise<Map<string, string>> {
+    const players = await this.db.select().from(schema.players).all();
+    return new Map(players.map(p => [p.id, p.name]));
+  }
+
+  /** Storage keys hands by player id; the API speaks display names. */
+  private resolveHandNames(scored: ScoredHand, names: Map<string, string>): ScoredHand {
+    return {
+      ...scored,
+      winner: names.get(scored.winner) ?? scored.winner,
+      scores: Object.fromEntries(
+        Object.entries(scored.scores).map(([id, v]) => [names.get(id) ?? id, v])
+      ),
+    };
   }
 
   async getAllHands(): Promise<ScoredHand[]> {
     const rows = await this.db.select().from(schema.hands).all();
-    return rows.map(rowToScoredHand);
+    const names = await this.playerNames();
+    return rows.map(r => rowToScoredHand(r, names));
   }
 
   async getSessionHands(code: string): Promise<ScoredHand[]> {
     const rows = await this.db.select().from(schema.hands).where(eq(schema.hands.sessionCode, code)).orderBy(sql`id DESC`).all();
-    return rows.map(rowToScoredHand);
+    const names = await this.playerNames();
+    return rows.map(r => rowToScoredHand(r, names));
   }
 
   async deleteHand(id: number): Promise<void> {
@@ -257,26 +355,19 @@ export class AppDO extends DurableObject<Env> {
   async renamePlayer(id: string, newName: string) {
     const old = await this.db.select().from(schema.players).where(eq(schema.players.id, id)).get();
     if (!old) throw new Error('Player not found');
+    // Hands reference the id, so a rename is a single registry update.
     await this.db.update(schema.players).set({ name: newName }).where(eq(schema.players.id, id));
-    // Update all hands referencing old name
-    const allHands = await this.db.select().from(schema.hands).all();
-    for (const h of allHands) {
-      const scores = h.scores as Record<string, number>;
-      if (old.name in scores || h.winner === old.name) {
-        const newScores = Object.fromEntries(
-          Object.entries(scores).map(([k, v]) => [k === old.name ? newName : k, v])
-        );
-        await this.db.update(schema.hands).set({
-          winner: h.winner === old.name ? newName : h.winner,
-          scores: newScores as any,
-        }).where(eq(schema.hands.id, h.id));
-      }
-    }
     this.broadcast({ type: 'hands-changed' });
     return { id, name: newName, createdAt: old.createdAt };
   }
 
   async deletePlayer(id: string): Promise<void> {
+    const referenced = this.ctx.storage.sql.exec(
+      `SELECT 1 FROM hands WHERE winner_id = ? OR scores LIKE ? LIMIT 1`, id, `%"${id}"%`
+    ).toArray();
+    if (referenced.length > 0) {
+      throw new Error('Player has recorded hands — merge into another player instead');
+    }
     await this.db.delete(schema.players).where(eq(schema.players.id, id));
   }
 
@@ -287,22 +378,26 @@ export class AppDO extends DurableObject<Env> {
     const allHands = await this.db.select().from(schema.hands).all();
     for (const h of allHands) {
       const scores = h.scores as Record<string, number>;
-      if (merge.name in scores || h.winner === merge.name) {
+      if (mergeId in scores || h.winnerId === mergeId) {
         const newScores: Record<string, number> = {};
         for (const [k, v] of Object.entries(scores)) {
-          if (k === merge.name) {
-            newScores[keep.name] = (newScores[keep.name] ?? 0) + v;
-          } else {
-            newScores[k] = (newScores[k] ?? 0) + v;
-          }
+          const key = k === mergeId ? keepId : k;
+          newScores[key] = (newScores[key] ?? 0) + v;
         }
         await this.db.update(schema.hands).set({
-          winner: h.winner === merge.name ? keep.name : h.winner,
+          winnerId: h.winnerId === mergeId ? keepId : h.winnerId,
           scores: newScores as any,
         }).where(eq(schema.hands.id, h.id));
       }
     }
-    await this.deletePlayer(mergeId);
+    // A phone can still hold the retired id mid-entry; keep it resolvable.
+    this.ctx.storage.sql.exec(
+      `INSERT OR REPLACE INTO player_merges (old_id, new_id) VALUES (?, ?)`, mergeId, keepId
+    );
+    this.ctx.storage.sql.exec(
+      `UPDATE player_merges SET new_id = ? WHERE new_id = ?`, keepId, mergeId
+    );
+    await this.db.delete(schema.players).where(eq(schema.players.id, mergeId));
     this.broadcast({ type: 'hands-changed' });
   }
 
@@ -331,17 +426,21 @@ export class AppDO extends DurableObject<Env> {
   }
 }
 
-function rowToScoredHand(row: any): ScoredHand & { id?: number } {
+function rowToScoredHand(row: any, names: Map<string, string>): ScoredHand & { id?: number } {
+  // Post-migration rows key players by id; resolve to current display names.
+  // Unknown ids (or legacy name keys) pass through as-is.
+  const resolve = (key: string) => names.get(key) ?? key;
+  const scores = row.scores as Record<string, number>;
   return {
     id: row.id,
     timestamp: row.timestamp,
-    winner: row.winner,
+    winner: row.winnerId ? resolve(row.winnerId) : row.winner,
     method: row.method,
     handValue: row.handValue,
     appliedRules: row.appliedRules as any,
     dealerBonus: row.dealerBonus,
     melds: row.melds as any,
-    scores: row.scores as any,
+    scores: Object.fromEntries(Object.entries(scores).map(([k, v]) => [resolve(k), v])),
     scanId: (row.timing as any)?.scanId ?? undefined,
   };
 }
