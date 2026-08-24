@@ -108,7 +108,7 @@ describe('scoreHand', () => {
     expect(result.scores).toEqual({ A: 3, B: 0, C: -3, D: 0 });
   });
 
-  it('Hand 4 — all greens, all pongs, dealer self-pick (17 pts)', () => {
+  it('Hand 4 — all greens, all pongs, dealer self-pick (18 pts)', () => {
     // canOnlyWinWithOne does NOT fire: concealed 1b×3 + 3b can rearrange
     // to pair(1b) + chow(1b,2b,3b), so 2b also completes the hand.
     const hand: Hand = {
@@ -135,10 +135,11 @@ describe('scoreHand', () => {
     expect(result.appliedRules).toEqual([
       { name: 'allPongs', points: 4 },
       { name: 'selfPick', points: 1 },
+      { name: 'littleAndBigPong', points: 1 },
       { name: 'jadeDragon', points: 12 },
     ]);
-    expect(result.handValue).toBe(17);
-    expect(result.scores).toEqual({ A: 54, B: -18, C: -18, D: -18 });
+    expect(result.handValue).toBe(18);
+    expect(result.scores).toEqual({ A: 57, B: -19, C: -19, D: -19 });
   });
 
   it('Hand 5 — 1-9 chain, clean doorstep, discard win (5 pts)', () => {
@@ -307,7 +308,7 @@ describe('scoreHand', () => {
     expect(result.scores).toEqual({ A: -7, B: -7, C: 22, D: -8 });
   });
 
-  it('Hand 10 — pure, four hidden pongs, clean doorstep & self-pick (26 pts)', () => {
+  it('Hand 10 — pure, four hidden pongs, clean doorstep & self-pick (27 pts)', () => {
     // canOnlyWinWithOne does NOT fire: concealed 3d×3 + 4d can rearrange
     // to pair(3d) + chow(3d,4d,5d), so 5d also completes the hand.
     const hand: Hand = {
@@ -333,12 +334,13 @@ describe('scoreHand', () => {
 
     expect(result.appliedRules).toEqual([
       { name: 'cleanDoorstepAndSelfPick', points: 3 },
+      { name: 'littleAndBigPong', points: 1 },
       { name: 'noFlowersNoHonors', points: 3 },
       { name: 'pure', points: 8 },
       { name: 'fourHiddenPongs', points: 12 },
     ]);
-    expect(result.handValue).toBe(26);
-    expect(result.scores).toEqual({ A: -27, B: 79, C: -26, D: -26 });
+    expect(result.handValue).toBe(27);
+    expect(result.scores).toEqual({ A: -28, B: 82, C: -27, D: -27 });
   });
 
   it('Hand 11 — 1-9 chain, split kong, clean doorstep (10 pts)', () => {
@@ -411,7 +413,7 @@ describe('scoreHand', () => {
     expect(result.scores).toEqual({ A: 0, B: 0, C: 11, D: -11 });
   });
 
-  it('Hand 13 — terminals & honors, all pongs, dealer discard win (18 pts)', () => {
+  it('Hand 13 — terminals & honors, all pongs, dealer discard win (19 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: true },
@@ -438,10 +440,11 @@ describe('scoreHand', () => {
       { name: 'windPong', points: 1 },
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'allPongs', points: 4 },
+      { name: 'littleAndBigPong', points: 1 },
       { name: 'semi19sPongs', points: 12 },
     ]);
-    expect(result.handValue).toBe(18);
-    expect(result.scores).toEqual({ A: 0, B: 19, C: -19, D: 0 });
+    expect(result.handValue).toBe(19);
+    expect(result.scores).toEqual({ A: 0, B: 20, C: -20, D: 0 });
   });
 
   it('Hand 14 — little dragons (8 pts)', () => {
@@ -687,15 +690,14 @@ describe('scoreHand', () => {
     };
 
     const result = scoreHand(hand, discardWin);
-    const fired = (n: string) => result.appliedRules.find(r => r.name === n);
 
-    expect(fired('allHonors')).toEqual({ name: 'allHonors', points: 12 });
-    expect(fired('flower')).toEqual({ name: 'flower', points: 1 });
-    expect(fired('littleDragons')).toEqual({ name: 'littleDragons', points: 8 });
-    // allHonors absorbs these
-    for (const absorbed of ['allPongs', 'windPong', 'dragonPong', 'semiMixed19s', 'no19sWithHonors', 'missingSuit']) {
-      expect(fired(absorbed)).toBeUndefined();
-    }
+    expect(result.appliedRules).toEqual([
+      { name: 'flower', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'littleDragons', points: 8 },
+      { name: 'allHonors', points: 12 },
+    ]);
+    expect(result.handValue).toBe(22);
   });
 
   it('Hand 21 — all pairs, self-pick (13 pts)', () => {
@@ -789,31 +791,52 @@ describe('scoreHand', () => {
 
     const result = scoreHand(hand, win);
 
-    expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeUndefined();
+    expect(result.appliedRules).toEqual([
+      { name: 'noFlowersNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(3);
   });
 
   // --- canOnlyWinWithOne: pair waits that look single but aren't, due to alternate chow decomposition ---
 
   it.each([
     {
-      name: 'staircase 2b-3b-3b-4b-4b-5b-5b winning on 2b — also wins on 5b',
+      name: 'staircase 2b-3b-3b-4b-4b-5b-5b winning on 2b — also wins on 5b, no single-wait bonus (9 pts)',
       chows: [['3b', '4b', '5b'], ['3b', '4b', '5b']],
       pair: '2b',
-      single: false,
+      expected: [
+        { name: 'windPong', points: 2 },
+        { name: 'pairOf258', points: 1 },
+        { name: 'no19sWithHonors', points: 1 },
+        { name: 'doubleChow', points: 1 },
+        { name: 'semiPure', points: 4 },
+      ],
+      total: 9,
     },
     {
-      name: 'staircase 2b-3b-3b-4b-4b-5b-5b winning on 5b — also wins on 2b',
+      name: 'staircase 2b-3b-3b-4b-4b-5b-5b winning on 5b — also wins on 2b, no single-wait bonus (8 pts)',
       chows: [['2b', '3b', '4b'], ['3b', '4b', '5b']],
       pair: '5b',
-      single: false,
+      expected: [
+        { name: 'windPong', points: 2 },
+        { name: 'pairOf258', points: 1 },
+        { name: 'no19sWithHonors', points: 1 },
+        { name: 'semiPure', points: 4 },
+      ],
+      total: 8,
     },
     {
-      name: 'staircase 6b-7b-7b-8b-8b-9b-9b winning on 6b — also wins via shifted chow',
+      name: 'staircase 6b-7b-7b-8b-8b-9b-9b winning on 6b — also wins via shifted chow, no single-wait bonus (7 pts)',
       chows: [['7b', '8b', '9b'], ['7b', '8b', '9b']],
       pair: '6b',
-      single: false,
+      expected: [
+        { name: 'windPong', points: 2 },
+        { name: 'doubleChow', points: 1 },
+        { name: 'semiPure', points: 4 },
+      ],
+      total: 7,
     },
-  ])('$name', ({ chows, pair, single }) => {
+  ])('$name', ({ chows, pair, expected, total }) => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
@@ -824,9 +847,8 @@ describe('scoreHand', () => {
       ],
     };
     const result = scoreHand(hand, discardWin);
-    const fired = result.appliedRules.find(r => r.name === 'canOnlyWinWithOne');
-    if (single) expect(fired).toBeDefined();
-    else expect(fired).toBeUndefined();
+    expect(result.appliedRules).toEqual(expected);
+    expect(result.handValue).toBe(total);
   });
 
   it('genuine pair wait IS single wait (no staircase)', () => {
@@ -842,7 +864,13 @@ describe('scoreHand', () => {
       ],
     };
     const result = scoreHand(hand, discardWin);
-    expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeDefined();
+
+    expect(result.appliedRules).toEqual([
+      { name: 'windPong', points: 1 },
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+    ]);
+    expect(result.handValue).toBe(3);
   });
 
   it('Hand 24 — two kong mahjong (7 pts)', () => {
@@ -1130,7 +1158,7 @@ describe('scoreHand', () => {
     expect(result.scores).toEqual({ A: -29, B: 85, C: -28, D: -28 });
   });
 
-  it('Hand 30 — prodigy hand, clean doorstep (18 pts)', () => {
+  it('Hand 30 — prodigy hand, clean doorstep (19 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'chow', tiles: ['4b', '5b', '6b'], concealed: true, winTile: '5b' },
@@ -1157,11 +1185,12 @@ describe('scoreHand', () => {
       { name: 'pairOf258', points: 1 },
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'cleanDoorstep', points: 1 },
+      { name: 'littleAndBigChow', points: 1 },
       { name: 'noFlowersNoHonors', points: 3 },
       { name: 'prodigyHand', points: 12 },
     ]);
-    expect(result.handValue).toBe(18);
-    expect(result.scores).toEqual({ A: 0, B: 0, C: 18, D: -18 });
+    expect(result.handValue).toBe(19);
+    expect(result.scores).toEqual({ A: 0, B: 0, C: 19, D: -19 });
   });
 
   it('Hand 31 — three suits w/ wind and dragon (2 pts)', () => {
@@ -1279,7 +1308,8 @@ describe('scoreHand', () => {
       ],
     };
     const result = scoreHand(hand, discardWin);
-    expect(result.appliedRules.find(r => r.name === rule)).toEqual({ name: rule, points: 12 });
+    expect(result.appliedRules).toEqual([{ name: rule, points: 12 }]);
+    expect(result.handValue).toBe(12);
   });
 
   it.each(PURITY_DRAGONS)('$name Dragon does NOT fire when the matching dragon is absent', ({ rule, suit }) => {
@@ -1293,11 +1323,17 @@ describe('scoreHand', () => {
       ],
     };
     const result = scoreHand(hand, discardWin);
-    expect(result.appliedRules.find(r => r.name === rule)).toBeUndefined();
-    expect(result.appliedRules.find(r => r.name === 'pure')).toBeDefined();
+    expect(result.appliedRules).toEqual([
+      { name: 'allChows', points: 1 },
+      { name: 'cleanDoorstep', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
+      { name: 'twoDoubleChows', points: 12 },
+      { name: 'pure', points: 8 },
+    ]);
+    expect(result.handValue).toBe(25);
   });
 
-  it.each(PURITY_DRAGONS)('$name Dragon absorbs dragonPong, semiPure, missingSuit, pure', ({ rule, dragon, suit }) => {
+  it.each(PURITY_DRAGONS)('$name Dragon hand scores 13 flat — dragon pong, semi-pure and pure folded in', ({ rule, dragon, suit }) => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: [dragon, dragon, dragon], concealed: false },
@@ -1308,14 +1344,14 @@ describe('scoreHand', () => {
       ],
     };
     const result = scoreHand(hand, discardWin);
-    const fired = (n: string) => result.appliedRules.find(r => r.name === n);
-    expect(fired(rule)).toBeDefined();
-    for (const absorbed of ['dragonPong', 'semiPure', 'missingSuit', 'pure']) {
-      expect(fired(absorbed)).toBeUndefined();
-    }
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: rule, points: 12 },
+    ]);
+    expect(result.handValue).toBe(13);
   });
 
-  it('all 1s/9s with honors — every tile is terminal or honor (12 pts)', () => {
+  it('all 1s/9s with honors — every tile is terminal or honor (19 pts total)', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['9d', '9d', '9d'], concealed: false },
@@ -1338,14 +1374,17 @@ describe('scoreHand', () => {
 
     const result = scoreHand(hand, win);
 
-    expect(result.appliedRules.find(r => r.name === 'semi19sPongs')).toEqual(
+    expect(result.appliedRules).toEqual([
+      { name: 'windPong', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'allPongs', points: 4 },
+      { name: 'littleAndBigPong', points: 1 },
       { name: 'semi19sPongs', points: 12 },
-    );
-    // should absorb the "all sets have" variant
-    expect(result.appliedRules.find(r => r.name === 'semiMixed19s')).toBeUndefined();
+    ]);
+    expect(result.handValue).toBe(19);
   });
 
-  it('all sets have 1/9, no honors (8 pts)', () => {
+  it('doubled 123+789 chows — pure mixed 1/9 stacks with two double chows and little and big chow (38 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: false },
@@ -1367,11 +1406,206 @@ describe('scoreHand', () => {
 
     const result = scoreHand(hand, win);
 
-    expect(result.appliedRules.find(r => r.name === 'pureMixed19s')).toEqual(
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'allChows', points: 1 },
+      { name: 'selfPick', points: 1 },
+      { name: 'splitKong', points: 1 },
+      { name: 'littleAndBigChow', points: 3 },
+      { name: 'noFlowersNoHonors', points: 3 },
+      { name: 'twoDoubleChows', points: 12 },
       { name: 'pureMixed19s', points: 8 },
-    );
-    // should absorb the "with honors" variant
-    expect(result.appliedRules.find(r => r.name === 'semiMixed19s')).toBeUndefined();
+      { name: 'pure', points: 8 },
+    ]);
+    expect(result.handValue).toBe(38);
+  });
+
+  // --- Little and Big Chow / Pong ---
+
+  it('little and big chow — 123 and 789 of the same suit (1 pt)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: false },
+        { type: 'chow', tiles: ['7b', '8b', '9b'], concealed: true },
+        { type: 'pong', tiles: ['5d', '5d', '5d'], concealed: false },
+        { type: 'chow', tiles: ['2c', '3c', '4c'], concealed: true, winTile: '2c' },
+        { type: 'pair', tiles: ['6d', '6d'], concealed: true },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'littleAndBigChow', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(4);
+  });
+
+  it('little and big chow doubled-set footnote — 123, 123, 789 scores 2 plus double chow', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: false },
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: false },
+        { type: 'chow', tiles: ['7b', '8b', '9b'], concealed: true },
+        { type: 'pong', tiles: ['5d', '5d', '5d'], concealed: false, winTile: '5d' },
+        { type: 'pair', tiles: ['6c', '6c'], concealed: true },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'doubleChow', points: 1 },
+      { name: 'littleAndBigChow', points: 2 },
+      { name: 'noFlowersNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(6);
+  });
+
+  it('123 and 789 in different suits is NOT little and big chow (3 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: false },
+        { type: 'chow', tiles: ['7d', '8d', '9d'], concealed: true },
+        { type: 'pong', tiles: ['4c', '4c', '4c'], concealed: false },
+        { type: 'chow', tiles: ['4b', '5b', '6b'], concealed: true, winTile: '4b' },
+        { type: 'pair', tiles: ['6d', '6d'], concealed: true },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'noFlowersNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(3);
+  });
+
+  it('a full 1-9 train scores the train alone, not train plus little and big chow (7 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['1d', '2d', '3d'], concealed: false },
+        { type: 'chow', tiles: ['4d', '5d', '6d'], concealed: true },
+        { type: 'chow', tiles: ['7d', '8d', '9d'], concealed: true },
+        { type: 'pong', tiles: ['3b', '3b', '3b'], concealed: false, winTile: '3b' },
+        { type: 'pair', tiles: ['8c', '8c'], concealed: true },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
+      { name: 'oneToNineTrain', points: 3 },
+    ]);
+    expect(result.handValue).toBe(7);
+  });
+
+  it('little and big pong — pongs of 1s and 9s of the same suit (1 pt)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['1c', '1c', '1c'], concealed: false },
+        { type: 'pong', tiles: ['9c', '9c', '9c'], concealed: false },
+        { type: 'chow', tiles: ['4b', '5b', '6b'], concealed: true, winTile: '4b' },
+        { type: 'pong', tiles: ['6d', '6d', '6d'], concealed: false },
+        { type: 'pair', tiles: ['3d', '3d'], concealed: true },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'littleAndBigPong', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(4);
+  });
+
+  it('little and big pong counts kongs as pongs', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'kong', tiles: ['1c', '1c', '1c', '1c'], concealed: false },
+        { type: 'pong', tiles: ['9c', '9c', '9c'], concealed: false },
+        { type: 'chow', tiles: ['4b', '5b', '6b'], concealed: true, winTile: '4b' },
+        { type: 'pong', tiles: ['6d', '6d', '6d'], concealed: false },
+        { type: 'pair', tiles: ['3d', '3d'], concealed: true },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'kong', points: 1 },
+      { name: 'littleAndBigPong', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(5);
+  });
+
+  it('pongs of 1s and 9s in different suits is NOT little and big pong (4 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['1b', '1b', '1b'], concealed: false },
+        { type: 'pong', tiles: ['9d', '9d', '9d'], concealed: false },
+        { type: 'chow', tiles: ['2c', '3c', '4c'], concealed: true, winTile: '2c' },
+        { type: 'pong', tiles: ['5c', '5c', '5c'], concealed: false },
+        { type: 'pair', tiles: ['8b', '8b'], concealed: true },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(4);
+  });
+
+  it('little and big pong fires once per completed suit (2 suits = 2 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['1b', '1b', '1b'], concealed: false },
+        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: false },
+        { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: true },
+        { type: 'pong', tiles: ['9d', '9d', '9d'], concealed: false },
+        { type: 'pair', tiles: ['5c', '5c'], concealed: true, winTile: '5c' },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'allPongs', points: 4 },
+      { name: 'littleAndBigPong', points: 2 },
+      { name: 'noFlowersNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(11);
+  });
+
+  it('pure 1s/9s pongs hand scores 25, little and big pong folded into the 16', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: false },
+        { type: 'pong', tiles: ['9d', '9d', '9d'], concealed: false },
+        { type: 'pong', tiles: ['9c', '9c', '9c'], concealed: false },
+        { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: true },
+        { type: 'pair', tiles: ['1c', '1c'], concealed: true, winTile: '1c' },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'allPongs', points: 4 },
+      { name: 'pure19sPongs', points: 16 },
+      { name: 'threeSuitPongs', points: 4 },
+    ]);
+    expect(result.handValue).toBe(25);
+  });
+
+  it('heavenly gates hand scores 16 flat on a discard win', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: true },
+        { type: 'chow', tiles: ['2d', '3d', '4d'], concealed: true },
+        { type: 'chow', tiles: ['6d', '7d', '8d'], concealed: true },
+        { type: 'pong', tiles: ['9d', '9d', '9d'], concealed: true },
+        { type: 'pair', tiles: ['5d', '5d'], concealed: true, winTile: '5d' },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'heavenlyGates', points: 16 },
+    ]);
+    expect(result.handValue).toBe(16);
   });
 
   it('7788899 pattern: pair wait is NOT single (pong+pair decomposition)', () => {
@@ -1399,7 +1633,14 @@ describe('scoreHand', () => {
 
     const result = scoreHand(hand, win);
 
-    expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeUndefined();
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'selfPick', points: 1 },
+      { name: 'splitKong', points: 1 },
+      { name: 'doubleChow', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(7);
   });
 
   it('7788899 pattern with exposed pair: not single wait', () => {
@@ -1426,7 +1667,17 @@ describe('scoreHand', () => {
 
     const result = scoreHand(hand, win);
 
-    expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeUndefined();
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'allChows', points: 1 },
+      { name: 'selfPick', points: 1 },
+      { name: 'splitKong', points: 1 },
+      { name: 'doubleChow', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
+      { name: 'oneToNineTrain', points: 3 },
+      { name: 'pure', points: 8 },
+    ]);
+    expect(result.handValue).toBe(19);
   });
 
   it('unordered chow tiles produce the same score as sorted', () => {
@@ -1478,10 +1729,12 @@ describe('scoreHand', () => {
       dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = scoreHand(hand, win);
-    expect(result.appliedRules.find(r => r.name === 'thirteenOrphans')).toBeDefined();
-    // allFromOthers and cleanDoorstep should NOT fire
-    expect(result.appliedRules.find(r => r.name === 'allFromOthers')).toBeUndefined();
-    expect(result.appliedRules.find(r => r.name === 'cleanDoorstep')).toBeUndefined();
+
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'thirteenOrphans', points: 16 },
+    ]);
+    expect(result.handValue).toBe(17);
   });
 
   it('all pairs hand (7 pairs) scores correctly', () => {
@@ -1501,13 +1754,14 @@ describe('scoreHand', () => {
       dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = scoreHand(hand, win);
-    expect(result.appliedRules.find(r => r.name === 'allPairs')).toEqual(
+
+    expect(result.appliedRules).toEqual([
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'selfPick', points: 1 },
+      { name: 'threeSuitsWithWindAndDragon', points: 1 },
       { name: 'allPairs', points: 12 },
-    );
-    // allChows, allPongs, allFromOthers should NOT fire
-    expect(result.appliedRules.find(r => r.name === 'allChows')).toBeUndefined();
-    expect(result.appliedRules.find(r => r.name === 'allPongs')).toBeUndefined();
-    expect(result.appliedRules.find(r => r.name === 'allFromOthers')).toBeUndefined();
+    ]);
+    expect(result.handValue).toBe(15);
   });
 
   it('hand with kong counts tiles correctly for suit rules', () => {
@@ -1526,14 +1780,16 @@ describe('scoreHand', () => {
       dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = scoreHand(hand, win);
-    // Should be pure (all bamboo)
-    expect(result.appliedRules.find(r => r.name === 'pure')).toEqual(
-      { name: 'pure', points: 8 },
-    );
-    // Should have hidden kong
-    expect(result.appliedRules.find(r => r.name === 'secretKong')).toEqual(
+
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'selfPick', points: 1 },
       { name: 'secretKong', points: 2 },
-    );
+      { name: 'noFlowersNoHonors', points: 3 },
+      { name: 'pure', points: 8 },
+    ]);
+    expect(result.handValue).toBe(16);
   });
 
   it('cleanDoorstep does not fire for all-pairs hand', () => {
@@ -1553,10 +1809,13 @@ describe('scoreHand', () => {
       dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = scoreHand(hand, win);
-    expect(result.appliedRules.find(r => r.name === 'allPairs')).toBeDefined();
-    // cleanDoorstep/allFromOthers should not fire (no sets)
-    expect(result.appliedRules.find(r => r.name === 'cleanDoorstep')).toBeUndefined();
-    expect(result.appliedRules.find(r => r.name === 'allFromOthers')).toBeUndefined();
+
+    expect(result.appliedRules).toEqual([
+      { name: 'noFlowersNoHonors', points: 3 },
+      { name: 'pure', points: 8 },
+      { name: 'allPairs', points: 12 },
+    ]);
+    expect(result.handValue).toBe(23);
   });
 
   it('canOnlyWinWithOne: middle wait chow (4-6 waiting on 5) is single wait', () => {
@@ -1574,9 +1833,14 @@ describe('scoreHand', () => {
       dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = scoreHand(hand, win);
-    expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toEqual(
+
+    expect(result.appliedRules).toEqual([
+      { name: 'dragonPong', points: 1 },
+      { name: 'windPong', points: 1 },
       { name: 'canOnlyWinWithOne', points: 1 },
-    );
+      { name: 'threeSuitsWithWindAndDragon', points: 1 },
+    ]);
+    expect(result.handValue).toBe(4);
   });
 
   it('canOnlyWinWithOne: non-edge chow wait (3-4-5 won on 3) is NOT single wait', () => {
@@ -1594,7 +1858,13 @@ describe('scoreHand', () => {
       dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = scoreHand(hand, win);
-    expect(result.appliedRules.find(r => r.name === 'canOnlyWinWithOne')).toBeUndefined();
+
+    expect(result.appliedRules).toEqual([
+      { name: 'dragonPong', points: 1 },
+      { name: 'windPong', points: 1 },
+      { name: 'threeSuitsWithWindAndDragon', points: 1 },
+    ]);
+    expect(result.handValue).toBe(3);
   });
 
   it('4 flowers should not trigger splitKong', () => {
@@ -1613,7 +1883,15 @@ describe('scoreHand', () => {
       dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = scoreHand(hand, win);
-    expect(result.appliedRules.find(r => r.name === 'splitKong')).toBeUndefined();
+
+    expect(result.appliedRules).toEqual([
+      { name: 'flower', points: 4 },
+      { name: 'windPong', points: 1 },
+      { name: 'pairOf258', points: 1 },
+      { name: 'no19sWithHonors', points: 1 },
+      { name: 'cleanDoorstepAndSelfPick', points: 3 },
+    ]);
+    expect(result.handValue).toBe(10);
   });
 
   it('exposed kong scores 1 pt each', () => {
@@ -1631,9 +1909,13 @@ describe('scoreHand', () => {
       from: 'B', dealer: 'C', dealerRounds: 1, special: [],
     };
     const result = scoreHand(hand, win);
-    expect(result.appliedRules.find(r => r.name === 'kong')).toEqual(
+
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
       { name: 'kong', points: 1 },
-    );
+      { name: 'no19sNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(5);
   });
 
   it('discard win keeps clean doorstep but exposes the winning meld for hidden-pong scoring', () => {
@@ -1652,12 +1934,13 @@ describe('scoreHand', () => {
       from: 'D', dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = scoreHand(hand, win);
-    // 門前清 still holds — taking the discard that *completes* the hand doesn't dirty the door.
-    expect(result.appliedRules.find(r => r.name === 'cleanDoorstep')).toEqual(
+
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
       { name: 'cleanDoorstep', points: 1 },
-    );
-    // ...but the pong finished by that discard counts as exposed, so only two pongs are hidden.
-    expect(result.appliedRules.find(r => r.name === 'threeHiddenPongs')).toBeUndefined();
+      { name: 'noFlowersNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(5);
   });
 
   it('exposed wind kong fires windKong (2 pts) without stacking generic kong bonus', () => {
@@ -1675,12 +1958,18 @@ describe('scoreHand', () => {
       from: 'C', dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = scoreHand(hand, win);
-    expect(result.appliedRules.find(r => r.name === 'windKong')).toEqual(
+
+    expect(result.appliedRules).toEqual([
       { name: 'windKong', points: 2 },
-    );
-    expect(result.appliedRules.find(r => r.name === 'windSecretKong')).toBeUndefined();
-    expect(result.appliedRules.find(r => r.name === 'windPong')).toBeUndefined();
-    expect(result.appliedRules.find(r => r.name === 'kong')).toBeUndefined();
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'allPongs', points: 4 },
+      { name: 'no19sWithHonors', points: 1 },
+      { name: 'allFromOthers', points: 1 },
+      { name: 'bigDragons', points: 12 },
+      { name: 'semiPure', points: 4 },
+    ]);
+    expect(result.handValue).toBe(26);
   });
 
   it('exposed dragon kong fires dragonKong (2 pts) without stacking generic kong bonus', () => {
@@ -1698,12 +1987,14 @@ describe('scoreHand', () => {
       dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = scoreHand(hand, win);
-    expect(result.appliedRules.find(r => r.name === 'dragonKong')).toEqual(
+
+    expect(result.appliedRules).toEqual([
       { name: 'dragonKong', points: 2 },
-    );
-    expect(result.appliedRules.find(r => r.name === 'dragonSecretKong')).toBeUndefined();
-    expect(result.appliedRules.find(r => r.name === 'dragonPong')).toBeUndefined();
-    expect(result.appliedRules.find(r => r.name === 'kong')).toBeUndefined();
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'selfPick', points: 1 },
+    ]);
+    expect(result.handValue).toBe(5);
   });
 
   it('hidden dragon kong fires dragonSecretKong (3 pts)', () => {
@@ -1721,10 +2012,14 @@ describe('scoreHand', () => {
       dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = scoreHand(hand, win);
-    expect(result.appliedRules.find(r => r.name === 'dragonSecretKong')).toEqual(
+
+    expect(result.appliedRules).toEqual([
       { name: 'dragonSecretKong', points: 3 },
-    );
-    expect(result.appliedRules.find(r => r.name === 'secretKong')).toBeUndefined();
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'cleanDoorstepAndSelfPick', points: 3 },
+    ]);
+    expect(result.handValue).toBe(8);
   });
 });
 

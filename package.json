@@ -14,7 +14,6 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.47.0",
     "@cloudflare/workers-types": "^5.20260724.1",
-    "@playwright/test": "^1.59.0",
     "@remotion/bundler": "^4.0.496",
     "@remotion/cli": "^4.0.496",
     "@testing-library/jest-dom": "^6.9.1",

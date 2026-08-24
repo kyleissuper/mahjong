@@ -41,10 +41,12 @@ export const rules: Rule[] = [
   { name: 'cleanDoorstepAndSelfPick', label: 'Clean Doorstep AND Self-Pick', pts: '3', score: cleanDoorstepAndSelfPick, absorbs: ['cleanDoorstep', 'selfPick'] },
   { name: 'threeHiddenPongs', label: 'Three Hidden Pongs', pts: '4', score: threeHiddenPongs },
   { name: 'doubleChow', label: 'Double Chow', pts: '1 ea.', score: doubleChow },
+  { name: 'littleAndBigChow', label: 'Little and Big Chow', pts: '1', score: littleAndBigChow },
+  { name: 'littleAndBigPong', label: 'Little and Big Pong', pts: '1', score: littleAndBigPong },
   { name: 'threeSuitChow', label: 'Three Suit Chow', pts: '4', score: threeSuitChow },
   { name: 'threeConsecutivePongs', label: 'Three Consecutive Pongs', pts: '4', score: threeConsecutivePongs },
   { name: 'noFlowersNoHonors', label: 'No Flowers and No Honors', pts: '3', score: noFlowersNoHonors },
-  { name: 'oneToNineTrain', label: '1 through 9 Train', pts: '3', score: oneToNineTrain },
+  { name: 'oneToNineTrain', label: '1 through 9 Train', pts: '3', score: oneToNineTrain, absorbs: ['littleAndBigChow'] },
   { name: 'twoKongMahjong', label: '2 Kong Mahjong', pts: '6', score: twoKongMahjong },
   { name: 'twoDoubleChows', label: 'Two Double Chows', pts: '12', score: twoDoubleChows, absorbs: ['doubleChow'] },
   { name: 'littleDragons', label: 'Little Dragons', pts: '8', score: littleDragons, absorbs: [...DRAGON_COMPONENTS] },
@@ -60,14 +62,14 @@ export const rules: Rule[] = [
   { name: 'fourHiddenPongs', label: 'Four Hidden Pongs', pts: '12', score: fourHiddenPongs, absorbs: ['allPongs', 'threeHiddenPongs'] },
   { name: 'no19sNoHonors', label: "No 1's or 9's with NO Honors", pts: '3', score: no19sNoHonors, absorbs: ['noFlowersNoHonors'] },
   { name: 'allKongs', label: 'All Kongs', pts: '16', score: allKongs, absorbs: ['twoKongMahjong', 'allPongs'] },
-  { name: 'pure19sPongs', label: "Pure 1's or 9's Pongs", pts: '16', score: pure19sPongs, absorbs: ['semiMixed19s', 'pureMixed19s', 'semi19sPongs', 'noFlowersNoHonors'] },
+  { name: 'pure19sPongs', label: "Pure 1's or 9's Pongs", pts: '16', score: pure19sPongs, absorbs: ['semiMixed19s', 'pureMixed19s', 'semi19sPongs', 'noFlowersNoHonors', 'littleAndBigPong'] },
   { name: 'threeSuitPongs', label: 'Three Suit Pongs', pts: '4', score: threeSuitPongs },
   { name: 'allPairs', label: 'All Pairs', pts: '12', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258'] },
   { name: 'allHonors', label: 'All Honors', pts: '12', score: allHonors, absorbs: ['allPongs', ...HONOR_COMPONENTS, 'semiMixed19s', 'semi19sPongs', 'no19sWithHonors', 'missingSuit'] },
   { name: 'prodigyHand', label: 'Prodigy Hand', pts: '12', score: prodigyHand },
   { name: 'heavenlyHand', label: 'Heavenly Hand', pts: '24', score: heavenlyHand, absorbs: ['selfPick', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'noFlowersNoHonors'] },
   { name: 'earthlyHand', label: 'Earthly Hand', pts: '16', score: earthlyHand, absorbs: ['cleanDoorstep', 'noFlowersNoHonors'] },
-  { name: 'heavenlyGates', label: 'Heavenly Gates', pts: '16', score: heavenlyGates, absorbs: ['pure', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'canOnlyWinWithOne', 'pairOf258', 'noFlowersNoHonors', 'oneToNineTrain'] },
+  { name: 'heavenlyGates', label: 'Heavenly Gates', pts: '16', score: heavenlyGates, absorbs: ['pure', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'canOnlyWinWithOne', 'pairOf258', 'noFlowersNoHonors', 'oneToNineTrain', 'littleAndBigChow', 'littleAndBigPong'] },
   { name: 'thirteenOrphans', label: 'Thirteen Orphans', pts: '16', score: thirteenOrphans, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'semiMixed19s', 'semi19sPongs', 'allPongs', ...HONOR_COMPONENTS, 'no19sWithHonors', 'threeSuitsWithWindAndDragon'] },
   { name: 'jadeDragon', label: 'Jade Dragon', pts: '12', score: jadeDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'missingSuit', 'semiPure'] },
   { name: 'rubyDragon', label: 'Ruby Dragon', pts: '12', score: rubyDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'missingSuit', 'semiPure'] },
@@ -185,6 +187,26 @@ function littleWinds({ melds }: Hand): number {
 
 function bigDragons({ melds }: Hand): number {
   return melds.filter(({ type, tiles: [first] }) => (type === 'pong' || type === 'kong') && isDragon(first)).length === 3 ? 12 : 0;
+}
+
+function littleAndBigChow(hand: Hand): number {
+  let points = 0;
+  for (const s of ['b', 'c', 'd']) {
+    const chows = sets(hand).filter(({ type, tiles: [first] }) => type === 'chow' && suit(first) === s);
+    const c123 = chows.filter(({ tiles }) => tiles.map(numValue).sort().join('') === '123').length;
+    const c789 = chows.filter(({ tiles }) => tiles.map(numValue).sort().join('') === '789').length;
+    if (c123 && c789) points += c123 + c789 - 1;
+  }
+  return points;
+}
+
+function littleAndBigPong(hand: Hand): number {
+  let points = 0;
+  for (const s of ['b', 'c', 'd']) {
+    const pongs = sets(hand).filter(({ type, tiles: [first] }) => (type === 'pong' || type === 'kong') && suit(first) === s);
+    if (pongs.some(({ tiles }) => numValue(tiles[0]) === 1) && pongs.some(({ tiles }) => numValue(tiles[0]) === 9)) points += 1;
+  }
+  return points;
 }
 
 function semiMixed19s(hand: Hand): number {
