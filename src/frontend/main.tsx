@@ -3,8 +3,11 @@ import { createRoot } from 'react-dom/client';
 import { SWRConfig } from 'swr';
 import { setBackend } from './lib/backend.ts';
 import { HttpBackend } from './lib/http-backend.ts';
+import { pinFontScale } from './lib/pin-font-scale.ts';
 
 setBackend(new HttpBackend());
+pinFontScale();
+(window as any).__pinFontScale = pinFontScale;
 
 (window as any).__scoreDemo = async () => {
   try {
