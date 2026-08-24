@@ -1,6 +1,6 @@
 # Mahjong Scorer
 
-A scoring calculator for Hong Kong-style mahjong with house rules. Built for weekly game nights so anyone at the table can score a hand without memorizing the rules.
+A scoring calculator for Las Vegas-style mahjong, following [Mission: Mahjong!](https://missionmahjong.com/) rules. Built for weekly game nights so anyone at the table can score a hand without memorizing the rules.
 
 Live at [mahjong.kyletan.com](https://mahjong.kyletan.com).
 
