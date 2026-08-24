@@ -24,7 +24,7 @@ const HANDS: HandDef[] = [
     winTile: '8d',
     context: { winner: 'A', dealer: 'A', from: 'D' },
     expectedPts: 3,
-    expectedRules: ['Dragon pong', '2/5/8 pair', 'Only one you can win with'],
+    expectedRules: ['Pong of Honor (dragon)', 'Two, Five, Eight Pair', 'Can Only Win with One'],
     expectedPayments: { A: 4, D: -4 },
   },
   {
@@ -34,7 +34,7 @@ const HANDS: HandDef[] = [
     winTile: '8b',
     context: { method: 'self-pick', winner: 'A', dealer: 'B' },
     expectedPts: 7,
-    expectedRules: ['All chows', 'Self-pick', 'Only 2 suits'],
+    expectedRules: ['All Chow Hand', 'Self-Pick', 'Missing a Suit'],
     expectedPayments: { A: 22 },
   },
   {
@@ -44,7 +44,7 @@ const HANDS: HandDef[] = [
     winTile: '6c',
     context: { winner: 'A', dealer: 'A', from: 'C' },
     expectedPts: 3,
-    expectedRules: ['Wind pong', '2/5/8 pair'],
+    expectedRules: ['Pong of Honor (wind)', 'Two, Five, Eight Pair'],
     expectedPayments: { A: 4, C: -4 },
   },
   {
@@ -54,7 +54,7 @@ const HANDS: HandDef[] = [
     winTile: '3b',
     context: { method: 'self-pick', winner: 'A', dealer: 'A' },
     expectedPts: 19,
-    expectedRules: ['Jade Dragon', 'All pongs'],
+    expectedRules: ['Jade Dragon', 'All Pong Hand'],
     expectedPayments: { A: 60 },
   },
   {
@@ -63,7 +63,7 @@ const HANDS: HandDef[] = [
     winTile: '7d',
     context: { winner: 'C', dealer: 'C', from: 'D' },
     expectedPts: 5,
-    expectedRules: ['Clean doorstep', '1-9 chain', 'Only one you can win with'],
+    expectedRules: ['Clean Doorstep', '1 through 9 Train', 'Can Only Win with One'],
     expectedPayments: { C: 6, D: -6 },
   },
   {
@@ -72,7 +72,7 @@ const HANDS: HandDef[] = [
     winTile: '5c',
     context: { method: 'self-pick', winner: 'D', dealer: 'C', dealerRounds: 2 },
     expectedPts: 12,
-    expectedRules: ['All concealed self-pick', '3 hidden pongs'],
+    expectedRules: ['Clean Doorstep AND Self-Pick', 'Three Hidden Pongs'],
     expectedPayments: { D: 39, C: -15 },
   },
   {
@@ -81,7 +81,7 @@ const HANDS: HandDef[] = [
     winTile: '4d',
     context: { method: 'self-pick', winner: 'B', dealer: 'A' },
     expectedPts: 26,
-    expectedRules: ['Pure', '4 hidden pongs', 'All concealed self-pick'],
+    expectedRules: ['Pure Hand', 'Four Hidden Pongs', 'Clean Doorstep AND Self-Pick'],
     expectedPayments: { B: 79, A: -27 },
   },
   {
@@ -91,7 +91,7 @@ const HANDS: HandDef[] = [
     winTile: 'Wd',
     context: { winner: 'B', dealer: 'B', from: 'C' },
     expectedPts: 14,
-    expectedRules: ['All 1s/9s (has honors)', 'All pongs', 'Wind pong'],
+    expectedRules: ["Semi 1's or 9's Pongs", 'All Pong Hand', 'Pong of Honor (wind)'],
     expectedPayments: { B: 15, C: -15 },
   },
   {
@@ -100,7 +100,7 @@ const HANDS: HandDef[] = [
     winTile: '5c',
     context: { winner: 'A', dealer: 'D', from: 'D' },
     expectedPts: 11,
-    expectedRules: ['3 suit chow', 'Double chow', 'All chows', 'Clean doorstep'],
+    expectedRules: ['Three Suit Chow', 'Double Chow', 'All Chow Hand', 'Clean Doorstep'],
     expectedPayments: { A: 12, D: -12 },
   },
   {
@@ -110,7 +110,7 @@ const HANDS: HandDef[] = [
     winTile: '1b',
     context: { winner: 'D', dealer: 'D', from: 'B' },
     expectedPts: 16,
-    expectedRules: ['Big dragons', 'Semi-pure'],
+    expectedRules: ['Big Dragons', 'Semi-Pure Hand'],
     expectedPayments: { D: 17, B: -17 },
   },
   {
@@ -119,7 +119,7 @@ const HANDS: HandDef[] = [
     winTile: '7d',
     context: { method: 'self-pick', winner: 'B', dealer: 'D' },
     expectedPts: 14,
-    expectedRules: ['All pairs', 'Self-pick'],
+    expectedRules: ['All Pairs', 'Self-Pick'],
     expectedPayments: { B: 43, D: -15 },
   },
   {
@@ -129,7 +129,7 @@ const HANDS: HandDef[] = [
     winTile: '3b',
     context: { winner: 'D', dealer: 'D', from: 'A' },
     expectedPts: 19,
-    expectedRules: ['Big winds', 'Only one you can win with'],
+    expectedRules: ['Big Winds', 'Can Only Win with One'],
     expectedPayments: { D: 20, A: -20 },
   },
   {
@@ -139,7 +139,7 @@ const HANDS: HandDef[] = [
     winTile: '8d',
     context: { method: 'stolen-kong', winner: 'B', dealer: 'A', from: 'A' },
     expectedPts: 5,
-    expectedRules: ['Wind pong', '2/5/8 pair', 'Only one you can win with', 'Stolen kong', 'All from others'],
+    expectedRules: ['Pong of Honor (wind)', 'Two, Five, Eight Pair', 'Can Only Win with One', 'Stolen Kong', 'All from Others'],
     expectedPayments: { B: 6, A: -6 },
   },
   {
@@ -150,7 +150,7 @@ const HANDS: HandDef[] = [
     winTile: '3d',
     context: { winner: 'A', dealer: 'B', from: 'B' },
     expectedPts: 4,
-    expectedRules: ['Flower', 'Wind pong', '2/5/8 pair'],
+    expectedRules: ['Flowers', 'Pong of Honor (wind)', 'Two, Five, Eight Pair'],
     expectedPayments: { A: 5, B: -5 },
   },
   {
@@ -159,9 +159,9 @@ const HANDS: HandDef[] = [
     exposed: [['3d', '3d', '3d'], ['1b', '2b', '3b']],
     concealed: [['8c', '8c', '8c', '8c'], ['4b', '5b', '6b'], ['5d', '5d']],
     winTile: '6b',
-    context: { method: 'self-pick', winner: 'C', dealer: 'D', special: ['Replacement draw'] },
+    context: { method: 'self-pick', winner: 'C', dealer: 'D', special: ['Flower Wall draw'] },
     expectedPts: 7,
-    expectedRules: ['Flower', '2/5/8 pair', 'Self-pick', 'Win from butt', 'Hidden kong'],
+    expectedRules: ['Flowers', 'Two, Five, Eight Pair', 'Self-Pick', 'Win from the Flower Wall', 'Secret Kong'],
     expectedPayments: { C: 22 },
   },
   {
@@ -170,7 +170,7 @@ const HANDS: HandDef[] = [
     winTile: '9b',
     context: { winner: 'D', dealer: 'D', from: 'A' },
     expectedPts: 10,
-    expectedRules: ['2/5/8 pair', 'Only 2 suits', 'Split kong', 'Clean doorstep', '1-9 chain'],
+    expectedRules: ['Two, Five, Eight Pair', 'Missing a Suit', 'Split Kong', 'Clean Doorstep', '1 through 9 Train'],
     expectedPayments: { D: 11, A: -11 },
   },
   {
@@ -180,7 +180,7 @@ const HANDS: HandDef[] = [
     winTile: '2d',
     context: { winner: 'C', dealer: 'C', from: 'D' },
     expectedPts: 11,
-    expectedRules: ['3 consec. pongs', 'All from others'],
+    expectedRules: ['Three Consecutive Pongs', 'All from Others'],
     expectedPayments: { C: 12, D: -12 },
   },
   {
@@ -190,7 +190,7 @@ const HANDS: HandDef[] = [
     winTile: '6b',
     context: { winner: 'A', dealer: 'A', from: 'B' },
     expectedPts: 8,
-    expectedRules: ['Little dragons'],
+    expectedRules: ['Little Dragons'],
     expectedPayments: { A: 9, B: -9 },
   },
   {
@@ -200,7 +200,7 @@ const HANDS: HandDef[] = [
     winTile: '1c',
     context: { method: 'self-pick', winner: 'B', dealer: 'A', dealerRounds: 5 },
     expectedPts: 26,
-    expectedRules: ['All 1s/9s', '3 suit pongs', 'All pongs'],
+    expectedRules: ["Pure 1's or 9's Pongs", 'Three Suit Pongs', 'All Pong Hand'],
     expectedPayments: { B: 87 },
   },
   {
@@ -210,7 +210,7 @@ const HANDS: HandDef[] = [
     winTile: 'Ww',
     context: { winner: 'C', dealer: 'C', from: 'A' },
     expectedPts: 14,
-    expectedRules: ['4 consec. pongs', 'Semi-pure'],
+    expectedRules: ['Four Consecutive Pongs', 'Semi-Pure Hand'],
     expectedPayments: { C: 15, A: -15 },
   },
   {
@@ -220,7 +220,7 @@ const HANDS: HandDef[] = [
     winTile: '4b',
     context: { method: 'self-pick', winner: 'A', dealer: 'A' },
     expectedPts: 19,
-    expectedRules: ['Little winds', 'Semi-pure'],
+    expectedRules: ['Little Winds', 'Semi-Pure Hand'],
     expectedPayments: { A: 60 },
   },
   {
@@ -230,7 +230,7 @@ const HANDS: HandDef[] = [
     winTile: 'Sw',
     context: { winner: 'C', dealer: 'C', from: 'D' },
     expectedPts: 13,
-    expectedRules: ['All honors', 'Only one you can win with'],
+    expectedRules: ['All Honors', 'Can Only Win with One'],
     expectedPayments: { C: 14, D: -14 },
   },
   {
@@ -239,7 +239,7 @@ const HANDS: HandDef[] = [
     winTile: '5d',
     context: { method: 'self-pick', winner: 'C', dealer: 'D' },
     expectedPts: 17,
-    expectedRules: ['Self-pick', 'Heavenly gates'],
+    expectedRules: ['Self-Pick', 'Heavenly Gates'],
     expectedPayments: { C: 52 },
   },
   {
@@ -250,7 +250,7 @@ const HANDS: HandDef[] = [
     winTile: '3d',
     context: { winner: 'A', dealer: 'B', from: 'B' },
     expectedPts: 4,
-    expectedRules: ['Flower', 'Wind pong', '2/5/8 pair'],
+    expectedRules: ['Flowers', 'Pong of Honor (wind)', 'Two, Five, Eight Pair'],
     expectedPayments: { A: 5, B: -5 },
   },
   {
@@ -259,7 +259,7 @@ const HANDS: HandDef[] = [
     winTile: '9c',
     context: { method: 'self-pick', winner: 'A', dealer: 'A' },
     expectedPts: 16,
-    expectedRules: ['13 orphans'],
+    expectedRules: ['Thirteen Orphans'],
     expectedPayments: { A: 51 },
   },
   {
@@ -269,7 +269,7 @@ const HANDS: HandDef[] = [
     winTile: 'Rd',
     context: { winner: 'A', dealer: 'A', from: 'C' },
     expectedPts: 15,
-    expectedRules: ['13 orphans'],
+    expectedRules: ['Thirteen Orphans'],
     expectedPayments: { A: 16, C: -16 },
   },
 ];

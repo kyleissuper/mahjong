@@ -67,8 +67,8 @@ describe('scoreHand', () => {
       { name: 'pairOf258', points: 1 },
       { name: 'allChows', points: 1 },
       { name: 'selfPick', points: 1 },
-      { name: 'only2Suits', points: 1 },
-      { name: 'noTerminalsNoHonors', points: 3 },
+      { name: 'missingSuit', points: 1 },
+      { name: 'no19sNoHonors', points: 3 },
     ]);
     // canOnlyWinWithOne does NOT fire — 5b also completes the hand
     // (pair 5b + chow 6b-7b-8b instead of pair 8b + chow 5b-6b-7b)
@@ -102,7 +102,7 @@ describe('scoreHand', () => {
     expect(result.appliedRules).toEqual([
       { name: 'windPong', points: 1 },
       { name: 'pairOf258', points: 1 },
-      { name: 'noTerminalsWithHonors', points: 1 },
+      { name: 'no19sWithHonors', points: 1 },
     ]);
     expect(result.handValue).toBe(3);
     expect(result.scores).toEqual({ A: 3, B: 0, C: -3, D: 0 });
@@ -167,7 +167,7 @@ describe('scoreHand', () => {
     expect(result.appliedRules).toEqual([
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'cleanDoorstep', points: 1 },
-      { name: 'oneToNineChain', points: 3 },
+      { name: 'oneToNineTrain', points: 3 },
     ]);
     expect(result.handValue).toBe(5);
     expect(result.scores).toEqual({ A: 0, B: 0, C: 5, D: -5 });
@@ -291,7 +291,7 @@ describe('scoreHand', () => {
       method: 'self-pick',
       dealer: 'D',
       dealerRounds: 1,
-      special: ['fromButt'],
+      special: ['fromFlowerWall'],
     };
 
     const result = scoreHand(hand, win);
@@ -300,8 +300,8 @@ describe('scoreHand', () => {
       { name: 'flower', points: 2 },
       { name: 'pairOf258', points: 1 },
       { name: 'selfPick', points: 1 },
-      { name: 'winFromButt', points: 1 },
-      { name: 'hiddenKong', points: 2 },
+      { name: 'winFromFlowerWall', points: 1 },
+      { name: 'secretKong', points: 2 },
     ]);
     expect(result.handValue).toBe(7);
     expect(result.scores).toEqual({ A: -7, B: -7, C: 22, D: -8 });
@@ -366,11 +366,11 @@ describe('scoreHand', () => {
 
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
-      { name: 'only2Suits', points: 1 },
+      { name: 'missingSuit', points: 1 },
       { name: 'splitKong', points: 1 },
       { name: 'cleanDoorstep', points: 1 },
       { name: 'noFlowersNoHonors', points: 3 },
-      { name: 'oneToNineChain', points: 3 },
+      { name: 'oneToNineTrain', points: 3 },
     ]);
     expect(result.handValue).toBe(10);
     expect(result.scores).toEqual({ A: -10, B: 0, C: 0, D: 10 });
@@ -402,10 +402,10 @@ describe('scoreHand', () => {
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
       { name: 'canOnlyWinWithOne', points: 1 },
-      { name: 'only2Suits', points: 1 },
+      { name: 'missingSuit', points: 1 },
       { name: 'allFromOthers', points: 1 },
       { name: 'threeConsecutivePongs', points: 4 },
-      { name: 'noTerminalsNoHonors', points: 3 },
+      { name: 'no19sNoHonors', points: 3 },
     ]);
     expect(result.handValue).toBe(11);
     expect(result.scores).toEqual({ A: 0, B: 0, C: 11, D: -11 });
@@ -438,7 +438,7 @@ describe('scoreHand', () => {
       { name: 'windPong', points: 1 },
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'allPongs', points: 4 },
-      { name: 'all19WithHonors', points: 8 },
+      { name: 'semi19sPongs', points: 8 },
     ]);
     expect(result.handValue).toBe(14);
     expect(result.scores).toEqual({ A: 0, B: 15, C: -15, D: 0 });
@@ -503,7 +503,7 @@ describe('scoreHand', () => {
       { name: 'cleanDoorstep', points: 1 },
       { name: 'doubleChow', points: 1 },
       { name: 'threeSuitChow', points: 4 },
-      { name: 'noTerminalsNoHonors', points: 3 },
+      { name: 'no19sNoHonors', points: 3 },
     ]);
     expect(result.handValue).toBe(11);
     expect(result.scores).toEqual({ A: 12, B: 0, C: 0, D: -12 });
@@ -535,7 +535,7 @@ describe('scoreHand', () => {
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'allPongs', points: 4 },
       { name: 'selfPick', points: 1 },
-      { name: 'all19', points: 16 },
+      { name: 'pure19sPongs', points: 16 },
       { name: 'threeSuitPongs', points: 4 },
     ]);
     expect(result.handValue).toBe(26);
@@ -567,7 +567,7 @@ describe('scoreHand', () => {
 
     expect(result.appliedRules).toEqual([
       { name: 'canOnlyWinWithOne', points: 1 },
-      { name: 'noTerminalsWithHonors', points: 1 },
+      { name: 'no19sWithHonors', points: 1 },
       { name: 'semiPure', points: 4 },
       { name: 'fourConsecutivePongs', points: 8 },
     ]);
@@ -631,7 +631,7 @@ describe('scoreHand', () => {
     expect(result.appliedRules).toEqual([
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'selfPick', points: 1 },
-      { name: 'noTerminalsWithHonors', points: 1 },
+      { name: 'no19sWithHonors', points: 1 },
       { name: 'littleWinds', points: 12 },
       { name: 'semiPure', points: 4 },
     ]);
@@ -672,7 +672,7 @@ describe('scoreHand', () => {
 
   it('all honors with a flower — allHonors still fires, absorbs set-level variants', () => {
     // Regression: a bonus flower meld must not prevent allHonors from firing,
-    // otherwise allSetsHave19WithHonors / noTerminalsWithHonors / windPong /
+    // otherwise semiMixed19s / no19sWithHonors / windPong /
     // allPongs all leak into the breakdown (see screenshot: 4 honor pongs +
     // dragon pair + flower showed the individual rules instead of allHonors).
     const hand: Hand = {
@@ -693,7 +693,7 @@ describe('scoreHand', () => {
     expect(fired('flower')).toEqual({ name: 'flower', points: 1 });
     expect(fired('littleDragons')).toEqual({ name: 'littleDragons', points: 8 });
     // allHonors absorbs these
-    for (const absorbed of ['allPongs', 'windPong', 'dragonPong', 'allSetsHave19WithHonors', 'noTerminalsWithHonors', 'only2Suits']) {
+    for (const absorbed of ['allPongs', 'windPong', 'dragonPong', 'semiMixed19s', 'no19sWithHonors', 'missingSuit']) {
       expect(fired(absorbed)).toBeUndefined();
     }
   });
@@ -870,9 +870,9 @@ describe('scoreHand', () => {
 
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
-      { name: 'exposedKong', points: 2 },
+      { name: 'kong', points: 2 },
       { name: 'twoKongMahjong', points: 6 },
-      { name: 'noTerminalsNoHonors', points: 3 },
+      { name: 'no19sNoHonors', points: 3 },
     ]);
     expect(result.handValue).toBe(12);
     expect(result.scores).toEqual({ A: 12, B: -12, C: 0, D: 0 });
@@ -1081,7 +1081,7 @@ describe('scoreHand', () => {
       method: 'self-pick',
       dealer: 'A',
       dealerRounds: 1,
-      special: ['fromButt'],
+      special: ['fromFlowerWall'],
     };
 
     const result = scoreHand(hand, win);
@@ -1090,9 +1090,9 @@ describe('scoreHand', () => {
       { name: 'pairOf258', points: 1 },
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'selfPick', points: 1 },
-      { name: 'winFromButt', points: 1 },
-      { name: 'exposedKong', points: 3 },
-      { name: 'hiddenKong', points: 2 },
+      { name: 'winFromFlowerWall', points: 1 },
+      { name: 'kong', points: 3 },
+      { name: 'secretKong', points: 2 },
       { name: 'noFlowersNoHonors', points: 3 },
       { name: 'allKongs', points: 14 },
     ]);
@@ -1267,7 +1267,7 @@ describe('scoreHand', () => {
     expect(result.appliedRules.find(r => r.name === 'pure')).toBeDefined();
   });
 
-  it.each(PURITY_DRAGONS)('$name Dragon absorbs dragonPong, semiPure, only2Suits, pure', ({ rule, dragon, suit }) => {
+  it.each(PURITY_DRAGONS)('$name Dragon absorbs dragonPong, semiPure, missingSuit, pure', ({ rule, dragon, suit }) => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: [dragon, dragon, dragon], concealed: false },
@@ -1280,7 +1280,7 @@ describe('scoreHand', () => {
     const result = scoreHand(hand, discardWin);
     const fired = (n: string) => result.appliedRules.find(r => r.name === n);
     expect(fired(rule)).toBeDefined();
-    for (const absorbed of ['dragonPong', 'semiPure', 'only2Suits', 'pure']) {
+    for (const absorbed of ['dragonPong', 'semiPure', 'missingSuit', 'pure']) {
       expect(fired(absorbed)).toBeUndefined();
     }
   });
@@ -1308,11 +1308,11 @@ describe('scoreHand', () => {
 
     const result = scoreHand(hand, win);
 
-    expect(result.appliedRules.find(r => r.name === 'all19WithHonors')).toEqual(
-      { name: 'all19WithHonors', points: 8 },
+    expect(result.appliedRules.find(r => r.name === 'semi19sPongs')).toEqual(
+      { name: 'semi19sPongs', points: 8 },
     );
     // should absorb the "all sets have" variant
-    expect(result.appliedRules.find(r => r.name === 'allSetsHave19WithHonors')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'semiMixed19s')).toBeUndefined();
   });
 
   it('all sets have 1/9, no honors (4 pts)', () => {
@@ -1337,11 +1337,11 @@ describe('scoreHand', () => {
 
     const result = scoreHand(hand, win);
 
-    expect(result.appliedRules.find(r => r.name === 'allSetsHave19')).toEqual(
-      { name: 'allSetsHave19', points: 4 },
+    expect(result.appliedRules.find(r => r.name === 'pureMixed19s')).toEqual(
+      { name: 'pureMixed19s', points: 4 },
     );
     // should absorb the "with honors" variant
-    expect(result.appliedRules.find(r => r.name === 'allSetsHave19WithHonors')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'semiMixed19s')).toBeUndefined();
   });
 
   it('7788899 pattern: pair wait is NOT single (pong+pair decomposition)', () => {
@@ -1429,7 +1429,7 @@ describe('scoreHand', () => {
       { name: 'cleanDoorstep', points: 1 },
       { name: 'doubleChow', points: 1 },
       { name: 'threeSuitChow', points: 4 },
-      { name: 'noTerminalsNoHonors', points: 3 },
+      { name: 'no19sNoHonors', points: 3 },
     ]);
     expect(result.handValue).toBe(11);
   });
@@ -1501,8 +1501,8 @@ describe('scoreHand', () => {
       { name: 'pure', points: 8 },
     );
     // Should have hidden kong
-    expect(result.appliedRules.find(r => r.name === 'hiddenKong')).toEqual(
-      { name: 'hiddenKong', points: 2 },
+    expect(result.appliedRules.find(r => r.name === 'secretKong')).toEqual(
+      { name: 'secretKong', points: 2 },
     );
   });
 
@@ -1601,8 +1601,8 @@ describe('scoreHand', () => {
       from: 'B', dealer: 'C', dealerRounds: 1, special: [],
     };
     const result = scoreHand(hand, win);
-    expect(result.appliedRules.find(r => r.name === 'exposedKong')).toEqual(
-      { name: 'exposedKong', points: 1 },
+    expect(result.appliedRules.find(r => r.name === 'kong')).toEqual(
+      { name: 'kong', points: 1 },
     );
   });
 
@@ -1630,7 +1630,7 @@ describe('scoreHand', () => {
     expect(result.appliedRules.find(r => r.name === 'threeHiddenPongs')).toBeUndefined();
   });
 
-  it('exposed wind kong fires windKongExposed (2 pts) without stacking generic kong bonus', () => {
+  it('exposed wind kong fires windKong (2 pts) without stacking generic kong bonus', () => {
     const hand: Hand = {
       melds: [
         { type: 'kong', tiles: ['Nw', 'Nw', 'Nw', 'Nw'], concealed: false },
@@ -1645,15 +1645,15 @@ describe('scoreHand', () => {
       from: 'C', dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = scoreHand(hand, win);
-    expect(result.appliedRules.find(r => r.name === 'windKongExposed')).toEqual(
-      { name: 'windKongExposed', points: 2 },
+    expect(result.appliedRules.find(r => r.name === 'windKong')).toEqual(
+      { name: 'windKong', points: 2 },
     );
-    expect(result.appliedRules.find(r => r.name === 'windKongHidden')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'windSecretKong')).toBeUndefined();
     expect(result.appliedRules.find(r => r.name === 'windPong')).toBeUndefined();
-    expect(result.appliedRules.find(r => r.name === 'exposedKong')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'kong')).toBeUndefined();
   });
 
-  it('exposed dragon kong fires dragonKongExposed (2 pts) without stacking generic kong bonus', () => {
+  it('exposed dragon kong fires dragonKong (2 pts) without stacking generic kong bonus', () => {
     const hand: Hand = {
       melds: [
         { type: 'kong', tiles: ['Rd', 'Rd', 'Rd', 'Rd'], concealed: false },
@@ -1668,15 +1668,15 @@ describe('scoreHand', () => {
       dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = scoreHand(hand, win);
-    expect(result.appliedRules.find(r => r.name === 'dragonKongExposed')).toEqual(
-      { name: 'dragonKongExposed', points: 2 },
+    expect(result.appliedRules.find(r => r.name === 'dragonKong')).toEqual(
+      { name: 'dragonKong', points: 2 },
     );
-    expect(result.appliedRules.find(r => r.name === 'dragonKongHidden')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'dragonSecretKong')).toBeUndefined();
     expect(result.appliedRules.find(r => r.name === 'dragonPong')).toBeUndefined();
-    expect(result.appliedRules.find(r => r.name === 'exposedKong')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'kong')).toBeUndefined();
   });
 
-  it('hidden dragon kong fires dragonKongHidden (3 pts)', () => {
+  it('hidden dragon kong fires dragonSecretKong (3 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'kong', tiles: ['Gd', 'Gd', 'Gd', 'Gd'], concealed: true },
@@ -1691,20 +1691,20 @@ describe('scoreHand', () => {
       dealer: 'B', dealerRounds: 1, special: [],
     };
     const result = scoreHand(hand, win);
-    expect(result.appliedRules.find(r => r.name === 'dragonKongHidden')).toEqual(
-      { name: 'dragonKongHidden', points: 3 },
+    expect(result.appliedRules.find(r => r.name === 'dragonSecretKong')).toEqual(
+      { name: 'dragonSecretKong', points: 3 },
     );
-    expect(result.appliedRules.find(r => r.name === 'hiddenKong')).toBeUndefined();
+    expect(result.appliedRules.find(r => r.name === 'secretKong')).toBeUndefined();
   });
 });
 
 describe('honor component constants', () => {
   it('DRAGON_COMPONENTS covers the per-meld dragon rules', () => {
-    expect(DRAGON_COMPONENTS).toEqual(['dragonPong', 'dragonKongExposed', 'dragonKongHidden']);
+    expect(DRAGON_COMPONENTS).toEqual(['dragonPong', 'dragonKong', 'dragonSecretKong']);
   });
 
   it('WIND_COMPONENTS covers the per-meld wind rules', () => {
-    expect(WIND_COMPONENTS).toEqual(['windPong', 'windKongExposed', 'windKongHidden']);
+    expect(WIND_COMPONENTS).toEqual(['windPong', 'windKong', 'windSecretKong']);
   });
 
   it('HONOR_COMPONENTS is the union of dragon + wind components', () => {

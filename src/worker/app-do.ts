@@ -54,7 +54,46 @@ export class AppDO extends DurableObject<Env> {
         new_id TEXT NOT NULL
       )`);
       await this.migrateHandsToPlayerIds();
+      await this.migrateRuleNames();
     });
+  }
+
+  /**
+   * One-time: engine rule ids were renamed to match Mission: Mahjong! card
+   * terminology; stored receipts reference the old ids.
+   */
+  private async migrateRuleNames(): Promise<void> {
+    if (await this.ctx.storage.get('rule-names-migrated')) return;
+    const RENAMES: Record<string, string> = {
+      allSetsHave19WithHonors: 'semiMixed19s',
+      allSetsHave19: 'pureMixed19s',
+      all19WithHonors: 'semi19sPongs',
+      all19: 'pure19sPongs',
+      only2Suits: 'missingSuit',
+      winFromButt: 'winFromFlowerWall',
+      oneToNineChain: 'oneToNineTrain',
+      dragonKongExposed: 'dragonKong',
+      dragonKongHidden: 'dragonSecretKong',
+      windKongExposed: 'windKong',
+      windKongHidden: 'windSecretKong',
+      exposedKong: 'kong',
+      hiddenKong: 'secretKong',
+      noTerminalsWithHonors: 'no19sWithHonors',
+      noTerminalsNoHonors: 'no19sNoHonors',
+    };
+    const rows = this.ctx.storage.sql.exec<{ id: number; applied_rules: string }>(
+      `SELECT id, applied_rules FROM hands`
+    ).toArray();
+    for (const row of rows) {
+      let applied: { name: string; points: number }[];
+      try { applied = JSON.parse(row.applied_rules); } catch { continue; }
+      if (!applied.some(r => r.name in RENAMES)) continue;
+      const next = applied.map(r => ({ ...r, name: RENAMES[r.name] ?? r.name }));
+      this.ctx.storage.sql.exec(
+        `UPDATE hands SET applied_rules = ? WHERE id = ?`, JSON.stringify(next), row.id
+      );
+    }
+    await this.ctx.storage.put('rule-names-migrated', true);
   }
 
   /**
