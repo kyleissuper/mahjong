@@ -19,24 +19,43 @@ export default {
   },
 
   async fetch(request: Request, env: Env): Promise<Response> {
-    const { pathname } = new URL(request.url);
+    const url = new URL(request.url);
 
-    if (pathname === '/api/recognize') {
-      if (request.method !== 'POST') return json({ error: 'Use POST' }, 405);
-      return recognize(request, env);
+    // Force HTTPS everywhere except local dev.
+    const isLocal = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+    if (url.protocol === 'http:' && !isLocal) {
+      url.protocol = 'https:';
+      return Response.redirect(url.toString(), 301);
     }
 
-    if (pathname === '/api/auth' && request.method === 'POST') {
-      return authenticate(request, env);
-    }
+    const response = await handleRequest(request, env, url.pathname);
 
-    if (pathname.startsWith('/api/')) {
-      return routeApi(request, env, pathname);
+    // 101s carry the WebSocket and can't be rewrapped.
+    if (url.protocol === 'https:' && response.status !== 101) {
+      const secured = new Response(response.body, response);
+      secured.headers.set('Strict-Transport-Security', 'max-age=31536000');
+      return secured;
     }
-
-    return env.ASSETS.fetch(request);
+    return response;
   },
 };
+
+async function handleRequest(request: Request, env: Env, pathname: string): Promise<Response> {
+  if (pathname === '/api/recognize') {
+    if (request.method !== 'POST') return json({ error: 'Use POST' }, 405);
+    return recognize(request, env);
+  }
+
+  if (pathname === '/api/auth' && request.method === 'POST') {
+    return authenticate(request, env);
+  }
+
+  if (pathname.startsWith('/api/')) {
+    return routeApi(request, env, pathname);
+  }
+
+  return env.ASSETS.fetch(request);
+}
 
 function getApp(env: Env) {
   return env.APP.getByName('main', { locationHint: 'wnam' }) as any;
