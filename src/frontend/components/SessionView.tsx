@@ -306,7 +306,7 @@ function HandsTab({ hands, roster, playerFilter, onPlayerFilterChange, dateFilte
             )}
             <div className="hcard-head">
               <div className="hcard-topline">
-                <span className="hcard-winner">{hand.winner} won</span>
+                <span className="hcard-winner"><span className="hcard-rank">{i + 1}</span>{hand.winner} won</span>
                 <span className="hcard-time">{shortTimestamp(hand.timestamp)}</span>
               </div>
               <div className="hcard-exchange">

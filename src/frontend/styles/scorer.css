@@ -1498,6 +1498,16 @@
   font-weight: 600;
 }
 
+/* Same rank treatment as the leaderboard — the list is ordered by points */
+.hcard-rank {
+  display: inline-block;
+  width: 24px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
 .hcard-time {
   font-size: 0.68rem;
   color: var(--text-secondary);
