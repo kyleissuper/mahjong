@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSession } from '../lib/session-context.tsx';
 import { Scorer } from './Scorer.tsx';
 import { CopyableCode } from './CopyableCode.tsx';
+import { SessionQR } from './SessionQR.tsx';
 import { ScoringReference } from './ScoringReference.tsx';
 import { TileImage } from './TileImage.tsx';
 import { type ScoredHand } from '../../mahjong/session.ts';
@@ -202,6 +203,7 @@ function Drawer({ open, closing, onClose, code, currentView, onNavigate, onLeave
       <nav className={`drawer ${closing ? 'drawer-out' : ''}`}>
         <div className="drawer-header">
           <CopyableCode label="Session Code" code={code} />
+          <SessionQR code={code} />
         </div>
         <div className="drawer-items">
           {items.map(item => (

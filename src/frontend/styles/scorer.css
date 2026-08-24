@@ -1237,6 +1237,21 @@
   letter-spacing: 0.08em;
 }
 
+.drawer-qr {
+  margin-top: 12px;
+  padding: 10px;
+  width: fit-content;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.drawer-qr svg {
+  display: block;
+  width: 132px;
+  height: 132px;
+}
+
 .copyable-code:active {
   opacity: 0.6;
 }
