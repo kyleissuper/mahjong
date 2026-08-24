@@ -1256,6 +1256,11 @@
   color: var(--text-secondary);
   letter-spacing: 0.05em;
   cursor: pointer;
+  /* Tap-to-copy is the interaction: selecting the text just invites the
+     browser's own select/search UI on top of it. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .drawer-header .copyable-code {
