@@ -184,6 +184,13 @@ export class AppDO extends DurableObject<Env> {
     await this.db.delete(schema.hands).where(eq(schema.hands.id, id));
   }
 
+  async hasScan(scanId: string): Promise<boolean> {
+    const rows = this.ctx.storage.sql.exec(
+      `SELECT 1 FROM hands WHERE timing LIKE ? LIMIT 1`, `%"scanId":"${scanId}"%`
+    ).toArray();
+    return rows.length > 0;
+  }
+
   async getTimingStats() {
     const rows = this.ctx.storage.sql.exec<{ timing: string; melds: string }>(
       `SELECT timing, melds FROM hands WHERE timing IS NOT NULL ORDER BY id DESC LIMIT 200`
@@ -297,6 +304,7 @@ function rowToScoredHand(row: any): ScoredHand & { id?: number } {
     dealerBonus: row.dealerBonus,
     melds: row.melds as any,
     scores: row.scores as any,
+    scanId: (row.timing as any)?.scanId ?? undefined,
   };
 }
 

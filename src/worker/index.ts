@@ -138,6 +138,18 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
       return json({ hands });
     }
 
+    // Scan photo behind a scored hand. The strict id pattern doubles as
+    // sanitization for the LIKE lookup in hasScan.
+    const scanMatch = pathname.match(/^\/api\/scans\/(\d+-[a-z0-9]+)$/);
+    if (scanMatch && request.method === 'GET') {
+      if (!(await app.hasScan(scanMatch[1]))) return json({ error: 'Not found' }, 404);
+      const obj = await env.SCANS.get(`scans/${scanMatch[1]}.jpg`);
+      if (!obj) return json({ error: 'Not found' }, 404);
+      return new Response(obj.body, {
+        headers: { 'content-type': 'image/jpeg', 'cache-control': 'private, max-age=86400' },
+      });
+    }
+
     // Players
     if (pathname === '/api/players' && request.method === 'GET') {
       const q = new URL(request.url).searchParams.get('q');

@@ -10,7 +10,7 @@ import { filterHistory, type DateFilter } from '../../mahjong/history.ts';
 import { leaderboardFromHands } from '../../mahjong/leaderboard.ts';
 import { RULE_LABELS } from '../../mahjong/scoring/engine.ts';
 import { DateFilterPills } from './DateFilterPills.tsx';
-import { HamburgerIcon, BackArrowIcon, PlusIcon } from './Icons.tsx';
+import { HamburgerIcon, BackArrowIcon, PlusIcon, PhotoIcon } from './Icons.tsx';
 import * as api from '../lib/api.ts';
 import '../styles/scorer.css';
 
@@ -269,6 +269,7 @@ function HandsTab({ hands, roster, playerFilter, onPlayerFilterChange, dateFilte
   const [visibleCount, setVisibleCount] = useState(20);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [highlightIdx, setHighlightIdx] = useState<number | null>(null);
+  const [photoScanId, setPhotoScanId] = useState<string | null>(null);
 
   useEffect(() => { setVisibleCount(20); }, [playerFilter, dateFilter]);
 
@@ -324,6 +325,12 @@ function HandsTab({ hands, roster, playerFilter, onPlayerFilterChange, dateFilte
               <>
                 <div className="hcard-hand">
                   <HistoryHand melds={hand.melds} />
+                  {hand.scanId && (
+                    <button className="hcard-photo-btn" aria-label="View original photo"
+                      onClick={e => { e.stopPropagation(); setPhotoScanId(hand.scanId!); }}>
+                      <PhotoIcon />
+                    </button>
+                  )}
                 </div>
                 <div className="hcard-receipt">
                   <div className="hcard-receipt-title">Hand value: {hand.handValue} pts</div>
@@ -351,6 +358,20 @@ function HandsTab({ hands, roster, playerFilter, onPlayerFilterChange, dateFilte
           Show more ({hands.length - visibleCount} remaining)
         </button>
       )}
+
+      {photoScanId && <PhotoModal scanId={photoScanId} onClose={() => setPhotoScanId(null)} />}
+    </div>
+  );
+}
+
+function PhotoModal({ scanId, onClose }: { scanId: string; onClose: () => void }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <div className="photo-modal" onClick={onClose}>
+      {failed
+        ? <p className="photo-modal-missing">Photo is no longer available</p>
+        : <img src={`/api/scans/${scanId}`} alt="Original photo of the hand" onError={() => setFailed(true)} />}
+      <button className="photo-modal-close" aria-label="Close">×</button>
     </div>
   );
 }

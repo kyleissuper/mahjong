@@ -10,6 +10,7 @@ export interface ScoredHand {
   dealerBonus: number;
   melds: Meld[];
   scores: Record<string, number>;
+  scanId?: string;
 }
 
 export interface Session {
