@@ -282,16 +282,39 @@ function SettingsTab() {
 function BackfillSection() {
   const [report, setReport] = useState<admin.BackfillReport | null>(null);
   const [running, setRunning] = useState(false);
+  const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<number | null>(null);
 
-  async function run(commit: boolean) {
+  async function dryRun() {
+    setRunning(true);
+    setError(null);
+    setDone(null);
+    try {
+      // Each call recognizes one small batch of photos; keep going until
+      // nothing is left or a batch makes no progress.
+      let r = await admin.backfillScans(false);
+      setReport(r);
+      while (r.remaining > 0 && r.batchRecognized > 0) {
+        setProgress(`Recognizing photos… ${r.recognized} done, ${r.remaining} to go`);
+        r = await admin.backfillScans(false);
+        setReport(r);
+      }
+      setProgress(r.remaining > 0 ? `${r.remaining} photo(s) could not be recognized` : null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed');
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  async function apply() {
     setRunning(true);
     setError(null);
     try {
-      const r = await admin.backfillScans(commit);
+      const r = await admin.backfillScans(true);
       setReport(r);
-      if (commit) setDone(r.committed ?? 0);
+      setDone(r.committed ?? 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed');
     } finally {
@@ -310,16 +333,16 @@ function BackfillSection() {
         Dry run first; ambiguous matches are never written.
       </p>
       <div style={{ display: 'flex', gap: 6 }}>
-        <button className="scorer-btn" disabled={running} onClick={() => run(false)}>
+        <button className="scorer-btn" disabled={running} onClick={dryRun}>
           {running ? 'Running…' : 'Dry run'}
         </button>
-        {report && linkable > 0 && done === null && (
-          <button className="scorer-btn scorer-btn-primary" disabled={running}
-            onClick={() => run(true)}>
+        {report && !running && report.remaining === 0 && linkable > 0 && done === null && (
+          <button className="scorer-btn scorer-btn-primary" onClick={apply}>
             Link {linkable} photo{linkable === 1 ? '' : 's'}
           </button>
         )}
       </div>
+      {progress && <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: 8 }}>{progress}</p>}
       {error && <p className="landing-error" style={{ marginTop: 8 }}>{error}</p>}
       {done !== null && (
         <p style={{ fontSize: '0.8rem', color: 'var(--accent-text)', marginTop: 8 }}>
@@ -330,7 +353,7 @@ function BackfillSection() {
         <div style={{ marginTop: 10, fontSize: '0.78rem' }}>
           <p style={{ color: 'var(--text-secondary)', margin: '0 0 6px' }}>
             {report.unlinkedHands} hands without photos · {report.orphanScans} orphaned photos ·{' '}
-            {report.recognized} re-recognized{report.recognitionFailed > 0 ? ` · ${report.recognitionFailed} failed` : ''}
+            {report.recognized} re-recognized
           </p>
           {report.proposals.length === 0 && <p className="admin-empty">No confident matches found.</p>}
           {report.proposals.map(p => (

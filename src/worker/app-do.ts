@@ -43,6 +43,10 @@ export class AppDO extends DurableObject<Env> {
       )`);
       try { ctx.storage.sql.exec(`ALTER TABLE hands ADD COLUMN timing TEXT`); } catch {}
       try { ctx.storage.sql.exec(`ALTER TABLE sessions ADD COLUMN backup_email TEXT`); } catch {}
+      ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS scan_recognitions (
+        scan_id TEXT PRIMARY KEY,
+        tiles TEXT NOT NULL
+      )`);
     });
   }
 
@@ -182,6 +186,24 @@ export class AppDO extends DurableObject<Env> {
 
   async deleteHand(id: number): Promise<void> {
     await this.db.delete(schema.hands).where(eq(schema.hands.id, id));
+  }
+
+  async getScanRecognitions(): Promise<Record<string, string[]>> {
+    const rows = this.ctx.storage.sql.exec<{ scan_id: string; tiles: string }>(
+      `SELECT scan_id, tiles FROM scan_recognitions`
+    ).toArray();
+    const out: Record<string, string[]> = {};
+    for (const r of rows) {
+      try { out[r.scan_id] = JSON.parse(r.tiles); } catch {}
+    }
+    return out;
+  }
+
+  async putScanRecognition(scanId: string, tiles: string[]): Promise<void> {
+    this.ctx.storage.sql.exec(
+      `INSERT OR REPLACE INTO scan_recognitions (scan_id, tiles) VALUES (?, ?)`,
+      scanId, JSON.stringify(tiles)
+    );
   }
 
   async setHandScanId(id: number, scanId: string): Promise<void> {

@@ -88,7 +88,9 @@ export interface BackfillReport {
   unlinkedHands: number;
   orphanScans: number;
   recognized: number;
-  recognitionFailed: number;
+  remaining: number;
+  batchRecognized: number;
+  batchFailed: number;
   proposals: BackfillProposal[];
 }
 

@@ -328,7 +328,9 @@ async function recognize(request: Request, env: Env): Promise<Response> {
 // content + capture time; commit only uncontested matches.
 
 async function backfillScans(app: any, env: Env, commit: boolean): Promise<Response> {
-  const MAX_RECOGNIZE = 80;
+  // Each call recognizes at most one small batch (seconds, not minutes) and
+  // caches results in the DO; the admin UI keeps calling until remaining = 0.
+  const BATCH = 8;
   const WINDOW_MS = 21 * 60 * 1000;
 
   const hands: any[] = await app.getAllHands();
@@ -361,17 +363,21 @@ async function backfillScans(app: any, env: Env, commit: boolean): Promise<Respo
   // Only photos near some unlinked hand are worth a vision call.
   const relevant = orphans.filter(o =>
     unlinkedHands.some(h => Math.abs((h.timeMs as number) - o.timeMs) <= WINDOW_MS)
-  ).slice(0, MAX_RECOGNIZE);
+  );
 
-  const vision = relevant.length > 0 ? new OpenRouterVision(env.OPENROUTER_API_KEY) : null;
-  const recognized: { scanId: string; timeMs: number; tiles: string[] }[] = [];
-  let recognitionFailed = 0;
-  const queue = [...relevant];
-  await Promise.all(Array.from({ length: 4 }, async () => {
+  const cache: Record<string, string[]> = await app.getScanRecognitions();
+  const todo = relevant.filter(o => !(o.scanId in cache));
+  const batch = commit ? [] : todo.slice(0, BATCH);
+
+  const vision = batch.length > 0 ? new OpenRouterVision(env.OPENROUTER_API_KEY) : null;
+  let batchRecognized = 0;
+  let batchFailed = 0;
+  const queue = [...batch];
+  await Promise.all(Array.from({ length: 3 }, async () => {
     for (let item = queue.shift(); item; item = queue.shift()) {
       try {
         const obj = await env.SCANS.get(`scans/${item.scanId}.jpg`);
-        if (!obj) { recognitionFailed++; continue; }
+        if (!obj) { batchFailed++; continue; }
         const bytes = new Uint8Array(await obj.arrayBuffer());
         let bin = '';
         for (let i = 0; i < bytes.length; i += 8192) {
@@ -379,12 +385,19 @@ async function backfillScans(app: any, env: Env, commit: boolean): Promise<Respo
         }
         const mime = obj.httpMetadata?.contentType ?? 'image/jpeg';
         const melds = await vision!.recognize(`data:${mime};base64,${btoa(bin)}`);
-        recognized.push({ ...item, tiles: melds.flatMap(m => m.tiles) });
+        const tiles = melds.flatMap((m: Meld) => m.tiles);
+        await app.putScanRecognition(item.scanId, tiles);
+        cache[item.scanId] = tiles;
+        batchRecognized++;
       } catch {
-        recognitionFailed++;
+        batchFailed++;
       }
     }
   }));
+
+  const recognized = relevant
+    .filter(o => o.scanId in cache)
+    .map(o => ({ scanId: o.scanId, timeMs: o.timeMs, tiles: cache[o.scanId] }));
 
   const matches = matchScansToHands(
     unlinkedHands.map(h => ({ id: h.id, timeMs: h.timeMs as number, tiles: h.tiles })),
@@ -420,7 +433,9 @@ async function backfillScans(app: any, env: Env, commit: boolean): Promise<Respo
     unlinkedHands: unlinkedHands.length,
     orphanScans: orphans.length,
     recognized: recognized.length,
-    recognitionFailed,
+    remaining: todo.length - batchRecognized,
+    batchRecognized,
+    batchFailed,
     proposals,
   });
 }
