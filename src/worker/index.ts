@@ -198,6 +198,10 @@ async function routeAdmin(app: any, request: Request, pathname: string, env: Env
     })) });
   }
 
+  if (pathname === '/api/admin/rescore' && (request.method === 'GET' || request.method === 'POST')) {
+    return json(await app.rescoreHands(request.method === 'POST'));
+  }
+
   if (pathname === '/api/admin/backup-email' && request.method === 'GET') {
     const email = await app.getBackupEmail();
     return json({ email });
