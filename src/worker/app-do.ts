@@ -272,6 +272,7 @@ export class AppDO extends DurableObject<Env> {
         }).where(eq(schema.hands.id, h.id));
       }
     }
+    this.broadcast({ type: 'hands-changed' });
     return { id, name: newName, createdAt: old.createdAt };
   }
 
@@ -302,6 +303,7 @@ export class AppDO extends DurableObject<Env> {
       }
     }
     await this.deletePlayer(mergeId);
+    this.broadcast({ type: 'hands-changed' });
   }
 
   // --- WebSocket ---
