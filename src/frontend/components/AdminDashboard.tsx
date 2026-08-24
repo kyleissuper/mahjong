@@ -274,101 +274,6 @@ function SettingsTab() {
           }}>{saved ? 'Saved' : 'Save'}</button>
       </div>
 
-      <BackfillSection />
-    </div>
-  );
-}
-
-function BackfillSection() {
-  const [report, setReport] = useState<admin.BackfillReport | null>(null);
-  const [running, setRunning] = useState(false);
-  const [progress, setProgress] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<number | null>(null);
-
-  async function dryRun() {
-    setRunning(true);
-    setError(null);
-    setDone(null);
-    try {
-      // Each call recognizes one small batch of photos; keep going until
-      // nothing is left or a batch makes no progress.
-      let r = await admin.backfillScans(false);
-      setReport(r);
-      while (r.remaining > 0 && r.batchRecognized > 0) {
-        setProgress(`Recognizing photos… ${r.recognized} done, ${r.remaining} to go`);
-        r = await admin.backfillScans(false);
-        setReport(r);
-      }
-      setProgress(r.remaining > 0 ? `${r.remaining} photo(s) could not be recognized` : null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed');
-    } finally {
-      setRunning(false);
-    }
-  }
-
-  async function apply() {
-    setRunning(true);
-    setError(null);
-    try {
-      const r = await admin.backfillScans(true);
-      setReport(r);
-      setDone(r.committed ?? 0);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed');
-    } finally {
-      setRunning(false);
-    }
-  }
-
-  const linkable = report?.proposals.filter(p => !p.contested).length ?? 0;
-
-  return (
-    <div style={{ marginTop: 24 }}>
-      <div className="admin-sub-label">Scan photo backfill</div>
-      <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 8px' }}>
-        Re-recognizes orphaned scan photos and links them to hands that were scored
-        without a photo reference, matching by tile content and capture time.
-        Dry run first; ambiguous matches are never written.
-      </p>
-      <div style={{ display: 'flex', gap: 6 }}>
-        <button className="scorer-btn" disabled={running} onClick={dryRun}>
-          {running ? 'Running…' : 'Dry run'}
-        </button>
-        {report && !running && report.remaining === 0 && linkable > 0 && done === null && (
-          <button className="scorer-btn scorer-btn-primary" onClick={apply}>
-            Link {linkable} photo{linkable === 1 ? '' : 's'}
-          </button>
-        )}
-      </div>
-      {progress && <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: 8 }}>{progress}</p>}
-      {error && <p className="landing-error" style={{ marginTop: 8 }}>{error}</p>}
-      {done !== null && (
-        <p style={{ fontSize: '0.8rem', color: 'var(--accent-text)', marginTop: 8 }}>
-          Linked {done} photo{done === 1 ? '' : 's'}.
-        </p>
-      )}
-      {report && (
-        <div style={{ marginTop: 10, fontSize: '0.78rem' }}>
-          <p style={{ color: 'var(--text-secondary)', margin: '0 0 6px' }}>
-            {report.unlinkedHands} hands without photos · {report.orphanScans} orphaned photos ·{' '}
-            {report.recognized} re-recognized
-          </p>
-          {report.proposals.length === 0 && <p className="admin-empty">No confident matches found.</p>}
-          {report.proposals.map(p => (
-            <div key={p.handId} style={{
-              display: 'flex', justifyContent: 'space-between', gap: 8, padding: '6px 0',
-              borderTop: '1px solid var(--border)', opacity: p.contested ? 0.55 : 1,
-            }}>
-              <span>{p.winner} · {p.handTime.split(', ')[0]} {p.handTime.split(', ')[1]}</span>
-              <span style={{ color: p.contested ? 'var(--red-accent)' : 'var(--text-secondary)' }}>
-                {Math.round(p.score * 100)}% tiles{p.contested ? ' · ambiguous, skipped' : ''}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -489,30 +394,6 @@ function ScanAccuracy({ timings }: { timings: any[] }) {
         <span>Avg tile accuracy: {avgAccuracy}%</span>
         {models.length > 0 && <span>Model: {models.join(', ')}</span>}
       </div>
-      {scanned.length > 0 && (
-        <div style={{ overflowX: 'auto', marginTop: 8 }}>
-          <table className="analytics-table">
-            <thead>
-              <tr><th>#</th><th>Predicted</th><th>Submitted</th><th>Match</th></tr>
-            </thead>
-            <tbody>
-              {results.map((r, i) => {
-                const t = scanned[i];
-                const predTiles = t.scanPrediction.melds.filter((m: any) => m.type !== 'flower').flatMap((m: any) => m.tiles);
-                const subTiles = t.submittedMelds.filter((m: any) => m.type !== 'flower').flatMap((m: any) => m.tiles);
-                return (
-                  <tr key={i}>
-                    <td>{scanned.length - i}</td>
-                    <td style={{ fontSize: '0.72rem' }}>{predTiles.join(' ')}</td>
-                    <td style={{ fontSize: '0.72rem' }}>{subTiles.join(' ')}</td>
-                    <td>{r.exact ? 'exact' : `${r.accuracy}%`}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
     </>
   );
 }

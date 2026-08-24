@@ -71,29 +71,3 @@ export async function getTimingStats(): Promise<{ timings: any[] }> {
   return getAdmin<{ timings: any[] }>('/api/admin/timing');
 }
 
-export interface BackfillProposal {
-  handId: number;
-  winner: string;
-  handTime: string;
-  scanId: string;
-  scanTime: string;
-  score: number;
-  contested: boolean;
-  handTiles: string[];
-  scanTiles: string[];
-}
-
-export interface BackfillReport {
-  committed: number | null;
-  unlinkedHands: number;
-  orphanScans: number;
-  recognized: number;
-  remaining: number;
-  batchRecognized: number;
-  batchFailed: number;
-  proposals: BackfillProposal[];
-}
-
-export async function backfillScans(commit: boolean): Promise<BackfillReport> {
-  return postAdmin<BackfillReport>('/api/admin/scans/backfill', { commit });
-}
