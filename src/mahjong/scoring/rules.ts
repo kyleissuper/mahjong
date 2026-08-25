@@ -53,8 +53,8 @@ export const rules: Rule[] = [
   { name: 'littleDragons', label: 'Little Dragons', pts: '8', score: littleDragons, absorbs: [...DRAGON_COMPONENTS] },
   { name: 'littleWinds', label: 'Little Winds', pts: '12', score: littleWinds, absorbs: [...WIND_COMPONENTS] },
   { name: 'bigDragons', label: 'Big Dragons', pts: '12', score: bigDragons, absorbs: ['littleDragons', ...DRAGON_COMPONENTS] },
-  { name: 'bigWinds', label: 'Big Winds', pts: '16', score: bigWinds, absorbs: ['littleWinds', ...WIND_COMPONENTS, 'allPongs', 'no19sWithHonors', 'semiPure', 'missingSuit', 'semiMixed19s'] },
-  { name: 'semiPure', label: 'Semi-Pure Hand', pts: '4', score: semiPure, absorbs: ['missingSuit'] },
+  { name: 'bigWinds', label: 'Big Winds', pts: '16', score: bigWinds, absorbs: ['littleWinds', ...WIND_COMPONENTS, 'allPongs', 'no19sWithHonors', 'semiPure', 'semiMixed19s'] },
+  { name: 'semiPure', label: 'Semi-Pure Hand', pts: '4', score: semiPure },
   { name: 'fourConsecutivePongs', label: 'Four Consecutive Pongs', pts: '8', score: fourConsecutivePongs, absorbs: ['allPongs', 'threeConsecutivePongs'] },
   { name: 'semiMixed19s', label: "Semi Mixed 1's or 9's", pts: '4', score: semiMixed19s },
   { name: 'pureMixed19s', label: "Pure Mixed 1's or 9's", pts: '8', score: pureMixed19s, absorbs: ['semiMixed19s'] },
@@ -71,15 +71,15 @@ export const rules: Rule[] = [
   { name: 'pure19sPongs', label: "Pure 1's or 9's Pongs", pts: '16', score: pure19sPongs, absorbs: ['semiMixed19s', 'pureMixed19s', 'semi19sPongs', 'noFlowersNoHonors', 'littleAndBigPong', 'allPongs'] },
   { name: 'threeSuitPongs', label: 'Three Suit Pongs', pts: '4', score: threeSuitPongs },
   { name: 'allPairs', label: 'All Pairs', pts: '12', score: allPairs, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'allChows', 'allPongs', 'allFromOthers', 'pairOf258', 'canOnlyWinWithOne'] },
-  { name: 'allHonors', label: 'All Honors', pts: '12', score: allHonors, absorbs: ['allPongs', ...HONOR_COMPONENTS, 'semiMixed19s', 'no19sWithHonors', 'missingSuit'] },
+  { name: 'allHonors', label: 'All Honors', pts: '12', score: allHonors, absorbs: ['allPongs', ...HONOR_COMPONENTS, 'semiMixed19s', 'no19sWithHonors'] },
   { name: 'prodigyHand', label: 'Prodigy Hand', pts: '12', score: prodigyHand },
   { name: 'heavenlyHand', label: 'Heavenly Hand', pts: '24', score: heavenlyHand, absorbs: ['selfPick', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'noFlowersNoHonors', 'prodigyHand'] },
   { name: 'earthlyHand', label: 'Earthly Hand', pts: '16', score: earthlyHand, absorbs: ['cleanDoorstep', 'noFlowersNoHonors', 'prodigyHand'] },
   { name: 'heavenlyGates', label: 'Heavenly Gates', pts: '16', score: heavenlyGates, absorbs: ['pure', 'cleanDoorstep', 'cleanDoorstepAndSelfPick', 'canOnlyWinWithOne', 'pairOf258', 'noFlowersNoHonors', 'oneToNineTrain', 'littleAndBigChow', 'littleAndBigPong'] },
   { name: 'thirteenOrphans', label: 'Thirteen Orphans', pts: '16', score: thirteenOrphans, absorbs: ['cleanDoorstep', 'cleanDoorstepAndSelfPick', 'semiMixed19s', 'allPongs', ...HONOR_COMPONENTS, 'no19sWithHonors', 'threeSuitsWithWindAndDragon', 'heavenlyGates'] },
-  { name: 'jadeDragon', label: 'Jade Dragon', pts: '12', score: jadeDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'missingSuit', 'semiPure'] },
-  { name: 'rubyDragon', label: 'Ruby Dragon', pts: '12', score: rubyDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'missingSuit', 'semiPure'] },
-  { name: 'pearlDragon', label: 'Pearl Dragon', pts: '12', score: pearlDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'missingSuit', 'semiPure'] },
+  { name: 'jadeDragon', label: 'Jade Dragon', pts: '12', score: jadeDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'semiPure'] },
+  { name: 'rubyDragon', label: 'Ruby Dragon', pts: '12', score: rubyDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'semiPure'] },
+  { name: 'pearlDragon', label: 'Pearl Dragon', pts: '12', score: pearlDragon, absorbs: [...DRAGON_COMPONENTS, 'no19sWithHonors', 'semiPure'] },
 ];
 
 // --- Rule implementations ---
@@ -140,7 +140,8 @@ function selfPick(_hand: Hand, { method }: Win): number {
 }
 
 function missingSuit(hand: Hand): number {
-  return new Set(handTiles(hand).map(suit)).size === 2 ? 1 : 0;
+  const tiles = handTiles(hand);
+  return !tiles.some(isHonor) && new Set(tiles.map(suit)).size === 2 ? 1 : 0;
 }
 
 function allPongs(hand: Hand): number {
