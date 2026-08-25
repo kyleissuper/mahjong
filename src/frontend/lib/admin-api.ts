@@ -62,7 +62,17 @@ export async function mergePlayers(keepId: string, mergeId: string): Promise<voi
 export interface BackupStatus {
   email: string | null;
   lastBackup: { at: string; ok: boolean; detail: string } | null;
-  delivery: string | null;
+}
+
+export async function downloadBackup(): Promise<void> {
+  const res = await fetch('/api/admin/backup/download', { headers: adminHeaders() });
+  if (!res.ok) throw new Error(`Download failed (${res.status})`);
+  const blob = await res.blob();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = res.headers.get('content-disposition')?.match(/filename="(.+)"/)?.[1] ?? 'mahjong-backup.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 export async function sendBackupNow(): Promise<{ ok: boolean; detail: string }> {

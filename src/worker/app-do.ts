@@ -9,6 +9,7 @@ import type { Hand, Win } from '../mahjong/types.ts';
 interface Env {
   APP: DurableObjectNamespace<AppDO>;
   RESEND_API_KEY: string;
+  SCANS: R2Bucket;
 }
 
 export class AppDO extends DurableObject<Env> {
@@ -84,62 +85,44 @@ export class AppDO extends DurableObject<Env> {
     await this.sendBackup();
   }
 
-  async sendBackup(): Promise<{ ok: boolean; detail: string; emailId?: string }> {
+  async sendBackup(): Promise<{ ok: boolean; detail: string }> {
     const outcome = await this.trySendBackup();
     await this.ctx.storage.put('last-backup-result', { at: new Date().toISOString(), ...outcome });
     return outcome;
   }
 
-  private async trySendBackup(): Promise<{ ok: boolean; detail: string; emailId?: string }> {
+  private async trySendBackup(): Promise<{ ok: boolean; detail: string }> {
     const email = await this.getBackupEmail();
     if (!email) return { ok: false, detail: 'no backup email configured' };
-    if (!this.env.RESEND_API_KEY) return { ok: false, detail: 'RESEND_API_KEY is not set' };
     try {
       const data = await this.exportAll();
       if (data.hands.length === 0) return { ok: false, detail: 'nothing to back up' };
-      const json = JSON.stringify(data, null, 2);
       const date = new Date().toISOString().split('T')[0];
+      const key = `backups/mahjong-backup-${date}.json`;
+      await this.env.SCANS.put(key, JSON.stringify(data, null, 2));
+      const summary = `${data.sessions.length} sessions, ${data.hands.length} hands, ${data.players.length} players`;
+      if (!this.env.RESEND_API_KEY) return { ok: false, detail: `stored ${key}; RESEND_API_KEY is not set` };
       const resend = new Resend(this.env.RESEND_API_KEY);
-      const { data: sent, error } = await resend.emails.send({
+      const { error } = await resend.emails.send({
         from: 'backup@mj-backups.kyletan.com',
         to: email,
         subject: `Mahjong Backup — ${date}`,
-        text: `Full backup: ${data.sessions.length} sessions, ${data.hands.length} hands, ${data.players.length} players.`,
-        attachments: [{
-          content: btoa(unescape(encodeURIComponent(json))),
-          filename: `mahjong-backup-${date}.json`,
-        }],
+        text: `Backup stored: ${summary}.\n\nDownload it any time from the admin panel at https://mahjong.kyletan.com/ (Settings > Download backup).`,
       });
       if (error) {
         const e = error as { name?: string; message?: string };
-        return { ok: false, detail: `resend: ${e.name ?? ''} ${e.message ?? JSON.stringify(error)}`.trim() };
+        return { ok: false, detail: `stored ${key}; email failed — resend: ${e.name ?? ''} ${e.message ?? JSON.stringify(error)}`.trim() };
       }
-      return {
-        ok: true,
-        detail: `sent to ${email} — ${data.sessions.length} sessions, ${data.hands.length} hands`,
-        emailId: sent?.id,
-      };
+      return { ok: true, detail: `stored ${key}; notified ${email} — ${summary}` };
     } catch (err) {
       return { ok: false, detail: err instanceof Error ? err.message : String(err) };
     }
   }
 
   async getBackupStatus() {
-    const lastBackup = await this.ctx.storage.get<{ emailId?: string }>('last-backup-result') ?? null;
-    let delivery: string | null = null;
-    if (lastBackup?.emailId && this.env.RESEND_API_KEY) {
-      try {
-        const { data, error } = await new Resend(this.env.RESEND_API_KEY).emails.get(lastBackup.emailId);
-        delivery = (data as { last_event?: string } | null)?.last_event
-          ?? (error ? `status lookup failed: ${(error as { message?: string }).message ?? JSON.stringify(error)}` : null);
-      } catch (err) {
-        delivery = `status lookup failed: ${err instanceof Error ? err.message : String(err)}`;
-      }
-    }
     return {
       email: await this.getBackupEmail(),
-      lastBackup,
-      delivery,
+      lastBackup: await this.ctx.storage.get('last-backup-result') ?? null,
       lastCronAt: await this.ctx.storage.get('last-cron-at') ?? null,
     };
   }

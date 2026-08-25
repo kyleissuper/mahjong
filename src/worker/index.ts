@@ -205,6 +205,16 @@ async function routeAdmin(app: any, request: Request, pathname: string, env: Env
   if (pathname === '/api/admin/backup/send' && request.method === 'POST') {
     return json(await app.sendBackup());
   }
+  if (pathname === '/api/admin/backup/download' && request.method === 'GET') {
+    const data = await app.exportAll();
+    const date = new Date().toISOString().split('T')[0];
+    return new Response(JSON.stringify(data, null, 2), {
+      headers: {
+        'content-type': 'application/json',
+        'content-disposition': `attachment; filename="mahjong-backup-${date}.json"`,
+      },
+    });
+  }
   if (pathname === '/api/admin/backup-email' && request.method === 'POST') {
     const { email } = await request.json() as { email: string | null };
     await app.setBackupEmail(email);
