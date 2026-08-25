@@ -314,22 +314,19 @@ function allHonors(hand: Hand): number {
 function pearlDragon(hand: Hand): number {
   const tiles = handTiles(hand);
   const allDotsOrWhite = tiles.every(t => suit(t) === 'd' || t === 'Wd');
-  const hasWhiteDragon = tiles.some(t => t === 'Wd');
-  return allDotsOrWhite && hasWhiteDragon ? 12 : 0;
+  return allDotsOrWhite && hasDragonPong(hand, 'Wd') ? 12 : 0;
 }
 
 function rubyDragon(hand: Hand): number {
   const tiles = handTiles(hand);
   const allCharsOrRed = tiles.every(t => suit(t) === 'c' || t === 'Rd');
-  const hasRedDragon = tiles.some(t => t === 'Rd');
-  return allCharsOrRed && hasRedDragon ? 12 : 0;
+  return allCharsOrRed && hasDragonPong(hand, 'Rd') ? 12 : 0;
 }
 
 function jadeDragon(hand: Hand): number {
   const tiles = handTiles(hand);
   const allBambooOrGreen = tiles.every(t => suit(t) === 'b' || t === 'Gd');
-  const hasGreenDragon = tiles.some(t => t === 'Gd');
-  return allBambooOrGreen && hasGreenDragon ? 12 : 0;
+  return allBambooOrGreen && hasDragonPong(hand, 'Gd') ? 12 : 0;
 }
 
 function lastWallTile(_hand: Hand, { method, special }: Win): number {
@@ -442,6 +439,10 @@ function handMelds(hand: Hand): Meld[] { return hand.melds.filter(m => m.type !=
 function handTiles(hand: Hand): Tile[] { return handMelds(hand).flatMap(m => m.tiles); }
 function sets(hand: Hand): Meld[] { return handMelds(hand).filter(m => m.type !== 'pair' && m.type !== 'orphans'); }
 function winningMeld(hand: Hand): Meld | undefined { return hand.melds.find(m => m.winTile !== undefined); }
+
+function hasDragonPong({ melds }: Hand, dragon: Tile): boolean {
+  return melds.some(({ type, tiles: [first] }) => (type === 'pong' || type === 'kong') && first === dragon);
+}
 
 function hasAll3NumberSuits(melds: Meld[]): boolean {
   const s = new Set(melds.map(m => suit(m.tiles[0])));

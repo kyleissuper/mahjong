@@ -1373,7 +1373,7 @@ describe('scoreHand', () => {
     { name: 'Pearl', rule: 'pearlDragon', dragon: 'Wd', suit: 'd' },
   ] as const;
 
-  it.each(PURITY_DRAGONS)('$name Dragon fires when the matching dragon is present', ({ rule, dragon, suit }) => {
+  it.each(PURITY_DRAGONS)('$name Dragon fires with a pong of the matching dragon', ({ rule, dragon, suit }) => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: [dragon, dragon, dragon], concealed: false },
@@ -1386,6 +1386,24 @@ describe('scoreHand', () => {
     const result = scoreHand(hand, discardWin);
     expect(result.appliedRules).toEqual([{ name: rule, points: 12 }]);
     expect(result.handValue).toBe(12);
+  });
+
+  it.each(PURITY_DRAGONS)('$name Dragon does NOT fire when the dragon is only the pair', ({ dragon, suit }) => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: [`2${suit}`, `2${suit}`, `2${suit}`], concealed: false },
+        { type: 'chow', tiles: [`4${suit}`, `5${suit}`, `6${suit}`], concealed: true },
+        { type: 'chow', tiles: [`5${suit}`, `6${suit}`, `7${suit}`], concealed: true },
+        { type: 'chow', tiles: [`6${suit}`, `7${suit}`, `8${suit}`], concealed: true },
+        { type: 'pair', tiles: [dragon, dragon], concealed: true },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'no19sWithHonors', points: 1 },
+      { name: 'semiPure', points: 4 },
+    ]);
+    expect(result.handValue).toBe(5);
   });
 
   it.each(PURITY_DRAGONS)('$name Dragon does NOT fire when the matching dragon is absent', ({ rule, suit }) => {
