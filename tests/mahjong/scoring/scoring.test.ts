@@ -512,7 +512,7 @@ describe('scoreHand', () => {
     expect(result.scores).toEqual({ A: 15, B: 0, C: 0, D: -15 });
   });
 
-  it('Hand 16 — all 1s/9s, three suit pongs, dealer extra round 4 (22 pts)', () => {
+  it('Hand 16 — all 1s/9s, three suit pongs, dealer extra round 4 (25 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: false },
@@ -537,11 +537,12 @@ describe('scoreHand', () => {
     expect(result.appliedRules).toEqual([
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'selfPick', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
       { name: 'pure19sPongs', points: 16 },
       { name: 'threeSuitPongs', points: 4 },
     ]);
-    expect(result.handValue).toBe(22);
-    expect(result.scores).toEqual({ A: -31, B: 75, C: -22, D: -22 });
+    expect(result.handValue).toBe(25);
+    expect(result.scores).toEqual({ A: -34, B: 84, C: -25, D: -25 });
   });
 
   it('Hand 17 — four consecutive pongs, semi-pure (14 pts)', () => {
@@ -1032,7 +1033,7 @@ describe('scoreHand', () => {
     expect(result.scores).toEqual({ A: 0, B: 0, C: -19, D: 19 });
   });
 
-  it('Hand 25 — heavenly gates (17 pts)', () => {
+  it('Hand 25 — heavenly gates (20 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: true },
@@ -1056,10 +1057,11 @@ describe('scoreHand', () => {
 
     expect(result.appliedRules).toEqual([
       { name: 'selfPick', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
       { name: 'heavenlyGates', points: 16 },
     ]);
-    expect(result.handValue).toBe(17);
-    expect(result.scores).toEqual({ A: -17, B: -17, C: 52, D: -18 });
+    expect(result.handValue).toBe(20);
+    expect(result.scores).toEqual({ A: -20, B: -20, C: 61, D: -21 });
   });
 
   it('Hand 25b — heavenly gates, different meld decomposition', () => {
@@ -1090,7 +1092,7 @@ describe('scoreHand', () => {
     );
   });
 
-  it('Hand 26 — heavenly hand, dealer wins on deal (25 pts)', () => {
+  it('Hand 26 — heavenly hand, dealer wins on deal (28 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['3b', '3b', '3b'], concealed: true },
@@ -1114,13 +1116,14 @@ describe('scoreHand', () => {
 
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
       { name: 'heavenlyHand', points: 24 },
     ]);
-    expect(result.handValue).toBe(25);
-    expect(result.scores).toEqual({ A: 78, B: -26, C: -26, D: -26 });
+    expect(result.handValue).toBe(28);
+    expect(result.scores).toEqual({ A: 87, B: -29, C: -29, D: -29 });
   });
 
-  it('Hand 26b — heavenly hand, NON-dealer self-draw on their first turn (25 pts)', () => {
+  it('Hand 26b — heavenly hand, NON-dealer self-draw on their first turn (28 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['3b', '3b', '3b'], concealed: true },
@@ -1144,13 +1147,14 @@ describe('scoreHand', () => {
 
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
       { name: 'heavenlyHand', points: 24 },
     ]);
-    expect(result.handValue).toBe(25);
-    expect(result.scores).toEqual({ A: -26, B: 76, C: -25, D: -25 });
+    expect(result.handValue).toBe(28);
+    expect(result.scores).toEqual({ A: -29, B: 85, C: -28, D: -28 });
   });
 
-  it('heavenly hand absorbs prodigy — winning on your first turn implies ready (25 pts)', () => {
+  it('heavenly hand absorbs prodigy — winning on your first turn implies ready (28 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['3b', '3b', '3b'], concealed: true },
@@ -1167,13 +1171,14 @@ describe('scoreHand', () => {
     const result = scoreHand(hand, win);
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
       { name: 'heavenlyHand', points: 24 },
     ]);
-    expect(result.handValue).toBe(25);
-    expect(result.scores).toEqual({ A: 78, B: -26, C: -26, D: -26 });
+    expect(result.handValue).toBe(28);
+    expect(result.scores).toEqual({ A: 87, B: -29, C: -29, D: -29 });
   });
 
-  it('earthly hand absorbs prodigy (18 pts)', () => {
+  it('earthly hand absorbs prodigy (21 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: true, winTile: '2b' },
@@ -1191,13 +1196,14 @@ describe('scoreHand', () => {
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
       { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
       { name: 'earthlyHand', points: 16 },
     ]);
-    expect(result.handValue).toBe(18);
-    expect(result.scores).toEqual({ A: -18, B: 0, C: 0, D: 18 });
+    expect(result.handValue).toBe(21);
+    expect(result.scores).toEqual({ A: -21, B: 0, C: 0, D: 21 });
   });
 
-  it('Hand 27 — earthly hand, non-dealer wins on first discard (18 pts)', () => {
+  it('Hand 27 — earthly hand, non-dealer wins on first discard (21 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: true, winTile: '2b' },
@@ -1223,10 +1229,11 @@ describe('scoreHand', () => {
     expect(result.appliedRules).toEqual([
       { name: 'pairOf258', points: 1 },
       { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
       { name: 'earthlyHand', points: 16 },
     ]);
-    expect(result.handValue).toBe(18);
-    expect(result.scores).toEqual({ A: -19, B: 19, C: 0, D: 0 });
+    expect(result.handValue).toBe(21);
+    expect(result.scores).toEqual({ A: -22, B: 22, C: 0, D: 0 });
   });
 
   it('Hand 28 — big winds (17 pts)', () => {
@@ -1749,7 +1756,7 @@ describe('scoreHand', () => {
     expect(result.handValue).toBe(11);
   });
 
-  it('pure 1s/9s pongs hand scores 21 — little and big pong and all pongs folded into the 16', () => {
+  it('pure 1s/9s pongs hand scores 24 — little and big pong and all pongs folded into the 16', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['9b', '9b', '9b'], concealed: false },
@@ -1762,13 +1769,14 @@ describe('scoreHand', () => {
     const result = scoreHand(hand, discardWin);
     expect(result.appliedRules).toEqual([
       { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'noFlowersNoHonors', points: 3 },
       { name: 'pure19sPongs', points: 16 },
       { name: 'threeSuitPongs', points: 4 },
     ]);
-    expect(result.handValue).toBe(21);
+    expect(result.handValue).toBe(24);
   });
 
-  it('heavenly gates hand scores 16 flat on a discard win', () => {
+  it('heavenly gates hand scores 19 on a discard win', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: true },
@@ -1780,9 +1788,10 @@ describe('scoreHand', () => {
     };
     const result = scoreHand(hand, discardWin);
     expect(result.appliedRules).toEqual([
+      { name: 'noFlowersNoHonors', points: 3 },
       { name: 'heavenlyGates', points: 16 },
     ]);
-    expect(result.handValue).toBe(16);
+    expect(result.handValue).toBe(19);
   });
 
   it('big winds with a terminal pair is NOT semi 1s/9s pongs — the pair is not a pong (17 pts)', () => {
