@@ -124,9 +124,8 @@ function canOnlyWinWithOne(hand: Hand): number {
   const meld = winningMeld(hand);
   if (!meld?.winTile) return 0;
   const { type, tiles, winTile } = meld;
-  if (type === 'pair') return pairIsOnlyWait(hand, meld) ? 1 : 0;
-  if (type === 'chow' && chowCanOnlyWinWithOne(meld)) return 1;
   if (type === 'orphans') return tiles.filter(t => t === winTile).length === 1 ? 1 : 0;
+  if (type === 'pair' || type === 'chow') return isOnlyWait(hand, winTile) ? 1 : 0;
   return 0;
 }
 
@@ -450,57 +449,52 @@ function hasAll3NumberSuits(melds: Meld[]): boolean {
   return s.has('b') && s.has('d') && s.has('c');
 }
 
-function chowCanOnlyWinWithOne(meld: Meld): boolean {
-  const others = meld.tiles
-    .filter(t => t !== meld.winTile)
-    .map(numValue)
-    .sort((a, b) => a - b);
-  const gap = others[1] - others[0];
-  return gap === 2 || others[0] === 1 || others[1] === 9;
-}
+const WAIT_CANDIDATES: Tile[] = [
+  ...['b', 'd', 'c'].flatMap(s => Array.from({ length: 9 }, (_, i) => `${i + 1}${s}` as Tile)),
+  'Ew', 'Sw', 'Ww', 'Nw', 'Rd', 'Gd', 'Wd',
+];
 
-function pairIsOnlyWait(hand: Hand, pairMeld: Meld): boolean {
-  const winTile = pairMeld.winTile!;
-  if (!isNumberTile(winTile)) return true;
-
-  const exposedSets = handMelds(hand).filter(m => !m.concealed && m.type !== 'pair').length;
-  const freeTiles = hand.melds.filter(m => m.concealed || m === pairMeld).flatMap(m => m.tiles);
+function isOnlyWait(hand: Hand, winTile: Tile): boolean {
+  const melds = handMelds(hand);
+  const fixedSets = melds.filter(m =>
+    m.type === 'kong' || (!m.concealed && !m.winTile && m.type !== 'pair')).length;
+  const freeTiles = melds.filter(m =>
+    m.type !== 'kong' && (m.concealed || m.winTile)).flatMap(m => m.tiles);
   const withoutWinningTile = freeTiles.toSpliced(freeTiles.indexOf(winTile), 1);
-  const setsNeeded = 4 - exposedSets;
+  const setsNeeded = 4 - fixedSets;
+  const allTiles = handTiles(hand);
 
-  for (const suitCode of ['b', 'd', 'c']) {
-    for (let rank = 1; rank <= 9; rank++) {
-      const candidateTile = `${rank}${suitCode}` as Tile;
-      if (candidateTile === winTile) continue;
-      if (canFormHand([...withoutWinningTile, candidateTile], setsNeeded)) return false;
-    }
+  for (const candidate of WAIT_CANDIDATES) {
+    if (candidate === winTile) continue;
+    if (allTiles.filter(t => t === candidate).length >= 4) continue;
+    if (canFormHand([...withoutWinningTile, candidate], setsNeeded)) return false;
   }
   return true;
+}
 
-  function canFormHand(freeTiles: Tile[], setsNeeded: number): boolean {
-    return solve([...freeTiles].sort(), setsNeeded, false);
+function canFormHand(freeTiles: Tile[], setsNeeded: number): boolean {
+  return solve([...freeTiles].sort(), setsNeeded, false);
 
-    function solve(tiles: Tile[], setsLeft: number, hasPair: boolean): boolean {
-      if (tiles.length === 0) return setsLeft === 0 && hasPair;
-      const first = tiles[0];
+  function solve(tiles: Tile[], setsLeft: number, hasPair: boolean): boolean {
+    if (tiles.length === 0) return setsLeft === 0 && hasPair;
+    const first = tiles[0];
 
-      if (!hasPair && tiles[1] === first) {
-        if (solve(tiles.slice(2), setsLeft, true)) return true;
-      }
-      if (setsLeft > 0 && tiles[2] === first) {
-        if (solve(tiles.slice(3), setsLeft - 1, hasPair)) return true;
-      }
-      if (setsLeft > 0 && isNumberTile(first)) {
-        const plus1 = `${numValue(first) + 1}${suit(first)}` as Tile;
-        const plus2 = `${numValue(first) + 2}${suit(first)}` as Tile;
-        if (tiles.includes(plus1) && tiles.includes(plus2)) {
-          const rest = tiles.slice(1);
-          const withoutPlus1 = rest.toSpliced(rest.indexOf(plus1), 1);
-          const withoutChow = withoutPlus1.toSpliced(withoutPlus1.indexOf(plus2), 1);
-          if (solve(withoutChow, setsLeft - 1, hasPair)) return true;
-        }
-      }
-      return false;
+    if (!hasPair && tiles[1] === first) {
+      if (solve(tiles.slice(2), setsLeft, true)) return true;
     }
+    if (setsLeft > 0 && tiles[2] === first) {
+      if (solve(tiles.slice(3), setsLeft - 1, hasPair)) return true;
+    }
+    if (setsLeft > 0 && isNumberTile(first)) {
+      const plus1 = `${numValue(first) + 1}${suit(first)}` as Tile;
+      const plus2 = `${numValue(first) + 2}${suit(first)}` as Tile;
+      if (tiles.includes(plus1) && tiles.includes(plus2)) {
+        const rest = tiles.slice(1);
+        const withoutPlus1 = rest.toSpliced(rest.indexOf(plus1), 1);
+        const withoutChow = withoutPlus1.toSpliced(withoutPlus1.indexOf(plus2), 1);
+        if (solve(withoutChow, setsLeft - 1, hasPair)) return true;
+      }
+    }
+    return false;
   }
 }

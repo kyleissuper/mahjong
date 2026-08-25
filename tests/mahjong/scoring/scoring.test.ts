@@ -871,6 +871,65 @@ describe('scoreHand', () => {
     expect(result.handValue).toBe(3);
   });
 
+  it('chow edge wait hiding a second wait is NOT canOnlyWinWithOne', () => {
+    // Concealed 8b 9b + 9b 9b: wins on 7b (789 + 99) but ALSO on 8b (999 + 88)
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['7b', '8b', '9b'], concealed: true, winTile: '7b' },
+        { type: 'pair', tiles: ['9b', '9b'], concealed: true },
+        { type: 'pong', tiles: ['2c', '2c', '2c'], concealed: false },
+        { type: 'chow', tiles: ['3d', '4d', '5d'], concealed: false },
+        { type: 'pong', tiles: ['Ew', 'Ew', 'Ew'], concealed: false },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'windPong', points: 1 },
+    ]);
+    expect(result.handValue).toBe(1);
+  });
+
+  it('genuine chow edge wait IS canOnlyWinWithOne', () => {
+    // Concealed 1b 2b + 8d 8d: only 3b completes the hand
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: true, winTile: '3b' },
+        { type: 'pair', tiles: ['8d', '8d'], concealed: true },
+        { type: 'pong', tiles: ['5c', '5c', '5c'], concealed: false },
+        { type: 'chow', tiles: ['4d', '5d', '6d'], concealed: false },
+        { type: 'pong', tiles: ['Ww', 'Ww', 'Ww'], concealed: false },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'windPong', points: 1 },
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+    ]);
+    expect(result.handValue).toBe(3);
+  });
+
+  it('concealed kong stays a fixed set when checking canOnlyWinWithOne', () => {
+    // Closed wait 5b _ 7b: only 6b wins; the 8c kong must not be treated as loose tiles
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['3d', '3d', '3d'], concealed: false },
+        { type: 'kong', tiles: ['8c', '8c', '8c', '8c'], concealed: true },
+        { type: 'chow', tiles: ['5b', '6b', '7b'], concealed: true, winTile: '6b' },
+        { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: false },
+        { type: 'pair', tiles: ['5d', '5d'], concealed: true },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'secretKong', points: 2 },
+      { name: 'noFlowersNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(7);
+  });
+
   it('Hand 24 — 2 kong mahjong declared, win after two consecutive kongs (17 pts)', () => {
     const hand: Hand = {
       melds: [
@@ -1479,7 +1538,7 @@ describe('scoreHand', () => {
     expect(result.handValue).toBe(14);
   });
 
-  it('doubled 123+789 chows — pure mixed 1/9 stacks with two double chows and little and big chow (38 pts)', () => {
+  it('doubled 123+789 chows — pure mixed 1/9 stacks with two double chows and little and big chow (37 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'chow', tiles: ['1b', '2b', '3b'], concealed: false },
@@ -1501,8 +1560,9 @@ describe('scoreHand', () => {
 
     const result = scoreHand(hand, win);
 
+    // canOnlyWinWithOne does NOT fire — 8b also completes the hand
+    // (789 chow + 999 pong + 88 pair instead of 789 + 789 + 99)
     expect(result.appliedRules).toEqual([
-      { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'allChows', points: 1 },
       { name: 'selfPick', points: 1 },
       { name: 'splitKong', points: 1 },
@@ -1512,7 +1572,7 @@ describe('scoreHand', () => {
       { name: 'pureMixed19s', points: 8 },
       { name: 'pure', points: 8 },
     ]);
-    expect(result.handValue).toBe(38);
+    expect(result.handValue).toBe(37);
   });
 
   // --- Little and Big Chow / Pong ---
