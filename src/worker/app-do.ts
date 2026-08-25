@@ -129,10 +129,11 @@ export class AppDO extends DurableObject<Env> {
     let delivery: string | null = null;
     if (lastBackup?.emailId && this.env.RESEND_API_KEY) {
       try {
-        const { data } = await new Resend(this.env.RESEND_API_KEY).emails.get(lastBackup.emailId);
-        delivery = (data as { last_event?: string } | null)?.last_event ?? null;
-      } catch {
-        delivery = null;
+        const { data, error } = await new Resend(this.env.RESEND_API_KEY).emails.get(lastBackup.emailId);
+        delivery = (data as { last_event?: string } | null)?.last_event
+          ?? (error ? `status lookup failed: ${(error as { message?: string }).message ?? JSON.stringify(error)}` : null);
+      } catch (err) {
+        delivery = `status lookup failed: ${err instanceof Error ? err.message : String(err)}`;
       }
     }
     return {
