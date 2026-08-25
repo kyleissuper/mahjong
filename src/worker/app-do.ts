@@ -104,7 +104,7 @@ export class AppDO extends DurableObject<Env> {
       if (!this.env.RESEND_API_KEY) return { ok: false, detail: `stored ${key}; RESEND_API_KEY is not set` };
       const resend = new Resend(this.env.RESEND_API_KEY);
       const { error } = await resend.emails.send({
-        from: 'Mahjong Backup <onboarding@resend.dev>',
+        from: 'backup@mj-backups.kyletan.com',
         to: email,
         subject: `Mahjong Backup — ${date}`,
         text: `Backup stored: ${summary}.\n\nDownload it any time from the admin panel at https://mahjong.kyletan.com/ (Settings > Download backup).`,
