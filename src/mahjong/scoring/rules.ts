@@ -66,7 +66,7 @@ export const rules: Rule[] = [
     { from: 'dragonSecretKong', to: 'dragonKong', fromEach: 3, toEach: 2 },
   ] },
   { name: 'hiddenTreasure', label: 'Hidden Treasure', pts: '16', score: hiddenTreasure, absorbs: ['fourHiddenPongs', 'threeHiddenPongs', 'allPongs', 'cleanDoorstepAndSelfPick', 'cleanDoorstep', 'selfPick'] },
-  { name: 'no19sNoHonors', label: "No 1's or 9's with NO Honors", pts: '3', score: no19sNoHonors, absorbs: ['noFlowersNoHonors'] },
+  { name: 'no19sNoHonors', label: "No 1's or 9's with NO Honors", pts: '3', score: no19sNoHonors },
   { name: 'allKongs', label: 'All Kongs', pts: '16', score: allKongs, absorbs: ['allPongs'] },
   { name: 'pure19sPongs', label: "Pure 1's or 9's Pongs", pts: '16', score: pure19sPongs, absorbs: ['semiMixed19s', 'pureMixed19s', 'semi19sPongs', 'noFlowersNoHonors', 'littleAndBigPong', 'allPongs'] },
   { name: 'threeSuitPongs', label: 'Three Suit Pongs', pts: '4', score: threeSuitPongs },
