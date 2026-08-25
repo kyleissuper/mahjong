@@ -412,7 +412,7 @@ describe('scoreHand', () => {
     expect(result.scores).toEqual({ A: 0, B: 0, C: 11, D: -11 });
   });
 
-  it('Hand 13 — terminals & honors, all pongs, dealer discard win (19 pts)', () => {
+  it('Hand 13 — terminals & honors, all pongs, dealer discard win (14 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['1d', '1d', '1d'], concealed: true },
@@ -438,12 +438,10 @@ describe('scoreHand', () => {
     expect(result.appliedRules).toEqual([
       { name: 'windPong', points: 1 },
       { name: 'canOnlyWinWithOne', points: 1 },
-      { name: 'allPongs', points: 4 },
-      { name: 'littleAndBigPong', points: 1 },
       { name: 'semi19sPongs', points: 12 },
     ]);
-    expect(result.handValue).toBe(19);
-    expect(result.scores).toEqual({ A: 0, B: 20, C: -20, D: 0 });
+    expect(result.handValue).toBe(14);
+    expect(result.scores).toEqual({ A: 0, B: 15, C: -15, D: 0 });
   });
 
   it('Hand 14 — little dragons (8 pts)', () => {
@@ -1445,7 +1443,7 @@ describe('scoreHand', () => {
     expect(result.handValue).toBe(13);
   });
 
-  it('all 1s/9s with honors — every tile is terminal or honor (19 pts total)', () => {
+  it('all 1s/9s with honors — every tile is terminal or honor (14 pts total)', () => {
     const hand: Hand = {
       melds: [
         { type: 'pong', tiles: ['9d', '9d', '9d'], concealed: false },
@@ -1471,11 +1469,9 @@ describe('scoreHand', () => {
     expect(result.appliedRules).toEqual([
       { name: 'windPong', points: 1 },
       { name: 'canOnlyWinWithOne', points: 1 },
-      { name: 'allPongs', points: 4 },
-      { name: 'littleAndBigPong', points: 1 },
       { name: 'semi19sPongs', points: 12 },
     ]);
-    expect(result.handValue).toBe(19);
+    expect(result.handValue).toBe(14);
   });
 
   it('doubled 123+789 chows — pure mixed 1/9 stacks with two double chows and little and big chow (38 pts)', () => {

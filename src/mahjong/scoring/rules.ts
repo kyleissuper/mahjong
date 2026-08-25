@@ -58,7 +58,7 @@ export const rules: Rule[] = [
   { name: 'fourConsecutivePongs', label: 'Four Consecutive Pongs', pts: '8', score: fourConsecutivePongs, absorbs: ['allPongs', 'threeConsecutivePongs'] },
   { name: 'semiMixed19s', label: "Semi Mixed 1's or 9's", pts: '4', score: semiMixed19s },
   { name: 'pureMixed19s', label: "Pure Mixed 1's or 9's", pts: '8', score: pureMixed19s, absorbs: ['semiMixed19s'] },
-  { name: 'semi19sPongs', label: "Semi 1's or 9's Pongs", pts: '12', score: semi19sPongs, absorbs: ['semiMixed19s'] },
+  { name: 'semi19sPongs', label: "Semi 1's or 9's Pongs", pts: '12', score: semi19sPongs, absorbs: ['semiMixed19s', 'allPongs', 'littleAndBigPong'] },
   { name: 'pure', label: 'Pure Hand', pts: '8', score: pure },
   { name: 'fourHiddenPongs', label: 'Four Hidden Pongs', pts: '12', score: fourHiddenPongs, absorbs: ['allPongs', 'threeHiddenPongs'], demotes: [
     { from: 'secretKong', to: 'kong', fromEach: 2, toEach: 1 },
