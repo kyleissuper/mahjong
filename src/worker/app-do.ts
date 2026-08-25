@@ -124,7 +124,12 @@ export class AppDO extends DurableObject<Env> {
     return {
       email: await this.getBackupEmail(),
       lastBackup: await this.ctx.storage.get('last-backup-result') ?? null,
+      lastCronAt: await this.ctx.storage.get('last-cron-at') ?? null,
     };
+  }
+
+  async recordCronRun(): Promise<void> {
+    await this.ctx.storage.put('last-cron-at', new Date().toISOString());
   }
 
   async extendSession(code: string, hours: number): Promise<void> {

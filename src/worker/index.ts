@@ -15,6 +15,7 @@ interface Env {
 export default {
   async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
     const app = getApp(env);
+    await app.recordCronRun();
     await app.expireOverdueSessions();
   },
 
@@ -192,6 +193,7 @@ async function routeAdmin(app: any, request: Request, pathname: string, env: Env
     return json({ sessions: sessions.map((s: any) => ({
       ...s,
       expired: s.expired || (s.expiresAt && new Date(s.expiresAt).getTime() < now),
+      expiredFlag: s.expired,
       createdAt: formatPacific(s.createdAt),
       expiresAt: formatPacific(s.expiresAt),
     })) });
