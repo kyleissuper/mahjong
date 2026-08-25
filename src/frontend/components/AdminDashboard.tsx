@@ -247,13 +247,15 @@ function SettingsTab() {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [lastBackup, setLastBackup] = useState<admin.BackupStatus['lastBackup']>(null);
+  const [delivery, setDelivery] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    admin.getBackupEmail().then(({ email: e, lastBackup: lb }) => {
+    admin.getBackupEmail().then(({ email: e, lastBackup: lb, delivery: d }) => {
       setEmail(e ?? '');
       setSaved(!!e);
       setLastBackup(lb);
+      setDelivery(d);
       setLoading(false);
     });
   }, []);
@@ -290,7 +292,7 @@ function SettingsTab() {
           }}>{sending ? 'Sending…' : 'Send backup now'}</button>
         <span style={{ fontSize: '0.75rem', color: lastBackup?.ok ? 'var(--text-secondary)' : 'var(--danger, #c00)' }}>
           {lastBackup
-            ? `Last backup ${lastBackup.ok ? 'OK' : 'FAILED'} · ${new Date(lastBackup.at).toLocaleString()} · ${lastBackup.detail}`
+            ? `Last backup ${lastBackup.ok ? 'OK' : 'FAILED'} · ${new Date(lastBackup.at).toLocaleString()} · ${lastBackup.detail}${delivery ? ` · delivery: ${delivery}` : ''}`
             : 'No backup attempted since tracking began.'}
         </span>
       </div>

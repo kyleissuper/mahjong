@@ -62,6 +62,7 @@ export async function mergePlayers(keepId: string, mergeId: string): Promise<voi
 export interface BackupStatus {
   email: string | null;
   lastBackup: { at: string; ok: boolean; detail: string } | null;
+  delivery: string | null;
 }
 
 export async function sendBackupNow(): Promise<{ ok: boolean; detail: string }> {

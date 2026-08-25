@@ -84,13 +84,13 @@ export class AppDO extends DurableObject<Env> {
     await this.sendBackup();
   }
 
-  async sendBackup(): Promise<{ ok: boolean; detail: string }> {
+  async sendBackup(): Promise<{ ok: boolean; detail: string; emailId?: string }> {
     const outcome = await this.trySendBackup();
     await this.ctx.storage.put('last-backup-result', { at: new Date().toISOString(), ...outcome });
     return outcome;
   }
 
-  private async trySendBackup(): Promise<{ ok: boolean; detail: string }> {
+  private async trySendBackup(): Promise<{ ok: boolean; detail: string; emailId?: string }> {
     const email = await this.getBackupEmail();
     if (!email) return { ok: false, detail: 'no backup email configured' };
     if (!this.env.RESEND_API_KEY) return { ok: false, detail: 'RESEND_API_KEY is not set' };
@@ -100,7 +100,7 @@ export class AppDO extends DurableObject<Env> {
       const json = JSON.stringify(data, null, 2);
       const date = new Date().toISOString().split('T')[0];
       const resend = new Resend(this.env.RESEND_API_KEY);
-      const { error } = await resend.emails.send({
+      const { data: sent, error } = await resend.emails.send({
         from: 'backup@mj-backups.kyletan.com',
         to: email,
         subject: `Mahjong Backup — ${date}`,
@@ -114,16 +114,31 @@ export class AppDO extends DurableObject<Env> {
         const e = error as { name?: string; message?: string };
         return { ok: false, detail: `resend: ${e.name ?? ''} ${e.message ?? JSON.stringify(error)}`.trim() };
       }
-      return { ok: true, detail: `sent to ${email} — ${data.sessions.length} sessions, ${data.hands.length} hands` };
+      return {
+        ok: true,
+        detail: `sent to ${email} — ${data.sessions.length} sessions, ${data.hands.length} hands`,
+        emailId: sent?.id,
+      };
     } catch (err) {
       return { ok: false, detail: err instanceof Error ? err.message : String(err) };
     }
   }
 
   async getBackupStatus() {
+    const lastBackup = await this.ctx.storage.get<{ emailId?: string }>('last-backup-result') ?? null;
+    let delivery: string | null = null;
+    if (lastBackup?.emailId && this.env.RESEND_API_KEY) {
+      try {
+        const { data } = await new Resend(this.env.RESEND_API_KEY).emails.get(lastBackup.emailId);
+        delivery = (data as { last_event?: string } | null)?.last_event ?? null;
+      } catch {
+        delivery = null;
+      }
+    }
     return {
       email: await this.getBackupEmail(),
-      lastBackup: await this.ctx.storage.get('last-backup-result') ?? null,
+      lastBackup,
+      delivery,
       lastCronAt: await this.ctx.storage.get('last-cron-at') ?? null,
     };
   }
