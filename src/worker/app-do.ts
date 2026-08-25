@@ -84,24 +84,47 @@ export class AppDO extends DurableObject<Env> {
     await this.sendBackup();
   }
 
-  private async sendBackup(): Promise<void> {
+  async sendBackup(): Promise<{ ok: boolean; detail: string }> {
+    const outcome = await this.trySendBackup();
+    await this.ctx.storage.put('last-backup-result', { at: new Date().toISOString(), ...outcome });
+    return outcome;
+  }
+
+  private async trySendBackup(): Promise<{ ok: boolean; detail: string }> {
     const email = await this.getBackupEmail();
-    if (!email || !this.env.RESEND_API_KEY) return;
-    const data = await this.exportAll();
-    if (data.hands.length === 0) return;
-    const json = JSON.stringify(data, null, 2);
-    const date = new Date().toISOString().split('T')[0];
-    const resend = new Resend(this.env.RESEND_API_KEY);
-    await resend.emails.send({
-      from: 'backup@mj-backups.kyletan.com',
-      to: email,
-      subject: `Mahjong Backup — ${date}`,
-      text: `Full backup: ${data.sessions.length} sessions, ${data.hands.length} hands, ${data.players.length} players.`,
-      attachments: [{
-        content: btoa(unescape(encodeURIComponent(json))),
-        filename: `mahjong-backup-${date}.json`,
-      }],
-    });
+    if (!email) return { ok: false, detail: 'no backup email configured' };
+    if (!this.env.RESEND_API_KEY) return { ok: false, detail: 'RESEND_API_KEY is not set' };
+    try {
+      const data = await this.exportAll();
+      if (data.hands.length === 0) return { ok: false, detail: 'nothing to back up' };
+      const json = JSON.stringify(data, null, 2);
+      const date = new Date().toISOString().split('T')[0];
+      const resend = new Resend(this.env.RESEND_API_KEY);
+      const { error } = await resend.emails.send({
+        from: 'backup@mj-backups.kyletan.com',
+        to: email,
+        subject: `Mahjong Backup — ${date}`,
+        text: `Full backup: ${data.sessions.length} sessions, ${data.hands.length} hands, ${data.players.length} players.`,
+        attachments: [{
+          content: btoa(unescape(encodeURIComponent(json))),
+          filename: `mahjong-backup-${date}.json`,
+        }],
+      });
+      if (error) {
+        const e = error as { name?: string; message?: string };
+        return { ok: false, detail: `resend: ${e.name ?? ''} ${e.message ?? JSON.stringify(error)}`.trim() };
+      }
+      return { ok: true, detail: `sent to ${email} — ${data.sessions.length} sessions, ${data.hands.length} hands` };
+    } catch (err) {
+      return { ok: false, detail: err instanceof Error ? err.message : String(err) };
+    }
+  }
+
+  async getBackupStatus() {
+    return {
+      email: await this.getBackupEmail(),
+      lastBackup: await this.ctx.storage.get('last-backup-result') ?? null,
+    };
   }
 
   async extendSession(code: string, hours: number): Promise<void> {

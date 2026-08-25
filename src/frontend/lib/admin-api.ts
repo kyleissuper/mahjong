@@ -59,8 +59,17 @@ export async function mergePlayers(keepId: string, mergeId: string): Promise<voi
   await postAdmin('/api/admin/players/merge', { keepId, mergeId });
 }
 
-export async function getBackupEmail(): Promise<{ email: string | null }> {
-  return getAdmin<{ email: string | null }>('/api/admin/backup-email');
+export interface BackupStatus {
+  email: string | null;
+  lastBackup: { at: string; ok: boolean; detail: string } | null;
+}
+
+export async function sendBackupNow(): Promise<{ ok: boolean; detail: string }> {
+  return postAdmin<{ ok: boolean; detail: string }>('/api/admin/backup/send', {});
+}
+
+export async function getBackupEmail(): Promise<BackupStatus> {
+  return getAdmin<BackupStatus>('/api/admin/backup-email');
 }
 
 export async function setBackupEmail(email: string | null): Promise<void> {

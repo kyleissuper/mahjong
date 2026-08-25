@@ -246,11 +246,14 @@ function SettingsTab() {
   const [email, setEmail] = useState('');
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [lastBackup, setLastBackup] = useState<admin.BackupStatus['lastBackup']>(null);
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    admin.getBackupEmail().then(({ email: e }) => {
+    admin.getBackupEmail().then(({ email: e, lastBackup: lb }) => {
       setEmail(e ?? '');
       setSaved(!!e);
+      setLastBackup(lb);
       setLoading(false);
     });
   }, []);
@@ -274,6 +277,23 @@ function SettingsTab() {
           }}>{saved ? 'Saved' : 'Save'}</button>
       </div>
 
+      <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <button className="scorer-btn" disabled={sending || !saved}
+          onClick={async () => {
+            setSending(true);
+            try {
+              const outcome = await admin.sendBackupNow();
+              setLastBackup({ at: new Date().toISOString(), ...outcome });
+            } finally {
+              setSending(false);
+            }
+          }}>{sending ? 'Sending…' : 'Send backup now'}</button>
+        <span style={{ fontSize: '0.75rem', color: lastBackup?.ok ? 'var(--text-secondary)' : 'var(--danger, #c00)' }}>
+          {lastBackup
+            ? `Last backup ${lastBackup.ok ? 'OK' : 'FAILED'} · ${new Date(lastBackup.at).toLocaleString()} · ${lastBackup.detail}`
+            : 'No backup attempted since tracking began.'}
+        </span>
+      </div>
     </div>
   );
 }

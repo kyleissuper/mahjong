@@ -198,8 +198,10 @@ async function routeAdmin(app: any, request: Request, pathname: string, env: Env
   }
 
   if (pathname === '/api/admin/backup-email' && request.method === 'GET') {
-    const email = await app.getBackupEmail();
-    return json({ email });
+    return json(await app.getBackupStatus());
+  }
+  if (pathname === '/api/admin/backup/send' && request.method === 'POST') {
+    return json(await app.sendBackup());
   }
   if (pathname === '/api/admin/backup-email' && request.method === 'POST') {
     const { email } = await request.json() as { email: string | null };
