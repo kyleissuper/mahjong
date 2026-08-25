@@ -235,8 +235,9 @@ function pureMixed19s(hand: Hand): number {
 }
 
 function pure(hand: Hand): number {
-  const suits = new Set(handTiles(hand).map(suit));
-  return suits.size === 1 && isNumberTile(hand.melds[0].tiles[0]) ? 8 : 0;
+  const tiles = handTiles(hand);
+  const suits = new Set(tiles.map(suit));
+  return suits.size === 1 && isNumberTile(tiles[0]) ? 8 : 0;
 }
 
 function fourHiddenPongs({ melds }: Hand): number {
