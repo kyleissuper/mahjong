@@ -382,9 +382,10 @@ function threeHiddenPongs({ melds }: Hand): number {
 }
 
 function doubleChow(hand: Hand): number {
+  // Each PAIR of identical chows scores: 2 copies = 1, 3 copies = 3, 4 copies = 6
   const chows = hand.melds.filter(m => m.type === 'chow');
-  const keys = chows.map(m => m.tiles.join(','));
-  return keys.length - new Set(keys).size;
+  const byTiles = Map.groupBy(chows, m => m.tiles.join(','));
+  return [...byTiles.values()].reduce((sum, { length }) => sum + (length * (length - 1)) / 2, 0);
 }
 
 function threeSuitChow(hand: Hand): number {

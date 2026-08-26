@@ -1657,6 +1657,79 @@ describe('scoreHand', () => {
     expect(result.handValue).toBe(7);
   });
 
+  // --- Triple/quadruple identical chows: Double Chow counts PAIRINGS (3 copies = 3 pts, 4 copies = 6 pts).
+  // Which grouping applies turns on what's locked: a chow claimed from a discard is
+  // stuck as a chow, while fully concealed tiles can be declared as pongs instead. ---
+
+  it('triple chow, one locked by a discard claim — 3 double chow points, one per pairing (11 pts)', () => {
+    // 3b×3 4b×3 5b×3 declared as three 3-4-5 chows because one chow is exposed
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['3b', '4b', '5b'], concealed: false },
+        { type: 'chow', tiles: ['3b', '4b', '5b'], concealed: true },
+        { type: 'chow', tiles: ['3b', '4b', '5b'], concealed: true },
+        { type: 'pong', tiles: ['7c', '7c', '7c'], concealed: false },
+        { type: 'pair', tiles: ['2d', '2d'], concealed: true, winTile: '2d' },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'doubleChow', points: 3 },
+      { name: 'noFlowersNoHonors', points: 3 },
+      { name: 'no19sNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(11);
+  });
+
+  it('same nine tiles fully concealed, declared as pongs instead — worth more (20 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'pong', tiles: ['3b', '3b', '3b'], concealed: true },
+        { type: 'pong', tiles: ['4b', '4b', '4b'], concealed: true },
+        { type: 'pong', tiles: ['5b', '5b', '5b'], concealed: true },
+        { type: 'pong', tiles: ['7c', '7c', '7c'], concealed: false },
+        { type: 'pair', tiles: ['2d', '2d'], concealed: true, winTile: '2d' },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'allPongs', points: 4 },
+      { name: 'threeHiddenPongs', points: 4 },
+      { name: 'threeConsecutivePongs', points: 4 },
+      { name: 'noFlowersNoHonors', points: 3 },
+      { name: 'no19sNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(20);
+  });
+
+  it('four identical chows — 6 double chow pairings, Two Double Chows needs two different sequences (26 pts)', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['2c', '3c', '4c'], concealed: true },
+        { type: 'chow', tiles: ['2c', '3c', '4c'], concealed: true },
+        { type: 'chow', tiles: ['2c', '3c', '4c'], concealed: false },
+        { type: 'chow', tiles: ['2c', '3c', '4c'], concealed: false },
+        { type: 'pair', tiles: ['8c', '8c'], concealed: true, winTile: '8c' },
+      ],
+    };
+    const result = scoreHand(hand, discardWin);
+    expect(result.appliedRules).toEqual([
+      { name: 'pairOf258', points: 1 },
+      { name: 'canOnlyWinWithOne', points: 1 },
+      { name: 'allChows', points: 1 },
+      { name: 'splitKong', points: 3 },
+      { name: 'doubleChow', points: 6 },
+      { name: 'noFlowersNoHonors', points: 3 },
+      { name: 'pure', points: 8 },
+      { name: 'no19sNoHonors', points: 3 },
+    ]);
+    expect(result.handValue).toBe(26);
+  });
+
   it('doubled train leg — 123, 123, 456, 789 awards the duplicate point (11 pts)', () => {
     const hand: Hand = {
       melds: [
