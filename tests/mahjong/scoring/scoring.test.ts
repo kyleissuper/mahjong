@@ -1706,7 +1706,7 @@ describe('scoreHand', () => {
     expect(result.handValue).toBe(20);
   });
 
-  it('four identical chows — 6 double chow pairings, Two Double Chows needs two different sequences (26 pts)', () => {
+  it('four identical chows — Two Double Chows pays double, 24, absorbing the chow pairings (44 pts)', () => {
     const hand: Hand = {
       melds: [
         { type: 'chow', tiles: ['2c', '3c', '4c'], concealed: true },
@@ -1722,12 +1722,12 @@ describe('scoreHand', () => {
       { name: 'canOnlyWinWithOne', points: 1 },
       { name: 'allChows', points: 1 },
       { name: 'splitKong', points: 3 },
-      { name: 'doubleChow', points: 6 },
       { name: 'noFlowersNoHonors', points: 3 },
+      { name: 'twoDoubleChows', points: 24 },
       { name: 'pure', points: 8 },
       { name: 'no19sNoHonors', points: 3 },
     ]);
-    expect(result.handValue).toBe(26);
+    expect(result.handValue).toBe(44);
   });
 
   it('doubled train leg — 123, 123, 456, 789 awards the duplicate point (11 pts)', () => {

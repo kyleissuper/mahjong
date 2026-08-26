@@ -155,8 +155,10 @@ function twoKongMahjong(_hand: Hand, { special }: Win): number {
 function twoDoubleChows({ melds }: Hand): number {
   const chows = melds.filter(({ type }) => type === 'chow');
   const byTiles = Map.groupBy(chows, ({ tiles }) => tiles.join(','));
-  const duplicated = [...byTiles.values()].filter(g => g.length === 2);
-  return duplicated.length === 2 ? 12 : 0;
+  const groups = [...byTiles.values()];
+  // Four identical chows are two doubles of one sequence — rare enough to pay double
+  if (groups.some(g => g.length === 4)) return 24;
+  return groups.filter(g => g.length === 2).length === 2 ? 12 : 0;
 }
 
 function littleDragons({ melds }: Hand): number {
