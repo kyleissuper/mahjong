@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { scoreHand } from '../../../src/mahjong/scoring/engine.ts';
 import { DRAGON_COMPONENTS, WIND_COMPONENTS, HONOR_COMPONENTS } from '../../../src/mahjong/scoring/rules.ts';
-import type { Hand, Win } from '../../../src/mahjong/types.ts';
+import { buildWin, type Hand, type Win } from '../../../src/mahjong/types.ts';
 
 describe('scoreHand', () => {
   const discardWin: Win = {
@@ -870,6 +870,21 @@ describe('scoreHand', () => {
       { name: 'canOnlyWinWithOne', points: 1 },
     ]);
     expect(result.handValue).toBe(3);
+  });
+
+  it('all from others requires a discard win — self-pick with every meld exposed does not fire', () => {
+    const hand: Hand = {
+      melds: [
+        { type: 'chow', tiles: ['2b', '3b', '4b'], concealed: false },
+        { type: 'pong', tiles: ['5c', '5c', '5c'], concealed: false },
+        { type: 'chow', tiles: ['7d', '8d', '9d'], concealed: false },
+        { type: 'pong', tiles: ['Ww', 'Ww', 'Ww'], concealed: false },
+        { type: 'pair', tiles: ['6c', '6c'], concealed: false, winTile: '6c' },
+      ],
+    };
+    const win = buildWin({ method: 'self-pick', winner: 'A', otherPlayers: ['B', 'C', 'D'] });
+    const result = scoreHand(hand, win);
+    expect(result.appliedRules.some(r => r.name === 'allFromOthers')).toBe(false);
   });
 
   it('chow edge wait hiding a second wait is NOT canOnlyWinWithOne', () => {

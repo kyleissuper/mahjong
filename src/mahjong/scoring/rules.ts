@@ -364,9 +364,9 @@ function stolenKong(_hand: Hand, { method }: Win): number {
   return method === 'stolen-kong' ? 1 : 0;
 }
 
-function allFromOthers(hand: Hand): number {
+function allFromOthers(hand: Hand, { method }: Win): number {
   const s = sets(hand);
-  return s.length > 0 && handMelds(hand).every(({ concealed }) => !concealed) ? 1 : 0;
+  return method !== 'self-pick' && s.length > 0 && handMelds(hand).every(({ concealed }) => !concealed) ? 1 : 0;
 }
 
 function cleanDoorstep(hand: Hand): number {
