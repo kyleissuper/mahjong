@@ -300,7 +300,6 @@ function threeSuitsWithWindAndDragon(hand: Hand): number {
 }
 
 function thirteenOrphans(hand: Hand): number {
-  if (hand.melds.some(({ type }) => type === 'orphans')) return 16;
   const tiles = handTiles(hand);
   if (tiles.length !== 14) return 0;
   const counts = new Map<string, number>();

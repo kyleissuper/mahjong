@@ -872,6 +872,17 @@ describe('scoreHand', () => {
     expect(result.handValue).toBe(3);
   });
 
+  it('a meld labeled orphans is not Thirteen Orphans unless the tiles match the pattern', () => {
+    const hand: Hand = {
+      melds: [{
+        type: 'orphans', concealed: true, winTile: '2b',
+        tiles: ['2b', '3b', '4b', '5b', '6b', '7b', '8b', '2c', '3c', '4c', '5c', '6c', '7c', '7c'],
+      }],
+    };
+    const result = scoreHand(hand, buildWin({ method: 'discard', winner: 'A', from: 'B' }));
+    expect(result.appliedRules.some(r => r.name === 'thirteenOrphans')).toBe(false);
+  });
+
   it('all from others requires a discard win — self-pick with every meld exposed does not fire', () => {
     const hand: Hand = {
       melds: [
