@@ -51,26 +51,6 @@ export class AppDO extends DurableObject<Env> {
         old_id TEXT PRIMARY KEY,
         new_id TEXT NOT NULL
       )`);
-      await this.rescoreOnce();
-    });
-  }
-
-  /**
-   * One-time: the 2026-08-24 rescore ran before the latest round of rule
-   * fixes (the No Flowers and No Honors stacking rulings among them), so
-   * stored hands still carry pre-fix values. Re-runs the rescore under the
-   * current rules on the first wake after deploy.
-   */
-  private async rescoreOnce(): Promise<void> {
-    const FLAG = 'rescored-2026-08-27';
-    if (await this.ctx.storage.get(FLAG)) return;
-    const result = await this.rescoreHands(true);
-    await this.ctx.storage.put(FLAG, {
-      at: new Date().toISOString(),
-      total: result.total,
-      unchanged: result.unchanged,
-      changed: result.changed.length,
-      anomalies: result.anomalies,
     });
   }
 
@@ -142,11 +122,6 @@ export class AppDO extends DurableObject<Env> {
     }
     if (apply && changed.length > 0) this.broadcast({ type: 'hands-changed' });
     return { applied: apply, total: rows.length, unchanged, changed, anomalies };
-  }
-
-  /** Inspection: the outcome of the deploy-time one-shot rescore, if it ran. */
-  async getRescoreStatus() {
-    return await this.ctx.storage.get('rescored-2026-08-27') ?? null;
   }
 
   // --- Sessions ---
