@@ -4,6 +4,7 @@ import { drizzle } from 'drizzle-orm/durable-sqlite';
 import { eq, sql } from 'drizzle-orm';
 import * as schema from './schema.ts';
 import { computeScoredHand, type ScoredHand } from '../mahjong/session.ts';
+import { rescoreStoredHand } from '../mahjong/rescore.ts';
 import type { Hand, Win } from '../mahjong/types.ts';
 
 interface Env {
@@ -50,7 +51,102 @@ export class AppDO extends DurableObject<Env> {
         old_id TEXT PRIMARY KEY,
         new_id TEXT NOT NULL
       )`);
+      await this.rescoreOnce();
     });
+  }
+
+  /**
+   * One-time: the 2026-08-24 rescore ran before the latest round of rule
+   * fixes (the No Flowers and No Honors stacking rulings among them), so
+   * stored hands still carry pre-fix values. Re-runs the rescore under the
+   * current rules on the first wake after deploy.
+   */
+  private async rescoreOnce(): Promise<void> {
+    const FLAG = 'rescored-2026-08-27';
+    if (await this.ctx.storage.get(FLAG)) return;
+    const result = await this.rescoreHands(true);
+    await this.ctx.storage.put(FLAG, {
+      at: new Date().toISOString(),
+      total: result.total,
+      unchanged: result.unchanged,
+      changed: result.changed.length,
+      anomalies: result.anomalies,
+    });
+  }
+
+  /**
+   * Recompute every stored hand under the current rules. Dry run reports what
+   * would change; apply backs up each touched row (first backup wins) and
+   * writes the new values. Idempotent: a second apply finds nothing to change.
+   */
+  async rescoreHands(apply: boolean) {
+    this.ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS hands_rescore_backup (
+      id INTEGER PRIMARY KEY,
+      backed_up_at TEXT NOT NULL,
+      hand_value REAL NOT NULL,
+      applied_rules TEXT NOT NULL,
+      scores TEXT NOT NULL
+    )`);
+    const rows = this.ctx.storage.sql.exec<{
+      id: number; session_code: string; timestamp: string; winner_id: string | null;
+      method: string; hand_value: number; applied_rules: string; melds: string; scores: string;
+    }>(`SELECT id, session_code, timestamp, winner_id, method, hand_value, applied_rules, melds, scores FROM hands`).toArray();
+
+    const changed: unknown[] = [];
+    const anomalies: unknown[] = [];
+    let unchanged = 0;
+    for (const row of rows) {
+      try {
+        if (!row.winner_id) throw new Error('missing winner_id');
+        const oldRules = JSON.parse(row.applied_rules) as { name: string; points: number }[];
+        const oldScores = JSON.parse(row.scores) as Record<string, number>;
+        const result = rescoreStoredHand({
+          melds: JSON.parse(row.melds),
+          method: row.method as Win['method'],
+          winnerId: row.winner_id,
+          handValue: row.hand_value,
+          appliedRules: oldRules,
+          scores: oldScores,
+        });
+        const same = result.handValue === row.hand_value
+          && JSON.stringify(result.appliedRules) === JSON.stringify(oldRules)
+          && Object.keys(oldScores).length === Object.keys(result.scores).length
+          && Object.entries(result.scores).every(([player, v]) => oldScores[player] === v);
+        if (same) { unchanged++; continue; }
+        changed.push({
+          id: row.id,
+          session: row.session_code,
+          timestamp: row.timestamp,
+          oldValue: row.hand_value,
+          newValue: result.handValue,
+          oldRules: oldRules.map(r => `${r.name}:${r.points}`),
+          newRules: result.appliedRules.map(r => `${r.name}:${r.points}`),
+          oldScores,
+          newScores: result.scores,
+        });
+        if (apply) {
+          this.ctx.storage.sql.exec(
+            `INSERT OR IGNORE INTO hands_rescore_backup (id, backed_up_at, hand_value, applied_rules, scores)
+             VALUES (?, ?, ?, ?, ?)`,
+            row.id, new Date().toISOString(), row.hand_value, row.applied_rules, row.scores
+          );
+          this.ctx.storage.sql.exec(
+            `UPDATE hands SET hand_value = ?, applied_rules = ?, scores = ? WHERE id = ?`,
+            result.handValue, JSON.stringify(result.appliedRules), JSON.stringify(result.scores), row.id
+          );
+        }
+      } catch (err) {
+        anomalies.push({ id: row.id, session: row.session_code, timestamp: row.timestamp,
+          error: err instanceof Error ? err.message : String(err) });
+      }
+    }
+    if (apply && changed.length > 0) this.broadcast({ type: 'hands-changed' });
+    return { applied: apply, total: rows.length, unchanged, changed, anomalies };
+  }
+
+  /** Inspection: the outcome of the deploy-time one-shot rescore, if it ran. */
+  async getRescoreStatus() {
+    return await this.ctx.storage.get('rescored-2026-08-27') ?? null;
   }
 
   // --- Sessions ---
