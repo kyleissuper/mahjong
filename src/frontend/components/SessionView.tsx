@@ -73,6 +73,15 @@ export function SessionView() {
     date: dateFilter,
   });
 
+  function closeDrawer() {
+    if (drawerClosing) return;
+    setDrawerClosing(true);
+    setTimeout(() => {
+      setDrawerOpen(false);
+      setDrawerClosing(false);
+    }, 200);
+  }
+
   function navigateTo(target: 'scorer' | 'leaderboard' | 'hands' | 'rules') {
     setDrawerClosing(true);
     setFading(true);
@@ -86,7 +95,7 @@ export function SessionView() {
 
   return (
     <div className="session-view">
-      <Drawer open={drawerOpen} closing={drawerClosing} onClose={() => setDrawerOpen(false)}
+      <Drawer open={drawerOpen} closing={drawerClosing} onClose={closeDrawer}
         code={code} currentView={view} onNavigate={navigateTo} onLeave={leave} />
 
       <div className="scorer-appbar">
