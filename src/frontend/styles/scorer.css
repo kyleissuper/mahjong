@@ -1281,12 +1281,30 @@
 }
 
 .drawer-qr {
+  position: relative;
   margin-top: 12px;
   padding: 10px;
   width: fit-content;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  cursor: pointer;
+  user-select: none;
+}
+
+.drawer-qr:active {
+  opacity: 0.6;
+}
+
+.drawer-qr-copied {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
 }
 
 .drawer-qr svg {
