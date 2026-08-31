@@ -26,14 +26,36 @@ export function useSession() {
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [code, setCode] = useState<string | null>(() => localStorage.getItem('mj-code'));
-  const [loading, setLoading] = useState(() => !!localStorage.getItem('mj-code'));
+  const [loading, setLoading] = useState(() =>
+    !!localStorage.getItem('mj-code') || new URLSearchParams(location.search).has('code'));
 
   useEffect(() => {
-    if (!code) return;
-    api.getSession(code)
-      .then(s => setSession(s))
-      .catch(() => { setCode(null); localStorage.removeItem('mj-code'); })
-      .finally(() => setLoading(false));
+    const stored = localStorage.getItem('mj-code');
+    const urlCode = new URLSearchParams(location.search).get('code')?.toUpperCase() || null;
+    if (!stored && !urlCode) return;
+
+    (async () => {
+      if (urlCode) {
+        try {
+          const s = await api.getSession(urlCode);
+          history.replaceState(null, '', location.pathname);
+          setSession(s);
+          setCode(urlCode);
+          localStorage.setItem('mj-code', urlCode);
+          return;
+        } catch {
+          // Invalid link: fall back to the stored session. Without one, the
+          // param is left in place so Landing's auto-join surfaces the error.
+        }
+      }
+      if (!stored) return;
+      try {
+        setSession(await api.getSession(stored));
+      } catch {
+        setCode(null);
+        localStorage.removeItem('mj-code');
+      }
+    })().finally(() => setLoading(false));
   }, []);
 
   const [handsVersion, setHandsVersion] = useState(0);

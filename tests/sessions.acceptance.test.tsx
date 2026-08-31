@@ -408,6 +408,53 @@ describe('Self-pick scoring', () => {
   });
 });
 
+describe('Joining via URL code', () => {
+  function CodeProbe() {
+    const { loading, session, code } = useSession();
+    if (loading) return null;
+    return <div data-testid="active-code">{session ? code : 'none'}</div>;
+  }
+
+  afterEach(() => {
+    localStorage.clear();
+    history.replaceState(null, '', '/');
+  });
+
+  it('a valid ?code= overrides the stored session', async () => {
+    backend.addSession('OLD01');
+    backend.addSession('NEW01');
+    localStorage.setItem('mj-code', 'OLD01');
+    history.replaceState(null, '', '/?code=NEW01');
+
+    render(<SessionProvider><CodeProbe /></SessionProvider>);
+
+    await waitFor(() => expect(screen.getByTestId('active-code').textContent).toBe('NEW01'));
+    expect(localStorage.getItem('mj-code')).toBe('NEW01');
+    expect(location.search).toBe('');
+  });
+
+  it('an invalid ?code= falls back to the stored session', async () => {
+    backend.addSession('OLD01');
+    localStorage.setItem('mj-code', 'OLD01');
+    history.replaceState(null, '', '/?code=BAD99');
+
+    render(<SessionProvider><CodeProbe /></SessionProvider>);
+
+    await waitFor(() => expect(screen.getByTestId('active-code').textContent).toBe('OLD01'));
+    expect(localStorage.getItem('mj-code')).toBe('OLD01');
+  });
+
+  it('lowercase ?code= values are normalized before joining', async () => {
+    backend.addSession('NEW01');
+    history.replaceState(null, '', '/?code=new01');
+
+    render(<SessionProvider><CodeProbe /></SessionProvider>);
+
+    await waitFor(() => expect(screen.getByTestId('active-code').textContent).toBe('NEW01'));
+    expect(localStorage.getItem('mj-code')).toBe('NEW01');
+  });
+});
+
 describe('Session expiry', () => {
   it('shows read-only leaderboard when session expires', async () => {
     backend.addSession('TEST1');
