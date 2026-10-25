@@ -4,9 +4,11 @@ import { SWRConfig } from 'swr';
 import { setBackend } from './lib/backend.ts';
 import { HttpBackend } from './lib/http-backend.ts';
 import { pinFontScale } from './lib/pin-font-scale.ts';
+import { startBundleWatch } from './lib/bundle-watch.ts';
 
 setBackend(new HttpBackend());
 pinFontScale();
+startBundleWatch();
 (window as any).__pinFontScale = pinFontScale;
 
 (window as any).__scoreDemo = async () => {

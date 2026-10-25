@@ -4,6 +4,7 @@ import type { Tile, Meld, Win, ScoreResult } from '../../mahjong/types.ts';
 import { scoreHand, RULE_LABELS } from '../../mahjong/scoring/engine.ts';
 import { isNumberTile, numValue, suit, ORPHAN_TILES } from '../../mahjong/tile.ts';
 import * as api from '../lib/api.ts';
+import { setBundleWatchBusy } from '../lib/bundle-watch.ts';
 import { isHandReady } from '../../mahjong/hand.ts';
 import { TileImage } from './TileImage.tsx';
 import { ScanHand } from './ScanHand.tsx';
@@ -179,6 +180,13 @@ export function Scorer({ roster = ['Player 1', 'Player 2', 'Player 3', 'Player 4
   }
 
   useEffect(() => { onPhaseChange?.(phase); }, [phase]);
+
+  // Hold any pending bundle reload while tiles are on the board.
+  const entering = melds.length > 0 || flowers > 0 || phase !== 'entering';
+  useEffect(() => {
+    setBundleWatchBusy(entering);
+    return () => setBundleWatchBusy(false);
+  }, [entering]);
 
   useEffect(() => {
     if (scoringResult && !timing.current.winContextComplete) {

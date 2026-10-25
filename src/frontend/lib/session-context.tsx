@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { Session } from '../../mahjong/session.ts';
 import * as api from './api.ts';
+import { checkBundle } from './bundle-watch.ts';
 
 interface SessionContextValue {
   loading: boolean;
@@ -73,6 +74,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
         if (data.type === 'hands-changed') {
           setHandsVersion(v => v + 1);
+          // Another phone just recorded a hand: the right moment to make sure
+          // this one is on the same bundle as the server.
+          void checkBundle();
         }
       });
       // Anything could have happened while the socket was down.
